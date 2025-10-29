@@ -1,0 +1,4056 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API DE FACTURACIÓN",
+        "version": "1.0",
+        "description": "API REST Facturación Electrónica - Coders Free.",
+        "contact": {
+            "name": "Coders Free",
+            "url": "https://codersfree.com",
+            "email": "contacto@codersfree.com"
+        },
+        "x-logo": {
+            "url": "https://codersfree.nyc3.cdn.digitaloceanspaces.com/companies/logos/rectangle_logo.png",
+            "backgroundColor": "#FAFAFA",
+            "altText": "Example logo"
+        }
+    },
+    "servers": [
+        {
+            "url": "https://apisunat.codersfree.com"
+        }
+    ],
+    "tags": [
+        {
+            "name": "user",
+            "x-displayName": "Usuarios",
+            "description": "Operaciones relacionadas con los usuarios de la plataforma."
+        },
+        {
+            "name": "company",
+            "x-displayName": "Empresas",
+            "description": "Operaciones relacionadas con las empresas registradas en la plataforma."
+        },
+        {
+            "name": "invoice",
+            "x-displayName": "Facturas y boletas",
+            "description": "Operaciones relacionadas con el envío de facturas y boletas electrónicas."
+        },
+        {
+            "name": "note",
+            "x-displayName": "Notas de crédito y débito",
+            "description": "Operaciones relacionadas con el envío de notas de crédito y débito electrónicas."
+        },
+        {
+            "name": "despatch",
+            "x-displayName": "Guías de remisión",
+            "description": "Operaciones relacionadas con el envío de guías de remisión electrónicas."
+        },
+        {
+            "name": "summary",
+            "x-displayName": "Resúmenes diarios",
+            "description": "Operaciones relacionadas con el envío de resúmenes diarios electrónicos."
+        },
+        {
+            "name": "voided",
+            "x-displayName": "Anulación de comprobantes",
+            "description": "Operaciones relacionadas con el envío de anulación de comprobantes electrónicos."
+        }
+    ],
+    "paths": {
+        "/api/register": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Registro",
+                "description": "Crea una cuenta de usuario proporcionando nombre, correo electrónico y contraseña.",
+                "operationId": "register",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "example@codersfree.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password"
+                                    }
+                                },
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BearerToken"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Inicio de sesión",
+                "description": "Inicia sesión en la plataforma proporcionando un correo electrónico y una contraseña válidos.",
+                "operationId": "login",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "example@codersfree.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "password"
+                                    }
+                                },
+                                "required": [
+                                    "email",
+                                    "password"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/BearerToken"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/companies": {
+            "get": {
+                "tags": [
+                    "company"
+                ],
+                "summary": "Listado de empresas",
+                "description": "Obtiene un listado de las empresas registradas en la plataforma.",
+                "operationId": "companyIndex",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationSanctum"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CompanyResponse"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "company"
+                ],
+                "summary": "Registro de empresa",
+                "description": "Registra una empresa en la plataforma proporcionando los datos necesarios.",
+                "operationId": "companyStore",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationSanctum"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CompanyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompanyResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/companies/{company}": {
+            "get": {
+                "tags": [
+                    "company"
+                ],
+                "summary": "Detalle de empresa",
+                "description": "Obtiene los detalles de una empresa registrada en la plataforma.",
+                "operationId": "companyShow",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationSanctum"
+                    },
+                    {
+                        "$ref": "#/components/parameters/CompanyId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompanyResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "company"
+                ],
+                "summary": "Actualización de empresa",
+                "description": "Actualiza los datos de una empresa registrada en la plataforma.",
+                "operationId": "companyUpdate",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationSanctum"
+                    },
+                    {
+                        "$ref": "#/components/parameters/CompanyId"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CompanyRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CompanyResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "company"
+                ],
+                "summary": "Eliminación de empresa",
+                "description": "Elimina una empresa registrada en la plataforma.",
+                "operationId": "companyDestroy",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationSanctum"
+                    },
+                    {
+                        "$ref": "#/components/parameters/CompanyId"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Operación exitosa"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    }
+                }
+            }
+        },
+        "/api/companies/{company}/token": {
+            "post": {
+                "tags": [
+                    "company"
+                ],
+                "summary": "Generar token de empresa",
+                "description": "Genera un token de acceso para la empresa registrada en la plataforma.",
+                "operationId": "companyToken",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationSanctum"
+                    },
+                    {
+                        "$ref": "#/components/parameters/CompanyId"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Nombre del token."
+                                    }
+                                }
+                            }
+                        },
+                        "required": [
+                            "name"
+                        ]
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Operación exitosa",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "description": "Token de acceso para la empresa.",
+                                            "example": "1|5DffBJbcQ67QB8EgQk9CZ1NoViuEULMiy9aiUNMv8f2ff0c6"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/invoice/send": {
+            "post": {
+                "tags": [
+                    "invoice"
+                ],
+                "summary": "Enviar una factura o boleta",
+                "operationId": "invoiceSend",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationJWT"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Invoice"
+                            },
+                            "examples": {
+                                "BoletaVenta": {
+                                    "$ref": "#/components/examples/BoletaVenta"
+                                },
+                                "BoletaVentaICBPER": {
+                                    "$ref": "#/components/examples/BoletaVentaICBPER"
+                                },
+                                "Factura": {
+                                    "$ref": "#/components/examples/Factura"
+                                },
+                                "FacturaAnticipos": {
+                                    "$ref": "#/components/examples/FacturaAnticipos"
+                                },
+                                "FacturaCompleja": {
+                                    "$ref": "#/components/examples/FacturaCompleja"
+                                },
+                                "FacturaCredito": {
+                                    "$ref": "#/components/examples/FacturaCredito"
+                                },
+                                "FacturaDetraccion": {
+                                    "$ref": "#/components/examples/FacturaDetraccion"
+                                },
+                                "FacturaDescuentoGlobal": {
+                                    "$ref": "#/components/examples/FacturaDescuentoGlobal"
+                                },
+                                "FacturaDescuentoLinea": {
+                                    "$ref": "#/components/examples/FacturaDescuentoLinea"
+                                },
+                                "FacturaDescuentoNoBase": {
+                                    "$ref": "#/components/examples/FacturaDescuentoNoBase"
+                                },
+                                "FacturaExonerado": {
+                                    "$ref": "#/components/examples/FacturaExonerado"
+                                },
+                                "FacturaExportacion": {
+                                    "$ref": "#/components/examples/FacturaExportacion"
+                                },
+                                "FacturaGratuita": {
+                                    "$ref": "#/components/examples/FacturaGratuita"
+                                },
+                                "FacturaGuiaRemision": {
+                                    "$ref": "#/components/examples/FacturaGuiaRemision"
+                                },
+                                "FacturaICBPER": {
+                                    "$ref": "#/components/examples/FacturaICBPER"
+                                },
+                                "FacturaICBPERGratuita": {
+                                    "$ref": "#/components/examples/FacturaICBPERGratuita"
+                                },
+                                "FacturaInafecta": {
+                                    "$ref": "#/components/examples/FacturaInafecta"
+                                },
+                                "FacturaISC": {
+                                    "$ref": "#/components/examples/FacturaISC"
+                                },
+                                "FacturaIVAP": {
+                                    "$ref": "#/components/examples/FacturaIVAP"
+                                },
+                                "FacturaPercepcion": {
+                                    "$ref": "#/components/examples/FacturaPercepcion"
+                                },
+                                "FacturaRetencion": {
+                                    "$ref": "#/components/examples/FacturaRetencion"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/SunatResponse"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/invoice/xml": {
+            "post": {
+                "tags": [
+                    "invoice"
+                ],
+                "summary": "Generar XML de una factura o boleta",
+                "operationId": "invoiceXml",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationJWT"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Invoice"
+                            },
+                            "examples": {
+                                "BoletaVenta": {
+                                    "$ref": "#/components/examples/BoletaVenta"
+                                },
+                                "BoletaVentaICBPER": {
+                                    "$ref": "#/components/examples/BoletaVentaICBPER"
+                                },
+                                "Factura": {
+                                    "$ref": "#/components/examples/Factura"
+                                },
+                                "FacturaAnticipos": {
+                                    "$ref": "#/components/examples/FacturaAnticipos"
+                                },
+                                "FacturaCompleja": {
+                                    "$ref": "#/components/examples/FacturaCompleja"
+                                },
+                                "FacturaCredito": {
+                                    "$ref": "#/components/examples/FacturaCredito"
+                                },
+                                "FacturaDetraccion": {
+                                    "$ref": "#/components/examples/FacturaDetraccion"
+                                },
+                                "FacturaDescuentoGlobal": {
+                                    "$ref": "#/components/examples/FacturaDescuentoGlobal"
+                                },
+                                "FacturaDescuentoLinea": {
+                                    "$ref": "#/components/examples/FacturaDescuentoLinea"
+                                },
+                                "FacturaDescuentoNoBase": {
+                                    "$ref": "#/components/examples/FacturaDescuentoNoBase"
+                                },
+                                "FacturaExonerado": {
+                                    "$ref": "#/components/examples/FacturaExonerado"
+                                },
+                                "FacturaExportacion": {
+                                    "$ref": "#/components/examples/FacturaExportacion"
+                                },
+                                "FacturaGratuita": {
+                                    "$ref": "#/components/examples/FacturaGratuita"
+                                },
+                                "FacturaGuiaRemision": {
+                                    "$ref": "#/components/examples/FacturaGuiaRemision"
+                                },
+                                "FacturaICBPER": {
+                                    "$ref": "#/components/examples/FacturaICBPER"
+                                },
+                                "FacturaICBPERGratuita": {
+                                    "$ref": "#/components/examples/FacturaICBPERGratuita"
+                                },
+                                "FacturaInafecta": {
+                                    "$ref": "#/components/examples/FacturaInafecta"
+                                },
+                                "FacturaISC": {
+                                    "$ref": "#/components/examples/FacturaISC"
+                                },
+                                "FacturaIVAP": {
+                                    "$ref": "#/components/examples/FacturaIVAP"
+                                },
+                                "FacturaPercepcion": {
+                                    "$ref": "#/components/examples/FacturaPercepcion"
+                                },
+                                "FacturaRetencion": {
+                                    "$ref": "#/components/examples/FacturaRetencion"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/SunatResponseXml"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/invoice/pdf": {
+            "post": {
+                "tags": [
+                    "invoice"
+                ],
+                "summary": "Generar PDF de una factura o boleta",
+                "operationId": "invoicePdf",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationJWT"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Invoice"
+                            },
+                            "examples": {
+                                "BoletaVenta": {
+                                    "$ref": "#/components/examples/BoletaVenta"
+                                },
+                                "BoletaVentaICBPER": {
+                                    "$ref": "#/components/examples/BoletaVentaICBPER"
+                                },
+                                "Factura": {
+                                    "$ref": "#/components/examples/Factura"
+                                },
+                                "FacturaAnticipos": {
+                                    "$ref": "#/components/examples/FacturaAnticipos"
+                                },
+                                "FacturaCompleja": {
+                                    "$ref": "#/components/examples/FacturaCompleja"
+                                },
+                                "FacturaCredito": {
+                                    "$ref": "#/components/examples/FacturaCredito"
+                                },
+                                "FacturaDetraccion": {
+                                    "$ref": "#/components/examples/FacturaDetraccion"
+                                },
+                                "FacturaDescuentoGlobal": {
+                                    "$ref": "#/components/examples/FacturaDescuentoGlobal"
+                                },
+                                "FacturaDescuentoLinea": {
+                                    "$ref": "#/components/examples/FacturaDescuentoLinea"
+                                },
+                                "FacturaDescuentoNoBase": {
+                                    "$ref": "#/components/examples/FacturaDescuentoNoBase"
+                                },
+                                "FacturaExonerado": {
+                                    "$ref": "#/components/examples/FacturaExonerado"
+                                },
+                                "FacturaExportacion": {
+                                    "$ref": "#/components/examples/FacturaExportacion"
+                                },
+                                "FacturaGratuita": {
+                                    "$ref": "#/components/examples/FacturaGratuita"
+                                },
+                                "FacturaGuiaRemision": {
+                                    "$ref": "#/components/examples/FacturaGuiaRemision"
+                                },
+                                "FacturaICBPER": {
+                                    "$ref": "#/components/examples/FacturaICBPER"
+                                },
+                                "FacturaICBPERGratuita": {
+                                    "$ref": "#/components/examples/FacturaICBPERGratuita"
+                                },
+                                "FacturaInafecta": {
+                                    "$ref": "#/components/examples/FacturaInafecta"
+                                },
+                                "FacturaISC": {
+                                    "$ref": "#/components/examples/FacturaISC"
+                                },
+                                "FacturaIVAP": {
+                                    "$ref": "#/components/examples/FacturaIVAP"
+                                },
+                                "FacturaPercepcion": {
+                                    "$ref": "#/components/examples/FacturaPercepcion"
+                                },
+                                "FacturaRetencion": {
+                                    "$ref": "#/components/examples/FacturaRetencion"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/SunatResponsePdf"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/note/send": {
+            "post": {
+                "tags": [
+                    "note"
+                ],
+                "summary": "Enviar una nota de crédito o débito",
+                "operationId": "noteSend",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationJWT"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Invoice"
+                            },
+                            "examples": {
+                                "NotaCredito": {
+                                    "$ref": "#/components/examples/NotaCredito"
+                                },
+                                "NotaCreditoBoleta": {
+                                    "$ref": "#/components/examples/NotaCreditoBoleta"
+                                },
+                                "NotaDebito": {
+                                    "$ref": "#/components/examples/NotaDebito"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/SunatResponse"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/note/xml": {
+            "post": {
+                "tags": [
+                    "note"
+                ],
+                "summary": "Generar XML de una nota de crédito o débito",
+                "operationId": "noteXml",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationJWT"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Invoice"
+                            },
+                            "examples": {
+                                "NotaCredito": {
+                                    "$ref": "#/components/examples/NotaCredito"
+                                },
+                                "NotaCreditoBoleta": {
+                                    "$ref": "#/components/examples/NotaCreditoBoleta"
+                                },
+                                "NotaDebito": {
+                                    "$ref": "#/components/examples/NotaDebito"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/SunatResponseXml"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/note/pdf": {
+            "post": {
+                "tags": [
+                    "note"
+                ],
+                "summary": "Generar PDF de una nota de crédito o débito",
+                "operationId": "notePdf",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationJWT"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Invoice"
+                            },
+                            "examples": {
+                                "NotaCredito": {
+                                    "$ref": "#/components/examples/NotaCredito"
+                                },
+                                "NotaCreditoBoleta": {
+                                    "$ref": "#/components/examples/NotaCreditoBoleta"
+                                },
+                                "NotaDebito": {
+                                    "$ref": "#/components/examples/NotaDebito"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/SunatResponsePdf"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/despatch/send": {
+            "post": {
+                "tags": [
+                    "despatch"
+                ],
+                "summary": "Enviar una guía de remisión",
+                "operationId": "despatchSend",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationJWT"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Despatch"
+                            },
+                            "examples": {
+                                "GuiaTransportePrivado": {
+                                    "$ref": "#/components/examples/GuiaTransportePrivado"
+                                },
+                                "GuiaTransporteM1L": {
+                                    "$ref": "#/components/examples/GuiaTransporteM1L"
+                                },
+                                "GuiaRemisionRemitenteMismaEmpresa": {
+                                    "$ref": "#/components/examples/GuiaRemisionRemitenteMismaEmpresa"
+                                },
+                                "GuiaTransportePublico": {
+                                    "$ref": "#/components/examples/GuiaTransportePublico"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/SunatResponse"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/despatch/xml": {
+            "post": {
+                "tags": [
+                    "despatch"
+                ],
+                "summary": "Generar XML de una guía de remisión",
+                "operationId": "despatchXml",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationJWT"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Despatch"
+                            },
+                            "examples": {
+                                "GuiaTransportePrivado": {
+                                    "$ref": "#/components/examples/GuiaTransportePrivado"
+                                },
+                                "GuiaTransporteM1L": {
+                                    "$ref": "#/components/examples/GuiaTransporteM1L"
+                                },
+                                "GuiaRemisionRemitenteMismaEmpresa": {
+                                    "$ref": "#/components/examples/GuiaRemisionRemitenteMismaEmpresa"
+                                },
+                                "GuiaTransportePublico": {
+                                    "$ref": "#/components/examples/GuiaTransportePublico"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/SunatResponseXml"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/despatch/pdf": {
+            "post": {
+                "tags": [
+                    "despatch"
+                ],
+                "summary": "Generar PDF de una guía de remisión",
+                "operationId": "despatchPdf",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationJWT"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Despatch"
+                            },
+                            "examples": {
+                                "GuiaTransportePrivado": {
+                                    "$ref": "#/components/examples/GuiaTransportePrivado"
+                                },
+                                "GuiaTransporteM1L": {
+                                    "$ref": "#/components/examples/GuiaTransporteM1L"
+                                },
+                                "GuiaRemisionRemitenteMismaEmpresa": {
+                                    "$ref": "#/components/examples/GuiaRemisionRemitenteMismaEmpresa"
+                                },
+                                "GuiaTransportePublico": {
+                                    "$ref": "#/components/examples/GuiaTransportePublico"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/SunatResponsePdf"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/summary/send": {
+            "post": {
+                "tags": [
+                    "summary"
+                ],
+                "operationId": "summarySend",
+                "summary": "Enviar resumen diario",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationJWT"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Summary"
+                            },
+                            "examples": {
+                                "ResumenDiario": {
+                                    "$ref": "#/components/examples/ResumenDiario"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/SunatResponse"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/summary/xml": {
+            "post": {
+                "tags": [
+                    "summary"
+                ],
+                "operationId": "summaryXml",
+                "summary": "Generar XML de un resumen diario",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationJWT"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Summary"
+                            },
+                            "examples": {
+                                "ResumenDiario": {
+                                    "$ref": "#/components/examples/ResumenDiario"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/SunatResponseXml"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/summary/pdf": {
+            "post": {
+                "tags": [
+                    "summary"
+                ],
+                "operationId": "summaryPdf",
+                "summary": "Generar PDF de un resumen diario",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationJWT"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Summary"
+                            },
+                            "examples": {
+                                "ResumenDiario": {
+                                    "$ref": "#/components/examples/ResumenDiario"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/SunatResponsePdf"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/voided/send": {
+            "post": {
+                "tags": [
+                    "voided"
+                ],
+                "operationId": "voidedSend",
+                "summary": "Enviar anulación de comprobantes",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationJWT"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Voided"
+                            },
+                            "examples": {
+                                "ComunicacionBaja": {
+                                    "$ref": "#/components/examples/ComunicacionBaja"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/SunatResponse"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/voided/xml": {
+            "post": {
+                "tags": [
+                    "voided"
+                ],
+                "operationId": "voidedXml",
+                "summary": "Generar XML de una anulación de comprobantes",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationJWT"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Voided"
+                            },
+                            "examples": {
+                                "ComunicacionBaja": {
+                                    "$ref": "#/components/examples/ComunicacionBaja"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/SunatResponseXml"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        },
+        "/api/voided/pdf": {
+            "post": {
+                "tags": [
+                    "voided"
+                ],
+                "operationId": "voidedPdf",
+                "summary": "Generar PDF de una anulación de comprobantes",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AcceptApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ContentTypeApplicationJson"
+                    },
+                    {
+                        "$ref": "#/components/parameters/AuthorizationJWT"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Voided"
+                            },
+                            "examples": {
+                                "ComunicacionBaja": {
+                                    "$ref": "#/components/examples/ComunicacionBaja"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "$ref": "#/components/responses/SunatResponsePdf"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Validation"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "parameters": {
+            "AcceptApplicationJson": {
+                "name": "Accept",
+                "in": "header",
+                "description": "El tipo de contenido que el cliente espera recibir en la respuesta.",
+                "required": true,
+                "schema": {
+                    "type": "string",
+                    "default": "application/json"
+                }
+            },
+            "ContentTypeApplicationJson": {
+                "name": "Content-Type",
+                "in": "header",
+                "description": "El tipo de contenido de la solicitud que está siendo enviada al servidor.",
+                "required": true,
+                "schema": {
+                    "type": "string",
+                    "default": "application/json"
+                }
+            },
+            "AuthorizationSanctum": {
+                "name": "Authorization",
+                "in": "header",
+                "description": "Token de acceso para autenticar las solicitudes del usuario.",
+                "required": true,
+                "schema": {
+                    "type": "string",
+                    "default": "Bearer {access_token}"
+                }
+            },
+            "AuthorizationJWT": {
+                "name": "Authorization",
+                "in": "header",
+                "description": "Token de acceso para autenticar las solicitudes de la empresa.",
+                "required": true,
+                "schema": {
+                    "type": "string",
+                    "default": "Bearer {access_token}"
+                }
+            },
+            "CompanyId": {
+                "name": "company",
+                "in": "path",
+                "description": "ID de la empresa.",
+                "required": true,
+                "schema": {
+                    "type": "integer"
+                }
+            }
+        },
+        "responses": {
+            "Unauthorized": {
+                "description": "No autorizado",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Mensaje de error de autenticación.",
+                                    "example": "No autorizado"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Validation": {
+                "description": "Error de validación",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string",
+                                    "description": "Mensaje de error de validación.",
+                                    "example": "The given data was invalid."
+                                },
+                                "errors": {
+                                    "type": "object",
+                                    "description": "Lista de errores de validación.",
+                                    "additionalProperties": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "SunatResponse": {
+                "description": "Respuesta exitosa",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "success": {
+                                    "type": "boolean",
+                                    "description": "Indica si la factura fue aceptada por SUNAT"
+                                },
+                                "cdrResponse": {
+                                    "type": "object",
+                                    "nullable": true,
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "description": "Identificador de la respuesta CDR de SUNAT"
+                                        },
+                                        "code": {
+                                            "type": "integer",
+                                            "description": "Código de respuesta de SUNAT"
+                                        },
+                                        "description": {
+                                            "type": "string",
+                                            "description": "Descripción de la respuesta de SUNAT"
+                                        },
+                                        "notes": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "description": "Notas adicionales en caso de observaciones"
+                                        }
+                                    }
+                                },
+                                "error": {
+                                    "type": "object",
+                                    "nullable": true,
+                                    "properties": {
+                                        "code": {
+                                            "type": "string",
+                                            "description": "Código de error en caso de fallo"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Mensaje de error proporcionado por SUNAT"
+                                        }
+                                    }
+                                },
+                                "xml": {
+                                    "type": "string",
+                                    "description": "XML del comprobante electrónico"
+                                },
+                                "hash": {
+                                    "type": "string",
+                                    "description": "Hash del XML del comprobante electrónico"
+                                },
+                                "pdf": {
+                                    "type": "string",
+                                    "description": "PDF del comprobante electrónico"
+                                }
+                            }
+                        },
+                        "examples": {
+                            "example1": {
+                                "summary": "Comprobante aceptado",
+                                "value": {
+                                    "success": true,
+                                    "cdrResponse": {
+                                        "id": "F001-123",
+                                        "code": 0,
+                                        "description": "La Factura numero F001-123, ha sido aceptada",
+                                        "notes": []
+                                    },
+                                    "xml": "<xml_data_here>",
+                                    "hash": "abc123xyz",
+                                    "pdf": "<html><body>Reporte en HTML</body></html>"
+                                }
+                            },
+                            "example2": {
+                                "summary": "Comprobante aceptado con observaciones",
+                                "value": {
+                                    "success": true,
+                                    "cdrResponse": {
+                                        "id": "F001-123",
+                                        "code": 0,
+                                        "description": "La Factura numero F001-123, ha sido aceptada",
+                                        "notes": [
+                                            "4096 - La provincia del domicilio fiscal del emisor no cumple con el formato establecido - cbc:CityName : 4096 (nodo: \"cac:RegistrationAddress/cbc:CityName\" valor: \"\")",
+                                            "4093 - El codigo de ubigeo del domicilio fiscal del emisor no es válido - : 4093: Valor no se encuentra en el catalogo: 13 (nodo: \"cac:RegistrationAddress/cbc:ID\" valor: \"\")",
+                                            "4097 - El departamento del domicilio fiscal del emisor no cumple con el formato establecido - INFO: 4097 (nodo: \"cac:RegistrationAddress/cbc:CountrySubentity\" valor: \"\")",
+                                            "4098 - El distrito del domicilio fiscal del emisor no cumple con el formato establecido - INFO: 4098 (nodo: \"cac:RegistrationAddress/cbc:District\" valor: \"\")"
+                                        ]
+                                    },
+                                    "xml": "<xml_data_here>",
+                                    "hash": "def456xyz",
+                                    "pdf": "<html><body>Reporte con observaciones</body></html>"
+                                }
+                            },
+                            "example3": {
+                                "summary": "Comprobante rechazado",
+                                "value": {
+                                    "success": false,
+                                    "error": {
+                                        "code": "2800",
+                                        "message": "El dato ingresado en el tipo de documento de identidad del receptor no esta permitido. - Detalle: xxx.xxx.xxx value='ticket: 1729384040858 error: INFO : 2800 (nodo: \"cbc:ID/schemeID\" valor: \"0\")'"
+                                    },
+                                    "xml": "<xml_data_here>",
+                                    "hash": "ghi789xyz",
+                                    "pdf": "<html><body>Factura rechazada</body></html>"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "SunatResponseXml": {
+                "description": "Respuesta exitosa",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "xml": {
+                                    "type": "string",
+                                    "description": "Representación en formato XML de la factura."
+                                },
+                                "hash": {
+                                    "type": "string",
+                                    "description": "Valor hash generado a partir del XML de la factura."
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "SunatResponsePdf": {
+                "description": "Respuesta exitosa",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "html": {
+                                    "type": "string",
+                                    "description": "Representación en formato HTML de la factura."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "schemas": {
+            "BearerToken": {
+                "type": "object",
+                "properties": {
+                    "access_token": {
+                        "type": "string",
+                        "description": "Token de acceso para autenticar las solicitudes del usuario.",
+                        "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjM"
+                    },
+                    "token_type": {
+                        "type": "string",
+                        "description": "Tipo de token que se está generando.",
+                        "example": "Bearer"
+                    },
+                    "expires_in": {
+                        "type": "integer",
+                        "description": "Tiempo de expiración del token en segundos.",
+                        "example": 3600
+                    }
+                }
+            },
+            "CompanyRequest": {
+                "type": "object",
+                "properties": {
+                    "logo": {
+                        "type": "string",
+                        "format": "binary",
+                        "description": "Imagen del logo de la empresa.",
+                        "nullable": true,
+                        "example": null
+                    },
+                    "ruc": {
+                        "type": "string",
+                        "description": "RUC de la compañía (debe ser único, empezar con 10 o 20, y tener 11 dígitos).",
+                        "example": "20123456789",
+                        "uniqueItems": true
+                    },
+                    "razonSocial": {
+                        "type": "string",
+                        "example": "Empresa SAC"
+                    },
+                    "nombreComercial": {
+                        "type": "string",
+                        "example": "Empresa"
+                    },
+                    "direccion": {
+                        "type": "string",
+                        "example": "Av. Lima 123"
+                    },
+                    "ubigeo": {
+                        "type": "string",
+                        "description": "Código de ubigeo",
+                        "example": "150101"
+                    },
+                    "sol_user": {
+                        "type": "string",
+                        "description": "Usuario secundario SUNAT con permisos para emisión electrónica. De no proporcionarse se asignará uno de prueba.",
+                        "example": "MODDATOS"
+                    },
+                    "sol_pass": {
+                        "type": "string",
+                        "description": "Contraseña usuario secundario SUNAT. De no proporcionarse se asignará una de prueba.",
+                        "example": "MODDATOS"
+                    },
+                    "client_id": {
+                        "type": "string",
+                        "description": "Credencial generado en el portal de SUNAT (requerido para la nueva versión de guías de remisión). De no proporcionarse se asignará uno de prueba.",
+                        "example": "test-85e5b0ae-255c-4891-a595-0b98c65c9854"
+                    },
+                    "client_secret": {
+                        "type": "string",
+                        "description": "Credencial generado en el portal de SUNAT (requerido para la nueva versión de guías de remisión). De no proporcionarse se asignará uno de prueba.",
+                        "example": "test-Hty/M6QshYvPgItX2P0+Kw=="
+                    },
+                    "certificate": {
+                        "type": "string",
+                        "description": "Certificado digital de la empresa (debe ser un archivo .pem). De no proporcionarse se asignará uno de prueba.",
+                        "example": "Bag Attributes\n    localKeyID: ..."
+                    }
+                }
+            },
+            "CompanyResponse": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "description": "ID de la empresa.",
+                        "example": 1
+                    },
+                    "ruc": {
+                        "type": "string",
+                        "description": "RUC de la empresa.",
+                        "example": "20123456789"
+                    },
+                    "razonSocial": {
+                        "type": "string",
+                        "description": "Razón social de la empresa.",
+                        "example": "Empresa SAC"
+                    },
+                    "nombreComercial": {
+                        "type": "string",
+                        "description": "Nombre comercial de la empresa.",
+                        "example": "Empresa"
+                    },
+                    "direccion": {
+                        "type": "string",
+                        "description": "Dirección de la empresa.",
+                        "example": "Av. Lima 123"
+                    },
+                    "ubigeo": {
+                        "type": "string",
+                        "description": "Código de ubigeo de la empresa.",
+                        "example": "150101"
+                    },
+                    "sol_user": {
+                        "type": "string",
+                        "description": "Usuario secundario SUNAT con permisos para emisión electrónica.",
+                        "example": "MODDATOS"
+                    },
+                    "sol_pass": {
+                        "type": "string",
+                        "description": "Contraseña usuario secundario SUNAT.",
+                        "example": "MODDATOS"
+                    },
+                    "client_id": {
+                        "type": "string",
+                        "description": "Credencial generado en el portal de SUNAT (requerido para la nueva versión de guías de remisión).",
+                        "example": "test-85e5b0ae-255c-4891-a595-0b98c65c9854"
+                    },
+                    "client_secret": {
+                        "type": "string",
+                        "description": "Credencial generado en el portal de SUNAT (requerido para la nueva versión de guías de remisión).",
+                        "example": "test-Hty/M6QshYvPgItX2P0+Kw=="
+                    },
+                    "certificate": {
+                        "type": "string",
+                        "description": "Certificado digital de la empresa.",
+                        "example": "Bag Attributes\n    localKeyID: ..."
+                    },
+                    "logo_path": {
+                        "type": "string",
+                        "description": "Ruta de la imagen del logo de la empresa.",
+                        "example": null
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Fecha de creación de la empresa.",
+                        "example": "2021-09-01T00:00:00.000000Z"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "Fecha de la última actualización de la empresa.",
+                        "example": "2021-09-01T00:00:00.000000Z"
+                    }
+                }
+            },
+            "Invoice": {
+                "type": "object",
+                "properties": {
+                    "ublVersion": {
+                        "$ref": "#/components/schemas/Version"
+                    },
+                    "tipoOperacion": {
+                        "type": "string",
+                        "description": "<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-51-codigo-de-tipo-de-operacion' target='_blank'>Catálogo 51</a>.",
+                        "example": "0101"
+                    },
+                    "tipoDoc": {
+                        "$ref": "#/components/schemas/TipoDoc"
+                    },
+                    "serie": {
+                        "$ref": "#/components/schemas/Serie"
+                    },
+                    "correlativo": {
+                        "$ref": "#/components/schemas/Correlativo"
+                    },
+                    "fechaEmision": {
+                        "$ref": "#/components/schemas/Fecha"
+                    },
+                    "fecVencimiento": {
+                        "$ref": "#/components/schemas/Fecha"
+                    },
+                    "formaPago": {
+                        "type": "object",
+                        "properties": {
+                            "moneda": {
+                                "$ref": "#/components/schemas/Moneda"
+                            },
+                            "tipo": {
+                                "type": "string",
+                                "description": "Contado o Credito.",
+                                "example": "Contado"
+                            },
+                            "monto": {
+                                "$ref": "#/components/schemas/Monto"
+                            }
+                        }
+                    },
+                    "cuotas": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "moneda": {
+                                    "$ref": "#/components/schemas/Moneda"
+                                },
+                                "monto": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "fechaPago": {
+                                    "$ref": "#/components/schemas/Fecha"
+                                }
+                            }
+                        }
+                    },
+
+                    "tipoMoneda": {
+                        "$ref": "#/components/schemas/Moneda"
+                    },
+
+                    "tipDocAfectado": {
+                        "$ref": "#/components/schemas/TipoDoc"
+                    },
+                    "numDocfectado": {
+                        "$ref": "#/components/schemas/NroDoc"
+                    },
+                    "codMotivo": {
+                        "type": "string",
+                        "description": "Nota de crédito (<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-09-codigos-de-tipo-de-nota-de-credito-electronica' target='_blank'>Catálogo 09</a>). Nota de de débito (<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-10-codigos-de-tipo-de-nota-de-debito-electronica' target='_blank'>Catálogo 10</a>)."
+                    },
+                    "desMotivo": {
+                        "type": "string",
+                        "description": "Nota de crédito (<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-09-codigos-de-tipo-de-nota-de-credito-electronica' target='_blank'>Catálogo 09</a>). Nota de de débito (<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-10-codigos-de-tipo-de-nota-de-debito-electronica' target='_blank'>Catálogo 10</a>)."
+                    },
+
+                    "guias": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "tipoDoc": {
+                                    "$ref": "#/components/schemas/TipoDoc"
+                                },
+                                "nroDoc": {
+                                    "$ref": "#/components/schemas/NroDoc"
+                                }
+                            }
+                        }
+                    },
+                    "client": {
+                        "$ref": "#/components/schemas/Client"
+                    },
+                    "anticipos": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "tipoDocRel": {
+                                    "type": "string",
+                                    "description": "<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-12-codigo-de-documentos-relacionados-tributarios' target='_blank'>Catálogo 12</a>.",
+                                    "example": "02"
+                                },
+                                "nroDocRel": {
+                                    "$ref": "#/components/schemas/NroDoc"
+                                },
+                                "total": {
+                                    "$ref": "#/components/schemas/Monto"
+                                }
+                            }
+                        }
+                    },
+                    "descuentos": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Descuento"
+                        }
+                    },
+                    "detraccion": {
+                        "type": "object",
+                        "properties": {
+                            "codBienDetraccion": {
+                                "type": "string",
+                                "description": "<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-54-codigos-de-bienes-y-servicios-sujetos-a-detracciones' target='_blank'>Catálogo 54</a>.",
+                                "example": "014"
+                            },
+                            "codMedioPago": {
+                                "type": "string",
+                                "description": "<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-59-medios-de-pago' target='_blank'>Catálogo 59</a>.",
+                                "example": "001"
+                            },
+                            "ctaBanco": {
+                                "type": "string",
+                                "description": "Cuenta bancaria para la detracción.",
+                                "example": "0004-3342343243"
+                            },
+                            "percent": {
+                                "$ref": "#/components/schemas/Porcentaje"
+                            },
+                            "mount": {
+                                "$ref": "#/components/schemas/Monto"
+                            }
+                        }
+                    },
+                    "perception": {
+                        "type": "object",
+                        "properties": {
+                            "codReg": {
+                                "type": "string",
+                                "description": "<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-53-codigos-de-cargos-descuentos-y-otras-deducciones' target='_blank'>Catálogo 53</a>.",
+                                "example": "51"
+                            },
+                            "porcentaje": {
+                                "$ref": "#/components/schemas/Porcentaje"
+                            },
+                            "mtoBase": {
+                                "$ref": "#/components/schemas/Monto"
+                            },
+                            "mto": {
+                                "$ref": "#/components/schemas/Monto"
+                            },
+                            "mtoTotal": {
+                                "$ref": "#/components/schemas/Monto"
+                            }
+                        }
+                    },
+                    "details": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "codProducto": {
+                                    "$ref": "#/components/schemas/Codigo"
+                                },
+                                "codProdSunat": {
+                                    "$ref": "#/components/schemas/Codigo"
+                                },
+                                "unidad": {
+                                    "$ref": "#/components/schemas/Unidad"
+                                },
+                                "cantidad": {
+                                    "$ref": "#/components/schemas/Cantidad"
+                                },
+                                "descripcion": {
+                                    "$ref": "#/components/schemas/Descripcion"
+                                },
+                                "descuentos": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Descuento"
+                                    }
+                                },
+                                "mtoValorUnitario": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "mtoValorGratuito": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "mtoValorVenta": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "mtoBaseIsc": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "tipSisIsc": {
+                                    "type": "string",
+                                    "description": "<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-08-codigo-de-tipos-de-sistema-de-calculo-del-isc' target='_blank'>Catálogo 08</a>.",
+                                    "example": "01"
+                                },
+                                "porcentajeIsc": {
+                                    "$ref": "#/components/schemas/Porcentaje"
+                                },
+                                "isc": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "mtoBaseIgv": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "porcentajeIgv": {
+                                    "$ref": "#/components/schemas/Porcentaje"
+                                },
+                                "igv": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "icbper": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "factorIcbper": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "tipAfeIgv": {
+                                    "type": "string",
+                                    "description": "<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-07-codigo-de-tipo-de-afectacion-del-igv' target='_blank'>Catálogo 07</a>.",
+                                    "example": "10"
+                                },
+                                "totalImpuestos": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "mtoPrecioUnitario": {
+                                    "$ref": "#/components/schemas/Monto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Despatch": {
+                "type": "object",
+                "properties": {
+                    "version": {
+                        "$ref": "#/components/schemas/Version"
+                    },
+                    "tipoDoc": {
+                        "$ref": "#/components/schemas/TipoDoc"
+                    },
+                    "serie": {
+                        "$ref": "#/components/schemas/Serie"
+                    },
+                    "correlativo": {
+                        "$ref": "#/components/schemas/Correlativo"
+                    },
+                    "fechaEmision": {
+                        "$ref": "#/components/schemas/Fecha"
+                    },
+                    "destinatario": {
+                        "$ref": "#/components/schemas/Client"
+                    },
+                    "envio": {
+                        "type": "object",
+                        "properties": {
+                            "codTraslado": {
+                                "type": "string",
+                                "description": "<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-20-codigo-de-motivo-de-traslado' target='_blank'>Catálogo 20</a>.",
+                                "example": "01"
+                            },
+                            "modTraslado": {
+                                "type": "string",
+                                "description": "<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-18-codigo-de-modalidad-de-transporte' target='_blank'>Catálogo 18</a>.",
+                                "example": "01"
+                            },
+                            "fecTraslado": {
+                                "$ref": "#/components/schemas/Fecha"
+                            },
+                            "pesoTotal": {
+                                "type": "number",
+                                "description": "Peso total de la guía de remisión.",
+                                "example": 100
+                            },
+                            "unidad": {
+                                "$ref": "#/components/schemas/Unidad"
+                            },
+                            "llegada": {
+                                "type": "object",
+                                "properties": {
+                                    "ubigueo": {
+                                        "type": "string",
+                                        "description": "Código de ubigeo de llegada.",
+                                        "example": "150101"
+                                    },
+                                    "direccion": {
+                                        "type": "string",
+                                        "description": "Dirección de llegada.",
+                                        "example": "Av. Lima 123"
+                                    },
+                                    "ruc": {
+                                        "type": "string",
+                                        "description": "RUC del destinatario.",
+                                        "example": "20123456789"
+                                    },
+                                    "codLocal": {
+                                        "type": "string",
+                                        "description": "Código de local de llegada.",
+                                        "example": "0001"
+                                    }
+                                }
+                            },
+                            "partida": {
+                                "type": "object",
+                                "properties": {
+                                    "ubigueo": {
+                                        "type": "string",
+                                        "description": "Código de ubigeo de llegada.",
+                                        "example": "150101"
+                                    },
+                                    "direccion": {
+                                        "type": "string",
+                                        "description": "Dirección de llegada.",
+                                        "example": "Av. Lima 123"
+                                    },
+                                    "ruc": {
+                                        "type": "string",
+                                        "description": "RUC del destinatario.",
+                                        "example": "20123456789"
+                                    },
+                                    "codLocal": {
+                                        "type": "string",
+                                        "description": "Código de local de llegada.",
+                                        "example": "0001"
+                                    }
+                                }
+                            },
+                            "transportista": {
+                                "tipoDoc": {
+                                    "type": "string",
+                                    "description": "<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-06-codigo-de-tipo-de-documento-de-identidad' target='_blank'>Catálogo 06</a>.",
+                                    "example": "6"
+                                },
+                                "numDoc": {
+                                    "type": "string",
+                                    "description": "Número de documento de identidad del transportista.",
+                                    "example": "20123456789"
+                                },
+                                "rznSocial": {
+                                    "type": "string",
+                                    "description": "Razón social del transportista.",
+                                    "example": "Empresa SAC"
+                                },
+                                "nroMtc": {
+                                    "type": "string",
+                                    "description": "Número de matrícula del vehículo.",
+                                    "example": "0001"
+                                }
+                            }
+                        }
+                    },
+                    "details": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "codProducto": {
+                                    "type": "string",
+                                    "description": "Código del producto.",
+                                    "example": "P001"
+                                },
+                                "unidad": {
+                                    "type": "string",
+                                    "description": "<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-03-tipo-de-unidad-de-medida-comercial' target='_blank'>Catálogo 03</a>.",
+                                    "example": "NIU"
+                                },
+                                "cantidad": {
+                                    "type": "number",
+                                    "description": "Cantidad del producto.",
+                                    "example": 2
+                                },
+                                "descripcion": {
+                                    "type": "string",
+                                    "description": "Descripción del producto.",
+                                    "example": "Producto 1"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Summary": {
+                "type": "object",
+                "properties": {
+                    "fecGeneracion": {
+                        "$ref": "#/components/schemas/Fecha"
+                    },
+                    "fecResumen": {
+                        "$ref": "#/components/schemas/Fecha"
+                    },
+                    "correlativo": {
+                        "$ref": "#/components/schemas/Correlativo"
+                    },
+                    "moneda": {
+                        "$ref": "#/components/schemas/Moneda"
+                    },
+                    "details": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "tipoDoc": {
+                                    "$ref": "#/components/schemas/TipoDoc"
+                                },
+                                "serieNro": {
+                                    "$ref": "#/components/schemas/Serie"
+                                },
+                                "clienteTipo": {
+                                    "$ref": "#/components/schemas/ClientTipoDoc"
+                                },
+                                "clienteNro": {
+                                    "$ref": "#/components/schemas/ClientNumDoc"
+                                },
+                                "docReferencia": {
+                                    "type": "object",
+                                    "properties": {
+                                        "tipoDoc": {
+                                            "$ref": "#/components/schemas/TipoDoc"
+                                        },
+                                        "nroDoc": {
+                                            "$ref": "#/components/schemas/NroDoc"
+                                        }
+                                    }
+                                },
+                                "percepcion": {
+                                    "type": "object",
+                                    "properties": {
+                                        "codReg": {
+                                            "type": "string",
+                                            "description": "<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-22-codigo-de-regimen-de-percepciones' target='_blank'>Catálogo 22</a>."
+                                        },
+                                        "tasa": {
+                                            "$ref": "#/components/schemas/Porcentaje"
+                                        },
+                                        "mtoBase": {
+                                            "$ref": "#/components/schemas/Monto"
+                                        },
+                                        "mto": {
+                                            "$ref": "#/components/schemas/Monto"
+                                        },
+                                        "mtoTotal": {
+                                            "$ref": "#/components/schemas/Monto"
+                                        }
+                                    }
+                                },
+                                "estado": {
+                                    "type": "string",
+                                    "description": "Estado del documento, catalogo 19."
+                                },
+                                "total": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "mtoOperGravadas": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "mtoOperInafectas": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "mtoOperExoneradas": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "mtoOperExportacion": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "mtoOperGratuitas": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "mtoOtrosCargos": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "mtoIGV": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "mtoIvap": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "mtoISC": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "mtoOtrosTributos": {
+                                    "$ref": "#/components/schemas/Monto"
+                                },
+                                "mtoIcbper": {
+                                    "$ref": "#/components/schemas/Monto"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Voided": {
+                "type": "object",
+                "properties": {
+                    "correlativo": {
+                        "$ref": "#/components/schemas/Correlativo"
+                    },
+                    "fecGeneracion": {
+                        "$ref": "#/components/schemas/Fecha"
+                    },
+                    "fecComunicacion": {
+                        "$ref": "#/components/schemas/Fecha"
+                    },
+                    "details": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "tipoDoc": {
+                                    "$ref": "#/components/schemas/TipoDoc"
+                                },
+                                "serieNro": {
+                                    "$ref": "#/components/schemas/Serie"
+                                },
+                                "correlativo": {
+                                    "$ref": "#/components/schemas/Correlativo"
+                                },
+                                "desMotivoBaja": {
+                                    "type": "string",
+                                    "example": "ERROR EN CÁLCULOS",
+                                    "description": "Descripción del motivo de baja."
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Version": {
+                "type": "string"
+            },
+            "TipoDoc": {
+                "type": "string",
+                "description": "<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-01-tipo-de-documento' target='_blank'>Catálogo 01</a>",
+                "example": "01"
+            },
+            "Serie": {
+                "type": "string",
+                "description": "Serie del comprobante.",
+                "example": "F001"
+            },
+            "Correlativo": {
+                "type": "string",
+                "description": "Número correlativo del comprobante.",
+                "example": "1"
+            },
+            "NroDoc": {
+                "type": "string"
+            },
+            "Fecha": {
+                "type": "string",
+                "format": "date",
+                "example": "2021-09-01"
+            },
+            "Moneda": {
+                "type": "string",
+                "description": "<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-02-tipo-de-monedas' target='_blank'>Catálogo 02</a>",
+                "example": "PEN"
+            },
+            "Monto": {
+                "type": "number",
+                "format": "float"
+            },
+            "Porcentaje": {
+                "type": "number"
+            },
+            "Descuento": {
+                "type": "object",
+                "properties": {
+                    "codTipo": {
+                        "type": "string",
+                        "description": "<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-53-codigos-de-cargos-descuentos-y-otras-deducciones' target='_blank'>Catálogo 53</a>.",
+                        "example": "04"
+                    },
+                    "montoBase": {
+                        "$ref": "#/components/schemas/Monto"
+                    },
+                    "factor": {
+                        "$ref": "#/components/schemas/Porcentaje"
+                    },
+                    "monto": {
+                        "$ref": "#/components/schemas/Monto"
+                    }
+                }
+            },
+            "Client": {
+                "type": "object",
+                "properties": {
+                    "tipoDoc": {
+                        "$ref": "#/components/schemas/ClientTipoDoc"
+                    },
+                    "numDoc": {
+                        "$ref": "#/components/schemas/ClientNumDoc"
+                    },
+                    "rznSocial": {
+                        "type": "string",
+                        "description": "Razón social del cliente.",
+                        "example": "Empresa SAC"
+                    },
+                    "address": {
+                        "type": "object",
+                        "properties": {
+                            "ubigueo": {
+                                "type": "string",
+                                "description": "Código de ubigeo del cliente.",
+                                "example": "150101"
+                            },
+                            "direccion": {
+                                "type": "string",
+                                "description": "Dirección del cliente.",
+                                "example": "Av. Lima 123"
+                            },
+                            "departamento": {
+                                "type": "string",
+                                "description": "Departamento del cliente.",
+                                "example": "Lima"
+                            },
+                            "provincia": {
+                                "type": "string",
+                                "description": "Provincia del cliente.",
+                                "example": "Lima"
+                            },
+                            "distrito": {
+                                "type": "string",
+                                "description": "Distrito del cliente.",
+                                "example": "Lima"
+                            }
+                        }
+                    }
+                }
+            },
+            "ClientTipoDoc": {
+                "type": "string",
+                "description": "<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-06-codigo-de-tipo-de-documento-de-identidad' target='_blank'>Catálogo 06</a>.",
+                "example": "6"
+            },
+            "ClientNumDoc": {
+                "type": "string",
+                "description": "Número de documento de identidad del cliente.",
+                "example": "20123456789"
+            },
+            "Codigo": {
+                "type": "string",
+                "description": "Código del producto.",
+                "example": "P001"
+            },
+            "Unidad": {
+                "type": "string",
+                "description": "<a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-03-tipo-de-unidad-de-medida-comercial' target='_blank'>Catálogo 03</a>.",
+                "example": "NIU"
+            },
+            "Cantidad": {
+                "type": "number"
+            },
+            "Descripcion": {
+                "type": "string"
+            }
+        },
+        "examples": {
+            "BoletaVenta": {
+                "summary": "Boleta de venta",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "03",
+                    "serie": "B001",
+                    "correlativo": "1",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 1",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 50,
+                            "mtoValorVenta": 100,
+                            "mtoBaseIgv": 100,
+                            "porcentajeIgv": 18,
+                            "igv": 18,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 18,
+                            "mtoPrecioUnitario": 59
+                        }
+                    ]
+                }
+            },
+            "BoletaVentaICBPER": {
+                "summary": "Boleta de venta ICPBER",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "03",
+                    "serie": "B001",
+                    "correlativo": "1",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 1",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 100,
+                            "mtoValorVenta": 200,
+                            "mtoBaseIgv": 200,
+                            "porcentajeIgv": 18,
+                            "igv": 36,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 36,
+                            "mtoPrecioUnitario": 118
+                        },
+                        {
+                            "codProducto": "P002",
+                            "unidad": "NIU",
+                            "descripcion": "BOLSA DE PLASTICO",
+                            "cantidad": 4,
+                            "mtoValorUnitario": 0.05,
+                            "mtoValorVenta": 0.2,
+                            "mtoBaseIgv": 0.2,
+                            "porcentajeIgv": 18,
+                            "igv": 0.04,
+                            "icbper": 0.8,
+                            "factorIcbper": 0.2,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 0.84,
+                            "mtoPrecioUnitario": 0.059
+                        }
+                    ]
+                }
+            },
+            "Factura": {
+                "summary": "Factura",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "123",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "fecVencimiento": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 1",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 100,
+                            "mtoValorVenta": 200,
+                            "mtoBaseIgv": 200,
+                            "porcentajeIgv": 18,
+                            "igv": 36,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 36,
+                            "mtoPrecioUnitario": 118
+                        },
+                        {
+                            "codProducto": "P002",
+                            "unidad": "KGM",
+                            "descripcion": "PRODUCTO 2",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 50,
+                            "mtoValorVenta": 100,
+                            "mtoBaseIgv": 100,
+                            "porcentajeIgv": 0,
+                            "igv": 0,
+                            "tipAfeIgv": 20,
+                            "totalImpuestos": 0,
+                            "mtoPrecioUnitario": 50
+                        }
+                    ]
+                }
+            },
+            "FacturaAnticipos": {
+                "summary": "Factura Anticipos",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "123",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "anticipos": [
+                        {
+                            "tipoDocRel": "02",
+                            "nroDocRel": "F001-111",
+                            "total": 100
+                        }
+                    ],
+                    "descuentos": [
+                        {
+                            "codTipo": "04",
+                            "factor": 1,
+                            "monto": 100,
+                            "montoBase": 100
+                        }
+                    ],
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 1",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 100,
+                            "mtoValorVenta": 200,
+                            "mtoBaseIgv": 200,
+                            "porcentajeIgv": 18,
+                            "igv": 36,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 36,
+                            "mtoPrecioUnitario": 118
+                        }
+                    ]
+                }
+            },
+            "FacturaCompleja": {
+                "summary": "Factura Compleja",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "126",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "fecVencimiento": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 1",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 100,
+                            "mtoValorVenta": 200,
+                            "mtoBaseIgv": 200,
+                            "porcentajeIgv": 18,
+                            "igv": 36,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 36,
+                            "mtoPrecioUnitario": 118
+                        },
+                        {
+                            "codProducto": "P002",
+                            "unidad": "KGM",
+                            "descripcion": "PRODUCTO 2",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 50,
+                            "mtoValorVenta": 100,
+                            "mtoBaseIgv": 100,
+                            "porcentajeIgv": 0,
+                            "igv": 0,
+                            "tipAfeIgv": 20,
+                            "totalImpuestos": 0,
+                            "mtoPrecioUnitario": 50
+                        },
+                        {
+                            "codProducto": "P003",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 3",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 100,
+                            "mtoValorVenta": 200,
+                            "mtoBaseIgv": 200,
+                            "porcentajeIgv": 0,
+                            "igv": 0,
+                            "tipAfeIgv": 30,
+                            "totalImpuestos": 0,
+                            "mtoPrecioUnitario": 100
+                        },
+                        {
+                            "codProducto": "P004",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 4",
+                            "cantidad": 1,
+                            "mtoValorUnitario": 0,
+                            "mtoValorGratuito": 100,
+                            "mtoValorVenta": 100,
+                            "mtoBaseIgv": 100,
+                            "porcentajeIgv": 18,
+                            "igv": 18,
+                            "tipAfeIgv": 13,
+                            "totalImpuestos": 18,
+                            "mtoPrecioUnitario": 0
+                        },
+                        {
+                            "codProducto": "P005",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 5",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 0,
+                            "mtoValorGratuito": 100,
+                            "mtoValorVenta": 200,
+                            "mtoBaseIgv": 200,
+                            "porcentajeIgv": 0,
+                            "igv": 0,
+                            "tipAfeIgv": 32,
+                            "totalImpuestos": 0,
+                            "mtoPrecioUnitario": 0
+                        }
+                    ]
+                }
+            },
+            "FacturaCredito": {
+                "summary": "Factura Crédito",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "123",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Credito",
+                        "monto": 236
+                    },
+                    "cuotas": [
+                        {
+                            "moneda": "PEN",
+                            "monto": 100,
+                            "fechaPago": "2021-02-05T11:39:00-05:00"
+                        },
+                        {
+                            "moneda": "PEN",
+                            "monto": 136,
+                            "fechaPago": "2021-02-13T11:39:00-05:00"
+                        }
+                    ],
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 1",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 100,
+                            "mtoValorVenta": 200,
+                            "mtoBaseIgv": 200,
+                            "porcentajeIgv": 18,
+                            "igv": 36,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 36,
+                            "mtoPrecioUnitario": 118
+                        }
+                    ]
+                }
+            },
+            "FacturaDescuentoGlobal": {
+                "summary": "Factura Descuento Global",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "80",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "fecVencimiento": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "descuentos": [
+                        {
+                            "codTipo": "02",
+                            "montoBase": 3,
+                            "factor": 1,
+                            "monto": 3
+                        }
+                    ],
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "descripcion": "Café Mendoza",
+                            "cantidad": 10,
+                            "mtoValorUnitario": 2,
+                            "mtoValorVenta": 20,
+                            "mtoBaseIgv": 20,
+                            "porcentajeIgv": 18,
+                            "igv": 3.6,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 3.6,
+                            "mtoPrecioUnitario": 2.36
+                        },
+                        {
+                            "codProducto": "P002",
+                            "unidad": "NIU",
+                            "descripcion": "Pasta Dental",
+                            "cantidad": 1,
+                            "mtoValorUnitario": 50,
+                            "mtoValorVenta": 50,
+                            "mtoBaseIgv": 50,
+                            "porcentajeIgv": 18,
+                            "igv": 9,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 9,
+                            "mtoPrecioUnitario": 59
+                        }
+                    ]
+                }
+            },
+            "FacturaDescuentoLinea": {
+                "summary": "Factura Descuento Línea",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "123",
+                    "fechaEmision": "2019-10-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 1",
+                            "cantidad": 10,
+                            "descuentos": [
+                                {
+                                    "codTipo": "00",
+                                    "montoBase": 20,
+                                    "factor": 0.2,
+                                    "monto": 4
+                                }
+                            ],
+                            "mtoValorUnitario": 2,
+                            "mtoValorVenta": 16,
+                            "mtoBaseIgv": 16,
+                            "porcentajeIgv": 18,
+                            "igv": 2.88,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 2.88,
+                            "mtoPrecioUnitario": 1.89
+                        },
+                        {
+                            "codProducto": "P002",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 2",
+                            "cantidad": 1,
+                            "mtoValorUnitario": 50,
+                            "mtoValorVenta": 50,
+                            "mtoBaseIgv": 50,
+                            "porcentajeIgv": 18,
+                            "igv": 9,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 9,
+                            "mtoPrecioUnitario": 59
+                        }
+                    ]
+                }
+            },
+            "FacturaDescuentoNoBase": {
+                "summary": "Factura Descuento No Base",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "123",
+                    "fechaEmision": "2019-10-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "descuentos": [
+                        {
+                            "codTipo": "03",
+                            "montoBase": 3,
+                            "factor": 1,
+                            "monto": 3
+                        }
+                    ],
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 1",
+                            "cantidad": 10,
+                            "descuentos": [
+                                {
+                                    "codTipo": "01",
+                                    "montoBase": 20,
+                                    "factor": 0.2,
+                                    "monto": 4
+                                }
+                            ],
+                            "mtoValorUnitario": 2,
+                            "mtoValorVenta": 20,
+                            "mtoBaseIgv": 20,
+                            "porcentajeIgv": 18,
+                            "igv": 3.6,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 3.6,
+                            "mtoPrecioUnitario": 1.96
+                        }
+                    ]
+                }
+            },
+            "FacturaDetraccion": {
+                "summary": "Factura Detracción",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "1001",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "123",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "detraccion": {
+                        "codBienDetraccion": "014",
+                        "codMedioPago": "001",
+                        "ctaBanco": "0004-3342343243",
+                        "percent": 4,
+                        "mount": 37.76
+                    },
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 1",
+                            "cantidad": 4,
+                            "mtoValorUnitario": 200,
+                            "mtoValorVenta": 800,
+                            "mtoBaseIgv": 800,
+                            "porcentajeIgv": 18,
+                            "igv": 144,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 144,
+                            "mtoPrecioUnitario": 236
+                        }
+                    ]
+                }
+            },
+            "FacturaExonerado": {
+                "summary": "Factura Exonerado",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "123",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 1",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 50,
+                            "mtoValorVenta": 100,
+                            "mtoBaseIgv": 100,
+                            "porcentajeIgv": 0,
+                            "igv": 0,
+                            "tipAfeIgv": 20,
+                            "totalImpuestos": 0,
+                            "mtoPrecioUnitario": 50
+                        }
+                    ]
+                }
+            },
+            "FacturaExportacion": {
+                "summary": "Factura Exportación",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "0200",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "123",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "USD",
+                    "client": {
+                        "tipoDoc": "0",
+                        "numDoc": "-",
+                        "rznSocial": "EXTRANJERO 1"
+                    },
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "codProdSunat": "44121618",
+                            "unidad": "KGM",
+                            "descripcion": "PRODUCTO 1",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 50,
+                            "mtoValorVenta": 100,
+                            "mtoBaseIgv": 100,
+                            "porcentajeIgv": 0,
+                            "igv": 0,
+                            "tipAfeIgv": 40,
+                            "totalImpuestos": 0,
+                            "mtoPrecioUnitario": 50
+                        }
+                    ]
+                }
+            },
+            "FacturaGuiaRemision": {
+                "summary": "Factura Guía de Remisión",
+                "value": {
+                    "ublVersion": "2.1",
+                    "fecVencimiento": "2021-01-27T00:00:00-05:00",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "123",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "guias": [
+                        {
+                            "tipoDoc": "09",
+                            "nroDoc": "T001-2"
+                        }
+                    ],
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 1",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 100,
+                            "mtoValorVenta": 200,
+                            "mtoBaseIgv": 200,
+                            "porcentajeIgv": 18,
+                            "igv": 36,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 36,
+                            "mtoPrecioUnitario": 118
+                        }
+                    ]
+                }
+            },
+            "FacturaGratuita": {
+                "summary": "Factura Gratuita",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "123",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 1",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 0,
+                            "mtoValorGratuito": 100,
+                            "mtoValorVenta": 200,
+                            "mtoBaseIgv": 200,
+                            "porcentajeIgv": 18,
+                            "igv": 36,
+                            "tipAfeIgv": 11,
+                            "totalImpuestos": 36,
+                            "mtoPrecioUnitario": 0
+                        }
+                    ]
+                }
+            },
+            "FacturaICBPER": {
+                "summary": "Factura ICBPER",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "123",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "cantidad": 2,
+                            "descripcion": "PRODUCTO 1",
+                            "mtoBaseIgv": 200,
+                            "porcentajeIgv": 18,
+                            "igv": 36,
+                            "totalImpuestos": 36,
+                            "tipAfeIgv": 10,
+                            "mtoValorVenta": 200,
+                            "mtoValorUnitario": 100,
+                            "mtoPrecioUnitario": 118
+                        },
+                        {
+                            "codProducto": "P002",
+                            "unidad": "NIU",
+                            "cantidad": 4,
+                            "descripcion": "BOLSA DE PLASTICO",
+                            "mtoValorUnitario": 0.05,
+                            "mtoPrecioUnitario": 0.059,
+                            "mtoValorVenta": 0.2,
+                            "tipAfeIgv": 10,
+                            "mtoBaseIgv": 0.2,
+                            "porcentajeIgv": 18,
+                            "igv": 0.04,
+                            "icbper": 0.8,
+                            "factorIcbper": 0.2,
+                            "totalImpuestos": 0.84
+                        }
+                    ]
+                }
+            },
+            "FacturaICBPERGratuita": {
+                "summary": "Factura ICBPER Gratuita",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "123",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "cantidad": 2,
+                            "descripcion": "PRODUCTO 1",
+                            "mtoBaseIgv": 200,
+                            "porcentajeIgv": 18,
+                            "igv": 36,
+                            "totalImpuestos": 36,
+                            "tipAfeIgv": 10,
+                            "mtoValorVenta": 200,
+                            "mtoValorUnitario": 100,
+                            "mtoPrecioUnitario": 118
+                        },
+                        {
+                            "codProducto": "P002",
+                            "unidad": "NIU",
+                            "cantidad": 2,
+                            "descripcion": "BOLSA DE PLASTICO",
+                            "mtoValorUnitario": 0,
+                            "mtoValorGratuito": 0.05,
+                            "mtoValorVenta": 0.1,
+                            "tipAfeIgv": 13,
+                            "mtoBaseIgv": 0.1,
+                            "porcentajeIgv": 18,
+                            "igv": 0.02,
+                            "factorIcbper": 0.2,
+                            "icbper": 0.4,
+                            "totalImpuestos": 0.42,
+                            "mtoPrecioUnitario": 0
+                        }
+                    ]
+                }
+            },
+            "FacturaInafecta": {
+                "summary": "Factura Inafecta",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "123",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 1",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 50,
+                            "mtoValorVenta": 100,
+                            "mtoBaseIgv": 100,
+                            "porcentajeIgv": 0,
+                            "igv": 0,
+                            "tipAfeIgv": 30,
+                            "totalImpuestos": 0,
+                            "mtoPrecioUnitario": 50
+                        }
+                    ]
+                }
+            },
+            "FacturaISC": {
+                "summary": "Factura ISC",
+                "value": {
+                    "ublVersion": "2.1",
+                    "fecVencimiento": "2021-01-27T00:00:00-05:00",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "127",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "descripcion": "PROD 1",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 100,
+                            "mtoValorVenta": 200,
+                            "mtoBaseIsc": 200,
+                            "tipSisIsc": "01",
+                            "porcentajeIsc": 17,
+                            "isc": 34,
+                            "mtoBaseIgv": 234,
+                            "porcentajeIgv": 18,
+                            "igv": 42.12,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 76.12,
+                            "mtoPrecioUnitario": 138.06
+                        }
+                    ]
+                }
+            },
+            "FacturaIVAP": {
+                "summary": "Factura IVAP",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "123",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "details": [
+                        {
+                            "codProducto": "A001",
+                            "unidad": "KGM",
+                            "descripcion": "SACOS DE ARROZ",
+                            "cantidad": 900,
+                            "mtoValorUnitario": 100,
+                            "mtoValorVenta": 90000,
+                            "mtoBaseIgv": 90000,
+                            "porcentajeIgv": 4,
+                            "igv": 3600,
+                            "tipAfeIgv": 17,
+                            "totalImpuestos": 3600,
+                            "mtoPrecioUnitario": 104
+                        }
+                    ]
+                }
+            },
+            "FacturaPercepcion": {
+                "summary": "Factura Percepción",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "2001",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "123",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "perception": {
+                        "codReg": "51",
+                        "porcentaje": 0.02,
+                        "mtoBase": 236,
+                        "mto": 4.72,
+                        "mtoTotal": 240.72
+                    },
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "descripcion": "PRODUCTO 1",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 100,
+                            "mtoValorVenta": 200,
+                            "mtoBaseIgv": 200,
+                            "porcentajeIgv": 18,
+                            "igv": 36,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 36,
+                            "mtoPrecioUnitario": 118
+                        }
+                    ]
+                }
+            },
+            "FacturaRetencion": {
+                "summary": "Factura con Retención",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoOperacion": "0101",
+                    "tipoDoc": "01",
+                    "serie": "F001",
+                    "correlativo": "168",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "formaPago": {
+                        "moneda": "PEN",
+                        "tipo": "Contado"
+                    },
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": "20000000002",
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "descuentos": [
+                        {
+                            "codTipo": "62",
+                            "montoBase": 236,
+                            "factor": 0.03,
+                            "monto": 7.08
+                        }
+                    ],
+                    "details": [
+                        {
+                            "codProducto": "P001",
+                            "unidad": "NIU",
+                            "descripcion": "Café Mendoza",
+                            "cantidad": 2,
+                            "mtoValorUnitario": 100,
+                            "mtoValorVenta": 200,
+                            "mtoBaseIgv": 200,
+                            "porcentajeIgv": 18,
+                            "igv": 36,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 36,
+                            "mtoPrecioUnitario": 118
+                        }
+                    ]
+                }
+            },
+            "NotaCredito": {
+                "summary": "Nota de Crédito",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoDoc": "07",
+                    "serie": "FF01",
+                    "correlativo": "123",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "tipDocAfectado": "01",
+                    "numDocfectado": "F001-111",
+                    "codMotivo": "07",
+                    "desMotivo": "DEVOLUCION POR ITEM",
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": 20000000002,
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "details": [
+                        {
+                            "codProducto": "C023",
+                            "unidad": "NIU",
+                            "cantidad": 2,
+                            "descripcion": "PRODUCTO 1",
+                            "mtoBaseIgv": 100,
+                            "porcentajeIgv": 18,
+                            "igv": 18,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 18,
+                            "mtoValorVenta": 100,
+                            "mtoValorUnitario": 50,
+                            "mtoPrecioUnitario": 59
+                        },
+                        {
+                            "codProducto": "C02",
+                            "unidad": "NIU",
+                            "cantidad": 2,
+                            "descripcion": "PRODUCTO 2",
+                            "mtoBaseIgv": 100,
+                            "porcentajeIgv": 18,
+                            "igv": 18,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 18,
+                            "mtoValorVenta": 100,
+                            "mtoValorUnitario": 50,
+                            "mtoPrecioUnitario": 59
+                        }
+                    ]
+                }
+            },
+            "NotaCreditoBoleta": {
+                "summary": "Nota de Crédito Boleta",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipoDoc": "07",
+                    "serie": "BB01",
+                    "correlativo": "123",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "tipDocAfectado": "03",
+                    "numDocfectado": "B001-12",
+                    "codMotivo": "01",
+                    "desMotivo": "ANULACION DE LA OPERACION",
+                    "tipoMoneda": "PEN",
+                    "guias": [
+                        {
+                            "tipoDoc": "09",
+                            "nroDoc": "0001-213"
+                        }
+                    ],
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": 20000000002,
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "details": [
+                        {
+                            "codProducto": "C023",
+                            "unidad": "NIU",
+                            "cantidad": 2,
+                            "descripcion": "PRODUCTO 1",
+                            "mtoBaseIgv": 100,
+                            "porcentajeIgv": 18,
+                            "igv": 18,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 18,
+                            "mtoValorVenta": 100,
+                            "mtoValorUnitario": 50,
+                            "mtoPrecioUnitario": 59
+                        },
+                        {
+                            "codProducto": "C02",
+                            "unidad": "NIU",
+                            "cantidad": 2,
+                            "descripcion": "PRODUCTO 2",
+                            "mtoBaseIgv": 100,
+                            "porcentajeIgv": 18,
+                            "igv": 18,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 18,
+                            "mtoValorVenta": 100,
+                            "mtoValorUnitario": 50,
+                            "mtoPrecioUnitario": 59
+                        }
+                    ]
+                }
+            },
+            "NotaDebito": {
+                "summary": "Nota de Débito",
+                "value": {
+                    "ublVersion": "2.1",
+                    "tipDocAfectado": "01",
+                    "numDocfectado": "F001-111",
+                    "codMotivo": "02",
+                    "desMotivo": "AUMENTO EN EL VALOR",
+                    "tipoDoc": "08",
+                    "serie": "FF01",
+                    "fechaEmision": "2021-01-27T00:00:00-05:00",
+                    "correlativo": "123",
+                    "tipoMoneda": "PEN",
+                    "client": {
+                        "tipoDoc": "6",
+                        "numDoc": 20000000002,
+                        "rznSocial": "Cliente",
+                        "address": {
+                            "direccion": "Direccion cliente",
+                            "provincia": "LIMA",
+                            "departamento": "LIMA",
+                            "distrito": "LIMA",
+                            "ubigueo": "150101"
+                        }
+                    },
+                    "details": [
+                        {
+                            "codProducto": "C023",
+                            "unidad": "NIU",
+                            "cantidad": 2,
+                            "descripcion": "PRODUCTO 1",
+                            "mtoBaseIgv": 100,
+                            "porcentajeIgv": 18,
+                            "igv": 18,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 18,
+                            "mtoValorVenta": 100,
+                            "mtoValorUnitario": 50,
+                            "mtoPrecioUnitario": 59
+                        },
+                        {
+                            "codProducto": "C02",
+                            "unidad": "NIU",
+                            "cantidad": 2,
+                            "descripcion": "PRODUCTO 2",
+                            "mtoBaseIgv": 100,
+                            "porcentajeIgv": 18,
+                            "igv": 18,
+                            "tipAfeIgv": 10,
+                            "totalImpuestos": 18,
+                            "mtoValorVenta": 100,
+                            "mtoValorUnitario": 50,
+                            "mtoPrecioUnitario": 59
+                        }
+                    ]
+                }
+            },
+            "GuiaTransportePrivado": {
+                "summary": "G.R. Transporte Privado",
+                "value": {
+                    "version": 2022,
+                    "tipoDoc": "09",
+                    "serie": "T001",
+                    "correlativo": "123",
+                    "fechaEmision": "2024-10-23",
+                    "destinatario": {
+                        "tipoDoc": "6",
+                        "numDoc": 20000000002,
+                        "rznSocial": "EMPRESA DEST 1",
+                        "address": {
+                            "direccion": "Direccion cliente"
+                        }
+                    },
+                    "envio": {
+                        "codTraslado": "01",
+                        "modTraslado": "02",
+                        "fecTraslado": "2024-10-23",
+                        "pesoTotal": 12.5,
+                        "undPesoTotal": "KGM",
+                        "llegada": {
+                            "ubigueo": "150101",
+                            "direccion": "AV LIMA"
+                        },
+                        "partida": {
+                            "ubigueo": "150203",
+                            "direccion": "AV ITALIA"
+                        },
+                        "vehiculo": {
+                            "placa": "ABC123",
+                            "secundarios": [
+                                {
+                                    "placa": "ABI456"
+                                }
+                            ]
+                        },
+                        "choferes": [
+                            {
+                                "tipo": "Principal",
+                                "tipoDoc": "1",
+                                "nroDoc": "44004400",
+                                "licencia": "0001122020",
+                                "nombres": "ROBERTO",
+                                "apellidos": "RODRIGUEZ VALENCIA"
+                            }
+                        ]
+                    },
+                    "details": [
+                        {
+                            "cantidad": 2,
+                            "unidad": "ZZ",
+                            "descripcion": "PRODUCTO 1",
+                            "codigo": "PROD1"
+                        }
+                    ]
+                }
+            },
+            "GuiaTransporteM1L": {
+                "summary": "G.R. Transporte M1-L",
+                "value": {
+                    "version": 2022,
+                    "tipoDoc": "09",
+                    "serie": "T001",
+                    "correlativo": "123",
+                    "fechaEmision": "2024-10-23",
+                    "destinatario": {
+                        "tipoDoc": "6",
+                        "numDoc": 20000000002,
+                        "rznSocial": "EMPRESA DEST 1",
+                        "address": {
+                            "direccion": "Direccion cliente"
+                        }
+                    },
+                    "envio": {
+                        "codTraslado": "01",
+                        "modTraslado": "02",
+                        "indicadores": [
+                            "SUNAT_Envio_IndicadorTrasladoVehiculoM1L"
+                        ],
+                        "fecTraslado": "2024-10-23",
+                        "pesoTotal": 12.5,
+                        "undPesoTotal": "KGM",
+                        "llegada": {
+                            "ubigueo": "150101",
+                            "direccion": "AV LIMA"
+                        },
+                        "partida": {
+                            "ubigueo": "150203",
+                            "direccion": "AV ITALIA"
+                        }
+                    },
+                    "details": [
+                        {
+                            "cantidad": 2,
+                            "unidad": "ZZ",
+                            "descripcion": "PRODUCTO 1",
+                            "codigo": "PROD1"
+                        }
+                    ]
+                }
+            },
+            "GuiaRemisionRemitenteMismaEmpresa": {
+                "summary": "G.R. Remitente Misma Empresa",
+                "value": {
+                    "version": 2022,
+                    "tipoDoc": "09",
+                    "serie": "T001",
+                    "correlativo": "123",
+                    "fechaEmision": "2024-10-23",
+                    "destinatario": {
+                        "tipoDoc": "6",
+                        "numDoc": "20609278235",
+                        "rznSocial": "CODERS FREE SAC",
+                        "address": {
+                            "direccion": "Direccion cliente"
+                        }
+                    },
+                    "envio": {
+                        "codTraslado": "04",
+                        "modTraslado": "02",
+                        "indicadores": [
+                            "SUNAT_Envio_IndicadorTrasladoVehiculoM1L"
+                        ],
+                        "fecTraslado": "2024-10-23",
+                        "pesoTotal": 12.5,
+                        "undPesoTotal": "KGM",
+                        "llegada": {
+                            "ubigueo": "150101",
+                            "direccion": "AV LIMA",
+                            "ruc": "20609278235",
+                            "codLocal": "00002"
+                        },
+                        "partida": {
+                            "ubigueo": "150113",
+                            "direccion": "AV ITALIA",
+                            "ruc": "20609278235",
+                            "codLocal": "00001"
+                        }
+                    },
+                    "details": [
+                        {
+                            "cantidad": 2,
+                            "unidad": "ZZ",
+                            "descripcion": "PRODUCTO 1",
+                            "codigo": "PROD1"
+                        }
+                    ]
+                }
+            },
+            "GuiaTransportePublico": {
+                "summary": "G.R Transporte Publico",
+                "value": {
+                    "version": 2022,
+                    "tipoDoc": "09",
+                    "serie": "T001",
+                    "correlativo": "121",
+                    "fechaEmision": "2024-10-23",
+                    "destinatario": {
+                        "tipoDoc": "6",
+                        "numDoc": 20000000002,
+                        "rznSocial": "'EMPRESA DEST 1",
+                        "address": {
+                            "direccion": "Direccion cliente"
+                        }
+                    },
+                    "envio": {
+                        "codTraslado": "01",
+                        "modTraslado": "01",
+                        "fecTraslado": "2024-01-17T00:00:00-05:00",
+                        "pesoTotal": 12.5,
+                        "undPesoTotal": "KGM",
+                        "llegada": {
+                            "ubigueo": "150101",
+                            "direccion": "AV LIMA"
+                        },
+                        "partida": {
+                            "ubigueo": "150203",
+                            "direccion": "AV ITALIA"
+                        },
+                        "transportista": {
+                            "tipoDoc": "6",
+                            "numDoc": "20000000002",
+                            "rznSocial": "TRANSPORTES S.A.C",
+                            "nroMtc": "0001"
+                        }
+                    },
+                    "details": [
+                        {
+                            "cantidad": 2,
+                            "unidad": "ZZ",
+                            "descripcion": "PRODUCTO 1",
+                            "codigo": "PROD1"
+                        }
+                    ]
+                }
+            },
+            "ResumenDiario": {
+                "summary": "Resumen Diario",
+                "value": {
+                    "fecGeneracion": "2021-01-27T00:00:00-05:00",
+                    "fecResumen": "2021-01-27T00:00:00-05:00",
+                    "correlativo": "001",
+                    "moneda": "PEN",
+                    "details": [
+                        {
+                            "tipoDoc": "03",
+                            "serieNro": "B001-1",
+                            "clienteTipo": "1",
+                            "clienteNro": "00000000",
+                            "estado": "3",
+                            "total": 129.555,
+                            "mtoOperGravadas": 20,
+                            "mtoOperInafectas": 24.4,
+                            "mtoOperExoneradas": 50,
+                            "mtoOperExportacion": 10.555,
+                            "mtoOtrosCargos": 21,
+                            "mtoIGV": 3.6
+                        },
+                        {
+                            "tipoDoc": "07",
+                            "serieNro": "B001-4",
+                            "clienteTipo": "1",
+                            "clienteNro": "00000000",
+                            "docReferencia": {
+                                "tipoDoc": "03",
+                                "nroDoc": "0001-122"
+                            },
+                            "estado": "1",
+                            "total": 200,
+                            "mtoOperGravadas": 40,
+                            "mtoOperInafectas": 120,
+                            "mtoOperExoneradas": 30,
+                            "mtoIGV": 7.2,
+                            "mtoISC": 2.8
+                        },
+                        {
+                            "tipoDoc": "03",
+                            "serieNro": "B001-2",
+                            "clienteTipo": "1",
+                            "clienteNro": "00000000",
+                            "percepcion": {
+                                "codReg": "01",
+                                "tasa": 2,
+                                "mtoBase": 119,
+                                "mto": 2,
+                                "mtoTotal": 121.38
+                            },
+                            "estado": "1",
+                            "total": 119,
+                            "mtoOperGravadas": 20,
+                            "mtoOperInafectas": 24.4,
+                            "mtoOperExoneradas": 50,
+                            "mtoOtrosCargos": 21,
+                            "mtoIGV": 3.6
+                        }
+                    ]
+                }
+            },
+            "ComunicacionBaja": {
+                "summary": "Comunicación de Baja",
+                "value": {
+                    "correlativo": "00111",
+                    "fecGeneracion": "2021-01-27T00:00:00-05:00",
+                    "fecComunicacion": "2021-01-29T00:00:00-05:00",
+                    "details": [
+                        {
+                            "tipoDoc": "01",
+                            "serie": "F001",
+                            "correlativo": "02132132",
+                            "desMotivoBaja": "ERROR EN CÁLCULOS"
+                        },
+                        {
+                            "tipoDoc": "07",
+                            "serie": "FC01",
+                            "correlativo": "222",
+                            "desMotivoBaja": "ERROR DE RUC"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

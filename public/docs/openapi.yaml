@@ -1,0 +1,1795 @@
+openapi: 3.0.0
+info:
+  title: API DE FACTURACIÓN
+  version: "1.0"
+  description: API REST Facturación Electrónica - Coders Free.
+  contact:
+    name: Coders Free
+    email: contacto@codersfree.com
+  x-logo:
+    url: 'https://codersfree.nyc3.cdn.digitaloceanspaces.com/companies/logos/rectangle_logo.png'
+    backgroundColor: '#FAFAFA'
+    altText: 'Example logo'
+
+servers:
+- url: http://apisunat.codersfree.test/api
+
+tags:
+- name: user
+  x-displayName: Usuario
+  description: Este grupo de endpoints está diseñado para gestionar las acciones relacionadas con los usuarios de la API, como el registro, inicio de sesión y la administración de cuentas. A través de estos endpoints, los usuarios pueden crear nuevas cuentas, actualizar información personal, y realizar autenticaciones para acceder a las funcionalidades de la plataforma.
+- name: company
+  x-displayName: Compañía
+  description: Este grupo de endpoints está diseñado para gestionar las acciones relacionadas con las compañías registradas en el sistema. A través de estos endpoints, puedes obtener información detallada sobre cada compañía, como su razón social, dirección y certificados asociados. Además, permite listar las compañías, consultar detalles específicos y gestionar la información clave relacionada con la autenticación y producción de la compañía.
+- name: invoice
+  x-displayName: Facturas / Boletas
+  description: Este tag agrupa todas las operaciones relacionadas con la gestión de facturas. Incluye la creación, el envío y la actualización de registros de facturas, así como la obtención de detalles de las mismas. Estas operaciones permiten a las empresas manejar sus procesos de facturación de manera eficiente a través de la API.
+
+paths:
+  "/register":
+    post:
+      tags:
+      - user
+      summary: Registro
+      description: Crea una cuenta de usuario proporcionando nombre, correo electrónico y contraseña.
+      operationId: register
+      parameters:
+      - $ref: '#/components/parameters/AcceptHeader'
+      requestBody:
+        description: Datos necesarios para registrar un usuario.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  description: Nombre de usuario
+                  type: string
+                  required: true
+                email:
+                  description: Correo electrónico del usuario.
+                  type: string
+                  required: true
+                password:
+                  description: Contraseña del usuario.
+                  type: string
+                  required: true
+      responses:
+        "200":
+          description: "Operación exitosa"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    description: Token de acceso generado.
+                    type: string
+                  token_type:
+                    description: Tipo de token (por ejemplo, 'bearer').
+                    type: string
+                  expires_in:
+                    description: Tiempo en segundos hasta que el token expira.
+                    type: integer
+        "422":
+          $ref: '#/components/responses/ValidationError'
+
+  /login:
+    post:
+      tags:
+      - user
+      summary: Iniciar sesión
+      operationId: login
+      description: Autenticación del usuario y generación de token de acceso.
+      parameters:
+      - $ref: '#/components/parameters/AcceptHeader'
+      requestBody:
+        description: Los datos necesarios para la autenticación del usuario.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  description: Correo electrónico del usuario.
+                  type: string
+                password:
+                  description: Contraseña del usuario.
+                  type: string
+              required:
+              - email
+              - password
+      responses:
+        "200":
+          description: "Operación exitosa"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+
+  /companies:
+    get:
+      tags:
+      - company
+      summary: Listar compañías
+      operationId: companyIndex
+      description: Obtiene una lista de compañías registradas en el sistema.
+      parameters:
+      - $ref: '#/components/parameters/AcceptHeader'
+      - $ref: '#/components/parameters/AuthorizationHeader'
+      responses:
+        "200":
+          description: "Lista de compañías obtenida exitosamente"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompanyResponse'
+        "401":
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedErrorResponse'
+    post:
+      tags:
+      - company
+      summary: Crear una nueva compañía
+      operationId: companyStore
+      description: Permite crear una nueva compañía en el sistema proporcionando la información requerida.
+      parameters:
+      - $ref: '#/components/parameters/AcceptHeader'
+      - $ref: '#/components/parameters/AuthorizationHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - ruc
+              - razonSocial
+              - nombreComercial
+              - direccion
+              properties:
+                logo:
+                  description: Logo de la compañía (opcional, debe ser una imagen).
+                  type: string
+                  format: binary
+                ruc:
+                  description: RUC de la compañía (debe ser único, empezar con 10 o 20, y tener 11 dígitos).
+                  type: string
+                  pattern: "^(10|20)[0-9]{9}$"
+                  uniqueItems: true
+                razonSocial:
+                  description: Razón social de la compañía.
+                  type: string
+                nombreComercial:
+                  description: Nombre comercial de la compañía.
+                  type: string
+                direccion:
+                  description: Dirección de la compañía.
+                  type: string
+                sol_user:
+                  description: Usuario SOL de la compañía (opcional, se asigna un valor por defecto si no se envía).
+                  type: string
+                sol_pass:
+                  description: Contraseña SOL de la compañía (opcional, se asigna un valor por defecto si no se envía).
+                  type: string
+                client_id:
+                  description: ID del cliente (opcional, se asigna un valor por defecto si no se envía).
+                  type: string
+                client_secret:
+                  description: Secreto del cliente (opcional, se asigna un valor por defecto si no se envía).
+                  type: string
+                certificate:
+                  description: Certificado de la compañía (opcional, formato `.pem` o `.txt`. Se asigna uno por defecto si no se proporciona).
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: "Compañía creada exitosamente"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyResponse'
+
+        "401":
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+
+  /companies/{company}:
+    get:
+      tags:
+      - company
+      summary: Obtener detalles de una compañía
+      operationId: companyShow
+      description: Permite obtener la información detallada de una compañía específica utilizando su ID.
+      parameters:
+      - $ref: '#/components/parameters/AcceptHeader'
+      - $ref: '#/components/parameters/AuthorizationHeader'
+      - name: company
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: ID de la compañía a consultar.
+      responses:
+        "200":
+          description: "Detalles de la compañía obtenidos exitosamente"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyResponse'
+        "401":
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        "404":
+          description: "Compañía no encontrada"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+    put:
+      tags:
+      - company
+      summary: Actualizar una compañía existente
+      operationId: companyUpdate
+      description: Permite actualizar la información de una compañía existente utilizando su ID.
+      parameters:
+      - $ref: '#/components/parameters/AcceptHeader'
+      - $ref: '#/components/parameters/AuthorizationHeader'
+      - name: company
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: ID de la compañía a actualizar.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                logo:
+                  description: Logo de la compañía (debe ser una imagen).
+                  type: string
+                  format: binary
+                  nullable: true
+                ruc:
+                  description: RUC de la compañía (debe empezar con 10 o 20 y tener 11 dígitos).
+                  type: string
+                  pattern: "^(10|20)[0-9]{9}$"
+                razonSocial:
+                  description: Razón social de la compañía.
+                  type: string
+                nombreComercial:
+                  description: Nombre comercial de la compañía.
+                  type: string
+                direccion:
+                  description: Dirección de la compañía.
+                  type: string
+                sol_user:
+                  description: Usuario SOL de la compañía.
+                  type: string
+                  nullable: true
+                sol_pass:
+                  description: Contraseña SOL de la compañía.
+                  type: string
+                  nullable: true
+                client_id:
+                  description: ID del cliente.
+                  type: string
+                  nullable: true
+                client_secret:
+                  description: Secreto del cliente.
+                  type: string
+                  nullable: true
+                certificate:
+                  description: Certificado de la compañía (formato `.pem` o `.txt`.).
+                  type: string
+                  format: binary
+                  nullable: true
+      responses:
+        "200":
+          description: "Compañía actualizada exitosamente"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyResponse'
+        "401":
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+    delete:
+      tags:
+      - company
+      summary: Eliminar una compañía
+      operationId: companyDelete
+      description: Permite eliminar una compañía existente utilizando su ID.
+      parameters:
+      - $ref: '#/components/parameters/AcceptHeader'
+      - $ref: '#/components/parameters/AuthorizationHeader'
+      - name: company
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: ID de la compañía a eliminar.
+      responses:
+        "204":
+          description: "Compañía eliminada exitosamente. No se devuelve contenido."
+        "401":
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedErrorResponse'
+
+  /companies/{company}/token:
+    post:
+      tags:
+      - company
+      summary: Generar un token para la compañía
+      operationId: generateCompanyToken
+      description: Permite generar un token de acceso para una compañía específica utilizando su ID.
+      parameters:
+      - $ref: '#/components/parameters/AcceptHeader'
+      - $ref: '#/components/parameters/AuthorizationHeader'
+      - name: company
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: ID de la compañía para la cual se generará el token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - name
+              properties:
+                name:
+                  description: Nombre del token (campo requerido).
+                  type: string
+      responses:
+        "200":
+          description: "Token generado exitosamente"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "2|5DffBJbcQ67QB8EgQk9CZ1NoViuEULMiy9aiUNMv8f2ff0c6"
+        "401":
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+
+  /invoice/send:
+    post:
+      tags:
+      - invoice
+      summary: Enviar una factura o boleta de venta
+      operationId: invoiceSend
+      description: Permite enviar una factura o boleta de venta.
+      parameters:
+      - $ref: '#/components/parameters/AcceptHeader'
+      - name: Authorization
+        in: header
+        required: true
+        schema:
+          type: string
+          example: Bearer {token}
+        description: Token de autenticación Bearer generado para identificar a la compañía en las solicitudes.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ublVersion:
+                  type: string
+                  description: Versión UBL (recomendada 2.1)
+                tipoOperacion:
+                  type: string
+                  description: <a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-51-codigo-de-tipo-de-operacion' target='_blank'>Catálogo 51</a>.
+                tipoDoc:
+                  type: string
+                  description: <a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-01-tipo-de-documento' target='_blank'>Catálogo 01</a>.
+                serie:
+                  type: string
+                correlativo:
+                  type: string
+                fechaEmision:
+                  type: string
+                  format: date-time
+                fecVencimiento:
+                  type: string
+                  format: date-time
+                formaPago:
+                  type: object
+                  properties:
+                    moneda:
+                      type: string
+                      description: <a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-02-tipo-de-monedas' target='_blank'>Catálogo 02</a>.
+                    tipo:
+                      type: string
+                      description: Contado o Credito
+                    monto:
+                      type: number
+                      format: float
+                cuotas:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      moneda:
+                        type: string
+                        description: <a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-02-tipo-de-monedas' target='_blank'>Catálogo 02</a>.
+                      monto:
+                        type: number
+                        format: float
+                      fechaPago:
+                        type: string
+                        format: date-time
+                tipoMoneda:
+                  type: string
+                  description: <a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-02-tipo-de-monedas' target='_blank'>Catálogo 02</a>.
+                client:
+                  type: object
+                  properties:
+                    tipoDoc:
+                      type: string
+                      description: <a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-06-codigo-de-tipo-de-documento-de-identidad' target='_blank'>Catálogo 06</a>.
+                    numDoc:
+                      type: string
+                    rznSocial:
+                      type: string
+                    address:
+                      type: object
+                      properties:
+                        direccion:
+                          type: string
+                        provincia:
+                          type: string
+                        departamento:
+                          type: string
+                        distrito:
+                          type: string
+                        ubigueo:
+                          type: string
+                details:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      codProducto:
+                        type: string
+                      unidad:
+                        type: string
+                        description: <a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-03-tipo-de-unidad-de-medida-comercial' target='_blank'>Catálogo 03</a>.
+                      descripcion:
+                        type: string
+                      cantidad:
+                        type: number
+                        format: float
+                      mtoValorUnitario:
+                        type: number
+                        format: float
+                      mtoValorVenta:
+                        type: number
+                        format: float
+                      mtoBaseIgv:
+                        type: number
+                        format: float
+                      porcentajeIgv:
+                        type: number
+                        format: float
+                      igv:
+                        type: number
+                        format: float
+                      tipAfeIgv:
+                        type: number
+                        description: <a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-07-codigo-de-tipo-de-afectacion-del-igv' target='_blank'>Catálogo 07</a>.
+                      totalImpuestos:
+                        type: number
+                        format: float
+                      mtoPrecioUnitario:
+                        type: number
+                        format: float
+                      mtoValorGratuito:
+                        type: number
+                        format: float
+                      icbper:
+                        type: number
+                        format: float
+                      factorIcbper:
+                        type: number
+                        format: float
+                        description: Impuesto al Consumo de las Bolsas de Plástico
+                descuentos:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      codTipo:
+                        type: string
+                        description: <a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-53-codigos-de-cargos-descuentos-y-otras-deducciones' target='_blank'>Catálogo 53</a>.
+                      montoBase:
+                        type: number
+                        format: float
+                      factor:
+                        type: number
+                        format: float
+                      monto:
+                        type: number
+                        format: float
+                anticipos:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      tipoDocRel:
+                        type: string
+                        description: <a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-12-codigo-de-documentos-relacionados-tributarios' target='_blank'>Catálogo 12</a>.
+                      nroDocRel:
+                        type: string
+                      total:
+                        type: number
+                        format: float
+                detraccion:
+                  type: object
+                  properties:
+                    codBienDetraccion:
+                      type: string
+                      description: <a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-54-codigos-de-bienes-y-servicios-sujetos-a-detracciones' target='_blank'>Catálogo 54</a>.
+                    codMedioPago:
+                      type: string
+                      description: <a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-59-medios-de-pago' target='_blank'>Catálogo 59</a>.
+                    ctaBanco:
+                      type: string
+                    percent:
+                      type: number
+                      format: float
+                    mount:
+                      type: number
+                      format: float
+                perception:
+                  type: object
+                  properties:
+                    codReg:
+                      type: string
+                      description: <a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-53-codigos-de-cargos-descuentos-y-otras-deducciones' target='_blank'>Catálogo 53</a>.
+                    porcentaje:
+                      type: number
+                      format: float
+                    mtoBase:
+                      type: number
+                      format: float
+                    mto:
+                      type: number
+                      format: float
+                    mtoTotal:
+                      type: number
+                      format: float
+                guias:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      tipoDoc:
+                        type: string
+                        description: <a href='https://eliutimana.github.io/SunatCatalogos/cat-08.html#n%C2%B0-01-tipo-de-documento' target='_blank'>Catálogo 01</a>.
+                      nroDoc:
+                        type: string
+                observacion:
+                  type: string
+                mtoImpVenta:
+                  type: number
+                  format: float
+                subTotal:
+                  type: number
+                  format: float
+                totalAnticipos:
+                  type: number
+                  format: float
+
+            examples:
+              BoletaVenta:
+                summary: Boleta de venta
+                value:
+                  ublVersion: "2.1"
+                  tipoOperacion: "0101"
+                  tipoDoc: "03"
+                  serie: "B001"
+                  correlativo: "1"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 1"
+                    cantidad: 2
+                    mtoValorUnitario: 50
+                    mtoValorVenta: 100
+                    mtoBaseIgv: 100
+                    porcentajeIgv: 18
+                    igv: 18
+                    tipAfeIgv: 10
+                    totalImpuestos: 18
+                    mtoPrecioUnitario: 59
+
+              BoletaVentaICBPER:
+                summary: Boleta de venta ICPBER
+                value:
+                  ublVersion: "2.1"
+                  tipoOperacion: "0101"
+                  tipoDoc: "03"
+                  serie: "B001"
+                  correlativo: "1"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 1"
+                    cantidad: 2
+                    mtoValorUnitario: 100
+                    mtoValorVenta: 200
+                    mtoBaseIgv: 200
+                    porcentajeIgv: 18
+                    igv: 36
+                    tipAfeIgv: 10
+                    totalImpuestos: 36
+                    mtoPrecioUnitario: 118
+                  - codProducto: "P002"
+                    unidad: "NIU"
+                    descripcion: "BOLSA DE PLASTICO"
+                    cantidad: 4
+                    mtoValorUnitario: 0.05
+                    mtoValorVenta: 0.2
+                    mtoBaseIgv: 0.2
+                    porcentajeIgv: 18
+                    igv: 0.04
+                    icbper: 0.8
+                    factorIcbper: 0.2
+                    tipAfeIgv: 10
+                    totalImpuestos: 0.84
+                    mtoPrecioUnitario: 0.059
+
+              Factura:
+                summary: Factura
+                value:
+                  ublVersion: "2.1"
+                  fecVencimiento: "2021-01-27T00:00:00-05:00"
+                  tipoOperacion: "0101"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "123"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 1"
+                    cantidad: 2
+                    mtoValorUnitario: 100
+                    mtoValorVenta: 200
+                    mtoBaseIgv: 200
+                    porcentajeIgv: 18
+                    igv: 36
+                    tipAfeIgv: 10
+                    totalImpuestos: 36
+                    mtoPrecioUnitario: 118
+                  - codProducto: "P002"
+                    unidad: "KGM"
+                    descripcion: "PRODUCTO 2"
+                    cantidad: 2
+                    mtoValorUnitario: 50
+                    mtoValorVenta: 100
+                    mtoBaseIgv: 100
+                    porcentajeIgv: 0
+                    igv: 0
+                    tipAfeIgv: 20
+                    totalImpuestos: 0
+                    mtoPrecioUnitario: 50
+
+              FacturaAnticipos:
+                summary: Factura Anticipos
+                value:
+                  ublVersion: "2.1"
+                  tipoOperacion: "0101"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "123"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  anticipos:
+                  - tipoDocRel: "02"
+                    nroDocRel: "F001-111"
+                    total: 100
+                  descuentos:
+                  - codTipo: "04"
+                    factor: 1
+                    monto: 100
+                    montoBase: 100
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 1"
+                    cantidad: 2
+                    mtoValorUnitario: 100
+                    mtoValorVenta: 200
+                    mtoBaseIgv: 200
+                    porcentajeIgv: 18
+                    igv: 36
+                    tipAfeIgv: 10
+                    totalImpuestos: 36
+                    mtoPrecioUnitario: 118
+
+              FacturaCompleja:
+                summary: Factura Compleja
+                value:
+                  ublVersion: "2.1"
+                  fecVencimiento: "2021-01-27T00:00:00-05:00"
+                  tipoOperacion: "0101"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "126"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 1"
+                    cantidad: 2
+                    mtoValorUnitario: 100
+                    mtoValorVenta: 200
+                    mtoBaseIgv: 200
+                    porcentajeIgv: 18
+                    igv: 36
+                    tipAfeIgv: 10
+                    totalImpuestos: 36
+                    mtoPrecioUnitario: 118
+                  - codProducto: "P002"
+                    unidad: "KGM"
+                    descripcion: "PRODUCTO 2"
+                    cantidad: 2
+                    mtoValorUnitario: 50
+                    mtoValorVenta: 100
+                    mtoBaseIgv: 100
+                    porcentajeIgv: 0
+                    igv: 0
+                    tipAfeIgv: 20
+                    totalImpuestos: 0
+                    mtoPrecioUnitario: 50
+                  - codProducto: "P003"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 3"
+                    cantidad: 2
+                    mtoValorUnitario: 100
+                    mtoValorVenta: 200
+                    mtoBaseIgv: 200
+                    porcentajeIgv: 0
+                    igv: 0
+                    tipAfeIgv: 30
+                    totalImpuestos: 0
+                    mtoPrecioUnitario: 100
+                  - codProducto: "P004"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 4"
+                    cantidad: 1
+                    mtoValorUnitario: 0
+                    mtoValorGratuito: 100
+                    mtoValorVenta: 100
+                    mtoBaseIgv: 100
+                    porcentajeIgv: 18
+                    igv: 18
+                    tipAfeIgv: 13
+                    totalImpuestos: 18
+                    mtoPrecioUnitario: 0
+                  - codProducto: "P005"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 5"
+                    cantidad: 2
+                    mtoValorUnitario: 0
+                    mtoValorGratuito: 100
+                    mtoValorVenta: 200
+                    mtoBaseIgv: 200
+                    porcentajeIgv: 0
+                    igv: 0
+                    tipAfeIgv: 32
+                    totalImpuestos: 0
+                    mtoPrecioUnitario: 0
+
+              FacturaCredito:
+                summary: Factura Crédito
+                value:
+                  ublVersion: "2.1"
+                  tipoOperacion: "0101"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "123"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Credito"
+                    monto: 236
+                  cuotas:
+                  - moneda: "PEN"
+                    monto: 100
+                    fechaPago: "2021-02-05T11:39:00-05:00"
+                  - moneda: "PEN"
+                    monto: 136
+                    fechaPago: "2021-02-13T11:39:00-05:00"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 1"
+                    cantidad: 2
+                    mtoValorUnitario: 100
+                    mtoValorVenta: 200
+                    mtoBaseIgv: 200
+                    porcentajeIgv: 18
+                    igv: 36
+                    tipAfeIgv: 10
+                    totalImpuestos: 36
+                    mtoPrecioUnitario: 118
+
+              FacturaDescuentoGlobal:
+                summary: Factura Descuento Global
+                value:
+                  ublVersion: "2.1"
+                  tipoOperacion: "0101"
+                  fecVencimiento: "2021-01-27T00:00:00-05:00"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "80"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  descuentos:
+                  - codTipo: "02"
+                    montoBase: 3
+                    factor: 1
+                    monto: 3
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    descripcion: "Café Mendoza"
+                    cantidad: 10
+                    mtoValorUnitario: 2
+                    mtoValorVenta: 20
+                    mtoBaseIgv: 20
+                    porcentajeIgv: 18
+                    igv: 3.6
+                    tipAfeIgv: 10
+                    totalImpuestos: 3.6
+                    mtoPrecioUnitario: 2.36
+                  - codProducto: "P002"
+                    unidad: "NIU"
+                    descripcion: "Pasta Dental"
+                    cantidad: 1
+                    mtoValorUnitario: 50
+                    mtoValorVenta: 50
+                    mtoBaseIgv: 50
+                    porcentajeIgv: 18
+                    igv: 9
+                    tipAfeIgv: 10
+                    totalImpuestos: 9
+                    mtoPrecioUnitario: 59
+
+              FacturaDescuentoLinea:
+                summary: Factura Descuento Línea
+                value:
+                  ublVersion: "2.1"
+                  tipoOperacion: "0101"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "123"
+                  fechaEmision: "2019-10-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 1"
+                    cantidad: 10
+                    descuentos:
+                    - codTipo: "00"
+                      montoBase: 20
+                      factor: 0.2
+                      monto: 4
+                    mtoValorUnitario: 2
+                    mtoValorVenta: 16
+                    mtoBaseIgv: 16
+                    porcentajeIgv: 18
+                    igv: 2.88
+                    tipAfeIgv: 10
+                    totalImpuestos: 2.88
+                    mtoPrecioUnitario: 1.89
+                  - codProducto: "P002"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 2"
+                    cantidad: 1
+                    mtoValorUnitario: 50
+                    mtoValorVenta: 50
+                    mtoBaseIgv: 50
+                    porcentajeIgv: 18
+                    igv: 9
+                    tipAfeIgv: 10
+                    totalImpuestos: 9
+                    mtoPrecioUnitario: 59
+
+              FacturaDescuentoNoBase:
+                summary: Factura Descuento No Base
+                value:
+                  ublVersion: "2.1"
+                  tipoOperacion: "0101"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "123"
+                  fechaEmision: "2019-10-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  descuentos:
+                  - codTipo: "03"
+                    montoBase: 3
+                    factor: 1
+                    monto: 3
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 1"
+                    cantidad: 10
+                    descuentos:
+                    - codTipo: "01"
+                      montoBase: 20
+                      factor: 0.2
+                      monto: 4
+                    mtoValorUnitario: 2
+                    mtoValorVenta: 20
+                    mtoBaseIgv: 20
+                    porcentajeIgv: 18
+                    igv: 3.6
+                    tipAfeIgv: 10
+                    totalImpuestos: 3.6
+                    mtoPrecioUnitario: 1.96
+
+              FacturaDetraccion:
+                summary: Factura Detracción
+                value:
+                  ublVersion: "2.1"
+                  tipoOperacion: "1001"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "123"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  detraccion:
+                    codBienDetraccion: "014"
+                    codMedioPago: "001"
+                    ctaBanco: "0004-3342343243"
+                    percent: 4
+                    mount: 37.76
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 1"
+                    cantidad: 4
+                    mtoValorUnitario: 200
+                    mtoValorVenta: 800
+                    mtoBaseIgv: 800
+                    porcentajeIgv: 18
+                    igv: 144
+                    tipAfeIgv: 10
+                    totalImpuestos: 144
+                    mtoPrecioUnitario: 236
+
+              FacturaExonerado:
+                summary: Factura Exonerado
+                value:
+                  ublVersion: "2.1"
+                  tipoOperacion: "0101"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "123"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 1"
+                    cantidad: 2
+                    mtoValorUnitario: 50
+                    mtoValorVenta: 100
+                    mtoBaseIgv: 100
+                    porcentajeIgv: 0
+                    igv: 0
+                    tipAfeIgv: 20
+                    totalImpuestos: 0
+                    mtoPrecioUnitario: 50
+
+              FacturaExportacion:
+                summary: Factura Exportación
+                value:
+                  ublVersion: "2.1"
+                  tipoOperacion: "0200"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "123"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "USD"
+                  client:
+                    tipoDoc: "0"
+                    numDoc: "-"
+                    rznSocial: "EXTRANJERO 1"
+                  details:
+                  - codProducto: "P001"
+                    codProdSunat: "44121618"
+                    unidad: "KGM"
+                    descripcion: "PRODUCTO 1"
+                    cantidad: 2
+                    mtoValorUnitario: 50
+                    mtoValorVenta: 100
+                    mtoBaseIgv: 100
+                    porcentajeIgv: 0
+                    igv: 0
+                    tipAfeIgv: 40
+                    totalImpuestos: 0
+                    mtoPrecioUnitario: 50
+
+              FacturaGuiaRemision:
+                summary: Factura Guía de Remisión
+                value:
+                  ublVersion: "2.1"
+                  fecVencimiento: "2021-01-27T00:00:00-05:00"
+                  tipoOperacion: "0101"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "123"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  guias:
+                  - tipoDoc: "09"
+                    nroDoc: "T001-2"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 1"
+                    cantidad: 2
+                    mtoValorUnitario: 100
+                    mtoValorVenta: 200
+                    mtoBaseIgv: 200
+                    porcentajeIgv: 18
+                    igv: 36
+                    tipAfeIgv: 10
+                    totalImpuestos: 36
+                    mtoPrecioUnitario: 118
+
+              FacturaGratuita:
+                summary: Factura Gratuita
+                value:
+                  ublVersion: "2.1"
+                  tipoOperacion: "0101"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "123"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 1"
+                    cantidad: 2
+                    mtoValorUnitario: 0
+                    mtoValorGratuito: 100
+                    mtoValorVenta: 200
+                    mtoBaseIgv: 200
+                    porcentajeIgv: 18
+                    igv: 36
+                    tipAfeIgv: 11
+                    totalImpuestos: 36
+                    mtoPrecioUnitario: 0
+
+              FacturaICBPER:
+                summary: Factura ICBPER
+                value:
+                  ublVersion: "2.1"
+                  tipoOperacion: "0101"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "123"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    cantidad: 2
+                    descripcion: "PRODUCTO 1"
+                    mtoBaseIgv: 200
+                    porcentajeIgv: 18
+                    igv: 36
+                    totalImpuestos: 36
+                    tipAfeIgv: 10
+                    mtoValorVenta: 200
+                    mtoValorUnitario: 100
+                    mtoPrecioUnitario: 118
+                  - codProducto: "P002"
+                    unidad: "NIU"
+                    cantidad: 4
+                    descripcion: "BOLSA DE PLASTICO"
+                    mtoValorUnitario: 0.05
+                    mtoPrecioUnitario: 0.059
+                    mtoValorVenta: 0.2
+                    tipAfeIgv: 10
+                    mtoBaseIgv: 0.2
+                    porcentajeIgv: 18
+                    igv: 0.04
+                    icbper: 0.8
+                    factorIcbper: 0.2
+                    totalImpuestos: 0.84
+
+              FacturaICBPERGratuita:
+                summary: Factura ICBPER Gratuita
+                value:
+                  ublVersion: "2.1"
+                  tipoOperacion: "0101"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "123"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    cantidad: 2
+                    descripcion: "PRODUCTO 1"
+                    mtoBaseIgv: 200
+                    porcentajeIgv: 18
+                    igv: 36
+                    totalImpuestos: 36
+                    tipAfeIgv: 10
+                    mtoValorVenta: 200
+                    mtoValorUnitario: 100
+                    mtoPrecioUnitario: 118
+                  - codProducto: "P002"
+                    unidad: "NIU"
+                    cantidad: 2
+                    descripcion: "BOLSA DE PLASTICO"
+                    mtoValorUnitario: 0
+                    mtoValorGratuito: 0.05
+                    mtoValorVenta: 0.1
+                    tipAfeIgv: 13
+                    mtoBaseIgv: 0.1
+                    porcentajeIgv: 18
+                    igv: 0.02
+                    factorIcbper: 0.2
+                    icbper: 0.4
+                    totalImpuestos: 0.42
+                    mtoPrecioUnitario: 0
+
+              FacturaInafecta:
+                summary: Factura Inafecta
+                value:
+                  ublVersion: "2.1"
+                  tipoOperacion: "0101"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "123"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 1"
+                    cantidad: 2
+                    mtoValorUnitario: 50
+                    mtoValorVenta: 100
+                    mtoBaseIgv: 100
+                    porcentajeIgv: 0
+                    igv: 0
+                    tipAfeIgv: 30
+                    totalImpuestos: 0
+                    mtoPrecioUnitario: 50
+
+              FacturaISC:
+                summary: Factura ISC
+                value:
+                  ublVersion: "2.1"
+                  fecVencimiento: "2021-01-27T00:00:00-05:00"
+                  tipoOperacion: "0101"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "127"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    descripcion: "PROD 1"
+                    cantidad: 2
+                    mtoValorUnitario: 100
+                    mtoValorVenta: 200
+                    mtoBaseIsc: 200
+                    tipSisIsc: "01"
+                    porcentajeIsc: 17
+                    isc: 34
+                    mtoBaseIgv: 234
+                    porcentajeIgv: 18
+                    igv: 42.12
+                    tipAfeIgv: 10
+                    totalImpuestos: 76.12
+                    mtoPrecioUnitario: 138.06
+
+              FacturaIVAP:
+                summary: Factura IVAP
+                value:
+                  ublVersion: "2.1"
+                  tipoOperacion: "0101"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "123"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  details:
+                  - codProducto: "A001"
+                    unidad: "SA"
+                    descripcion: "SACOS DE ARROZ"
+                    cantidad: 900
+                    mtoValorUnitario: 100
+                    mtoValorVenta: 90000
+                    mtoBaseIgv: 90000
+                    porcentajeIgv: 4
+                    igv: 3600
+                    tipAfeIgv: 17
+                    totalImpuestos: 3600
+                    mtoPrecioUnitario: 104
+
+              FacturaPercepcion:
+                summary: Factura Percepción
+                value:
+                  ublVersion: "2.1"
+                  tipoOperacion: "2001"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "123"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  perception:
+                    codReg: "51"
+                    porcentaje: 0.02
+                    mtoBase: 200
+                    mto: 4
+                    mtoTotal: 204
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    descripcion: "PRODUCTO 1"
+                    cantidad: 2
+                    mtoValorUnitario: 100
+                    mtoValorVenta: 200
+                    mtoBaseIgv: 200
+                    porcentajeIgv: 18
+                    igv: 36
+                    tipAfeIgv: 10
+                    totalImpuestos: 36
+                    mtoPrecioUnitario: 118
+
+              FacturaRetencion:
+                summary: Factura con Retención
+                value:
+                  ublVersion: "2.1"
+                  tipoOperacion: "0101"
+                  tipoDoc: "01"
+                  serie: "F001"
+                  correlativo: "168"
+                  fechaEmision: "2021-01-27T00:00:00-05:00"
+                  formaPago:
+                    moneda: "PEN"
+                    tipo: "Contado"
+                  tipoMoneda: "PEN"
+                  client:
+                    tipoDoc: "6"
+                    numDoc: "20000000002"
+                    rznSocial: "Cliente"
+                    address:
+                      direccion: "Direccion cliente"
+                      provincia: "LIMA"
+                      departamento: "LIMA"
+                      distrito: "LIMA"
+                      ubigueo: "150101"
+                  descuentos:
+                  - codTipo: "62"
+                    montoBase: 236
+                    factor: 0.03
+                    monto: 7.08
+                  details:
+                  - codProducto: "P001"
+                    unidad: "NIU"
+                    descripcion: "Café Mendoza"
+                    cantidad: 2
+                    mtoValorUnitario: 100
+                    mtoValorVenta: 200
+                    mtoBaseIgv: 200
+                    porcentajeIgv: 18
+                    igv: 36
+                    tipAfeIgv: 10
+                    totalImpuestos: 36
+                    mtoPrecioUnitario: 118
+
+      responses:
+        "200":
+          description: Respuesta exitosa
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  cdrResponse:
+                    type: object
+                    nullable: true
+                    properties:
+                      id:
+                        type: string
+                      code:
+                        type: integer
+                      description:
+                        type: string
+                      notes:
+                        type: array
+                        items:
+                          type: string
+                  error:
+                    type: object
+                    nullable: true
+                    properties:
+                      code:
+                        type: string
+                      message:
+                        type: string
+              examples:
+                example1:
+                  summary: Factura aceptada
+                  value:
+                    success: true
+                    cdrResponse:
+                      id: "F001-123"
+                      code: 0
+                      description: "La Factura numero F001-123, ha sido aceptada"
+                      notes: []
+                example2:
+                  summary: Factura aceptada con observaciones
+                  value:
+                    success: true
+                    cdrResponse:
+                      id: "F001-123"
+                      code: 0
+                      description: "La Factura numero F001-123, ha sido aceptada"
+                      notes:
+                      - "4096 - La provincia del domicilio fiscal del emisor no cumple con el formato establecido -  cbc:CityName : 4096 (nodo: \"cac:RegistrationAddress/cbc:CityName\" valor: \"\")"
+                      - "4093 - El codigo de ubigeo del domicilio fiscal del emisor no es válido - : 4093: Valor no se encuentra en el catalogo: 13 (nodo: \"cac:RegistrationAddress/cbc:ID\" valor: \"\")"
+                      - "4097 - El departamento del domicilio fiscal del emisor no cumple con el formato establecido - INFO: 4097 (nodo: \"cac:RegistrationAddress/cbc:CountrySubentity\" valor: \"\")"
+                      - "4098 - El distrito del domicilio fiscal del emisor no cumple con el formato establecido - INFO: 4098 (nodo: \"cac:RegistrationAddress/cbc:District\" valor: \"\")"
+                example3:
+                  summary: Factura rechazada
+                  value:
+                    success: false
+                    error:
+                      code: "2800"
+                      message: "El dato ingresado en el tipo de documento de identidad del receptor no esta permitido. - Detalle: xxx.xxx.xxx value='ticket: 1729384040858 error: INFO : 2800 (nodo: \"cbc:ID/schemeID\" valor: \"0\")'"
+
+        "401":
+          description: "Usuario no autenticado"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        "422":
+          $ref: '#/components/responses/ValidationError'
+components:
+  parameters:
+    AcceptHeader:
+      name: Accept
+      in: header
+      required: true
+      schema:
+        type: string
+        enum:
+        - application/json
+      description: El cliente debe enviar este encabezado con el valor 'application/json'.
+    AuthorizationHeader:
+      name: Authorization
+      in: header
+      required: true
+      schema:
+        type: string
+        example: Bearer {token}
+      description: Token de autenticación de tipo Bearer obtenido al iniciar sesión.
+  responses:
+    ValidationError:
+      description: "Error de validación"
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                description: Mensaje general del error.
+                type: string
+              errors:
+                description: Lista de campos con sus errores de validación.
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+
+  schemas:
+    AuthTokenResponse:
+      type: object
+      properties:
+        access_token:
+          description: Token de acceso generado.
+          type: string
+        token_type:
+          description: Tipo de token (por ejemplo, 'bearer').
+          type: string
+        expires_in:
+          description: Tiempo en segundos hasta que el token expira.
+          type: integer
+    UnauthorizedErrorResponse:
+      type: object
+      properties:
+        message:
+          description: Mensaje indicando que la autenticación ha fallado.
+          type: string
+          example: "Unauthenticated"
+    NotFoundErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Mensaje de error que indica que no se encontraron resultados.
+          example: No query results for model [App\\Models\\Company].
+        exception:
+          type: string
+          description: Nombre de la excepción lanzada.
+        file:
+          type: string
+          description: Ruta del archivo donde ocurrió la excepción.
+        line:
+          type: integer
+          description: Línea donde ocurrió la excepción.
+        trace:
+          type: array
+          items:
+            type: object
+            properties:
+              file:
+                type: string
+                description: Archivo en la traza de la excepción.
+              line:
+                type: integer
+                description: Línea en la traza de la excepción.
+
+    CompanyResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: ID de la compañía.
+          example: 1
+        ruc:
+          type: string
+          description: RUC de la compañía.
+        razonSocial:
+          type: string
+          description: Razón social de la compañía.
+        nombreComercial:
+          type: string
+          description: Nombre comercial de la compañía.
+        direccion:
+          type: string
+          description: Dirección de la compañía.
+        sol_user:
+          type: string
+          description: Usuario SOL de la compañía.
+        sol_pass:
+          type: string
+          description: Contraseña SOL de la compañía.
+        client_id:
+          type: string
+          description: ID del cliente.
+        client_secret:
+          type: string
+          description: Secreto del cliente.
+        certificate:
+          type: string
+          description: Certificado de la compañía.
+        logo_path:
+          type: string
+          description: Ruta del logo de la compañía.
+        created_at:
+          type: string
+          format: date-time
+          description: Fecha de creación de la compañía.
+        updated_at:
+          type: string
+          format: date-time
+          description: Fecha de actualización de la compañía.

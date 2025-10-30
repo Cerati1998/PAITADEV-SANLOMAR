@@ -329,7 +329,7 @@
                                 <div x-data="{ open: {{ $link['active'] ? 'true' : 'false' }} }">
 
                                     <button type="button" x-on:click="open = !open"
-                                        class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg group hover:bg-blue-500 hover:text-white dark:text-white dark:hover:bg-gray-700 {{ $link['active'] ? 'bg-green-600 text-white' : 'hover:bg-blue-500 hover:text-white' }}"
+                                        class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg group hover:bg-blue-500 hover:text-white dark:text-white dark:hover:bg-gray-700 {{ $link['active'] ? 'bg-blue-700 text-white' : 'hover:bg-blue-500 hover:text-white' }}"
                                         aria-controls="dropdown-example" data-collapse-toggle="dropdown-example">
 
                                         <span class="inline-flex w-6 h-6 justify-center items-center">
@@ -356,7 +356,7 @@
                                             <li>
 
                                                 <a href="{{ $link['route'] }}"
-                                                    class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-4 group hover:bg-blue-500 hover:text-white dark:text-white dark:hover:bg-gray-700 {{ $link['active'] ? 'bg-green-600 text-white' : 'hover:bg-blue-500 hover:text-white' }}">
+                                                    class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-4 group hover:bg-blue-500 hover:text-white dark:text-white dark:hover:bg-gray-700 {{ $link['active'] ? 'bg-blue-700 text-white' : 'hover:bg-blue-500 hover:text-white' }}">
 
                                                     @isset($link['icon'])
                                                         <span class="inline-flex w-6 h-6 justify-center items-center mr-2">
@@ -376,7 +376,7 @@
                                 </div>
                             @else
                                 <a href="{{ $link['route'] ?? '#' }}"
-                                    class="flex items-center p-2 group text-gray-900 rounded-lg dark:text-white hover:bg-blue-500 hover:text-white {{ $link['active'] ? 'bg-green-600 text-white' : 'hover:bg-blue-500 hover:text-white' }}">
+                                    class="flex items-center p-2 group text-gray-900 rounded-lg dark:text-white hover:bg-blue-500 hover:text-white {{ $link['active'] ? 'bg-blue-700 text-white' : 'hover:bg-blue-500 hover:text-white' }}">
 
                                     <span class="inline-flex w-6 h-6 justify-center items-center">
                                         <i

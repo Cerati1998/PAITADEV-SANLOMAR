@@ -3,7 +3,7 @@
     <x-container class="py-8 px-4">
 
         <a href="{{ route('dashboard') }}">
-            <img class="h-8 mb-3 md:mb-0" src="{{ asset('img/logos/inspectec.png') }}" alt="Coders Free">
+            <img class="h-8 mb-3 md:mb-0" src="{{ asset('img/logos/paitadev.png') }}" alt="Coders Free">
         </a>
 
         <h1 class="text-2xl text-center font-bold text-gray-700 mb-6">

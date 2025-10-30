@@ -18,7 +18,7 @@
 
                 {{-- Logotipo --}}
                 <a href="/" class="flex ml-2 md:mr-24">
-                    <img src="{{ asset('img/logos/inspectec.png') }}" class="h-10" alt="">
+                    <img src="{{ asset('img/logos/paitadev.png') }}" class="h-10" alt="">
                     {{-- <img src="{{ session('company')->logo }}" class="h-8" alt=""> --}}
                 </a>
             </div>

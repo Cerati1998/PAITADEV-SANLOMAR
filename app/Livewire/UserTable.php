@@ -23,6 +23,7 @@ class UserTable extends DataTableComponent
         'tipoDoc' => '',
         'numDoc' => '',
         'email' => '',
+        'role' => '',
         'branch_id' => '',
     ];
 
@@ -39,17 +40,17 @@ class UserTable extends DataTableComponent
     {
         return [
             Column::make("Id", "id")
-                ->sortable(),
-            Column::make("Name", "name")
+                ->deselected(),
+            Column::make("Nombres", "name")
                 ->searchable()
                 ->sortable(),
             Column::make("Email", "email")
                 ->sortable(),
-            Column::make("Tipo Documento", "identity.description")
+            Column::make("Tipo Doc", "identity.description")
                 ->sortable()
                 ->format(fn($value) => '<div class="text-center">' . $value . '</div>')
                 ->html(),
-            Column::make("Numero Documento", "numDoc")
+            Column::make("Nro Documento", "numDoc")
                 ->searchable()
                 ->sortable()
                 ->format(fn($value) => '<div class="text-center">' . $value . '</div>')
@@ -59,6 +60,10 @@ class UserTable extends DataTableComponent
                     return '<img src="' . $row->profile_photo_url   . '" alt="Foto" class="h-12 w-12 rounded-full object-cover">';
                 })
                 ->html(),
+                     Column::make("Rol")
+                ->label(function ($row) {
+                    return $row->roles->pluck('name')->implode(', ') ?: 'Sin rol';
+                }),
 
             Column::make("Sucursal")
                 ->label(function ($row) {
@@ -72,12 +77,16 @@ class UserTable extends DataTableComponent
         ];
     }
 
-    #[On('UserAdded')]
+      #[On('UserAdded')]
     public function builder(): Builder
     {
         return User::query()
+            ->with(['roles', 'branches', 'identity'])
             ->whereHas('companies', function ($query) {
                 $query->where('company_id', session('company')->id);
+            })
+            ->whereDoesntHave('roles', function ($query) {
+                $query->where('name', 'Super');
             });
     }
 

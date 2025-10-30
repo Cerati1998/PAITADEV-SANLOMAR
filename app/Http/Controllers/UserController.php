@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -23,7 +24,8 @@ class UserController extends Controller
         $branches = Branch::where('company_id', session('company')->id)->get();
         //$identities = Identity::whereIn('id', [1, 2])->get();
         $identities = Identity::find([1, 2]);
-        return view('users.index', compact('branches', 'identities'));
+        $roles = Role::all();
+        return view('users.index', compact('branches', 'identities', 'roles'));
     }
 
     /**
@@ -47,9 +49,10 @@ class UserController extends Controller
                 'required',
                 Rule::when($request->tipoDoc == 1, 'numeric|digits:8'),
                 Rule::when($request->tipoDoc == 2, 'numeric|digits:7'),
-                Rule::unique('users','numDoc')
+                Rule::unique('users', 'numDoc')
             ],
             'password' => ['required', 'string', 'confirmed', 'min:8', 'regex:/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@*\/\-_])[a-zA-Z0-9@*\/\-_]{8,}$/'],
+            'role' => ['required', 'exists:roles,id'],
             'branch_id' => ['required', 'exists:branches,id'],
         ], [
             'password.regex' => 'La contraseña debe contener al menos una letra, un número y un carácter especial (@,/, -).',
@@ -92,6 +95,9 @@ class UserController extends Controller
             'company_id' => session('company')->id,
         ]);
 
+        //Asignar Rol
+        $role = Role::find($data['role']);
+        $user->assignRole($role->name);
         return $user;
     }
 

@@ -67,10 +67,21 @@
                 </div>
 
                 <div class="mt-4">
+                    <x-label value="Roles" />
+
+                    <x-select class="block mt-1 w-full" x-model="user.role">
+                        <option value="" hidden>Selecciona un rol</option>
+                        @foreach ($roles as $role)
+                            <option value="{{ $role->id }}">{{ $role->name }}</option>
+                        @endforeach
+                    </x-select>
+
+                </div>
+                <div class="mt-4">
                     <x-label value="Sucursal" />
 
                     <x-select class="block mt-1 w-full" x-model="user.branch_id">
-                        <option value="">Selecciona una sucursal</option>
+                        <option value="" hidden>Selecciona una sucursal</option>
                         @foreach ($branches as $branch)
                             <option value="{{ $branch->id }}">{{ $branch->name }}</option>
                         @endforeach
@@ -104,6 +115,7 @@
                     numDoc: "",
                     password: "",
                     password_confirmation: "",
+                    role: "",
                     branch_id: ""
                 },
 
@@ -167,6 +179,7 @@
                             numDoc: "",
                             password: "",
                             password_confirmation: "",
+                            role: "",
                             branch_id: ""
                         };
 

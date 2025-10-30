@@ -23,6 +23,8 @@ class CompanySeeder extends Seeder
         ]);
 
         $company->users()->attach(1);
+        $company->users()->attach(2);
+        $company->users()->attach(3);
 
         $branch = $company->branches()->create([
             'name' => 'Depot Paita - Norte',
@@ -74,6 +76,12 @@ class CompanySeeder extends Seeder
         ]);
 
         $branch->users()->attach(1, [
+            'company_id' => $company->id,
+        ]);
+        $branch->users()->attach(2, [
+            'company_id' => $company->id,
+        ]);
+        $branch->users()->attach(3, [
             'company_id' => $company->id,
         ]);
 

@@ -9,76 +9,96 @@
         [
             'header' => 'Gestor de Contenedores',
             'icon' => 'fa-solid fa-rectangle-list',
+            'can' => [
+                'discharges.index',
+                'devolution.index',
+                'inspections.eir.list',
+                'inspections.leak.list',
+                'containers.traces',
+            ],
         ],
         [
             'name' => 'Descargas',
             'icon' => 'fa-solid fa-arrow-up-from-water-pump',
             'route' => route('discharges.index'),
             'active' => request()->routeIs(['discharges.*', 'discharge.*']),
+            'can' => 'discharges.index',
         ],
         [
             'name' => 'Devoluciones',
             'icon' => 'fa-solid fa-arrow-down-short-wide',
             'route' => route('devolutions.index'),
             'active' => request()->routeIs('devolutions.*'),
+            'can' => 'devolution.index',
         ],
         [
             'name' => 'Contenedores',
             'icon' => 'fa-solid fa-boxes-stacked',
             'active' => request()->routeIs(['containers.*', 'inspections.*']),
+            'can' => ['inspections.eir.list', 'containers.traces', 'inspections.leak.list'],
             'submenu' => [
                 [
                     'name' => 'Lista',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('containers.traces'),
                     'active' => request()->routeIs('containers.*'),
+                    'can' => 'containers.traces',
                 ],
                 [
                     'name' => 'EIR Gate In',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('inspections.eir.list'),
                     'active' => request()->routeIs('inspections.eir.*'),
+                    'can' => 'inspections.eir.list',
                 ],
-                [
+                /*  [
                     'name' => 'Pre trip Inspection',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('inspections.pti.list'),
                     'active' => request()->routeIs('inspections.pti.*'),
-                ],
+                    'can' => 'inspections.eir.list',
+                ], */
                 [
                     'name' => 'Leak Test',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('inspections.leak.list'),
                     'active' => request()->routeIs('inspections.leak.*'),
+                    'can' => 'inspections.leak.list',
                 ],
             ],
         ],
         [
             'header' => 'Gestor de Patio',
             'icon' => 'fa-solid fa-helmet-safety',
+            'can' => ['manage_work.index', 'workers.index', 'dispatches.index'],
         ],
         [
             'name' => 'Operaciones',
             'icon' => 'fa-solid fa-person-digging',
             'active' => request()->routeIs(['workers.*', 'work_orders.*', 'dispatches.index']),
+            'can' => ['manage_work.index', 'workers.index', 'dispatches.index'],
+
             'submenu' => [
                 [
                     'name' => 'Ordenes de Trabajo',
                     'icon' => 'fa-solid fa-file-contract',
                     'route' => route('work_orders.box'),
                     'active' => request()->routeIs('work_orders.*'),
+                    'can' => 'manage_work.index',
                 ],
                 [
                     'name' => 'Trabajadores',
                     'icon' => 'fa-solid fa-people-carry-box',
                     'route' => route('workers.index'),
                     'active' => request()->routeIs('workers.*'),
+                    'can' => 'workers.index',
                 ],
                 [
                     'name' => 'Despachos',
                     'icon' => 'fa-solid fa-soap',
                     'route' => route('dispatches.index'),
                     'active' => request()->routeIs('dispatches.index'),
+                    'can' => 'dispatches.index',
                 ],
             ],
         ],
@@ -86,6 +106,7 @@
         [
             'header' => 'Panel de CPE',
             'icon' => 'fa-solid fa-file-invoice',
+            'can' => ['vouchers.index','vouchers.anulate','despatches.index'],
         ],
         /* [
             'name' => 'Ventas',
@@ -114,18 +135,21 @@
             'icon' => 'fa-solid fa-cash-register',
             'route' => route('vouchers.index'),
             'active' => request()->routeIs('vouchers.*'),
+            'can' => 'vouchers.index',
         ],
         [
             'name' => 'Anulaciones',
             'icon' => 'fa-solid fa-ban',
             'route' => route('voideds.index'),
             'active' => request()->routeIs('voideds.*'),
+            'can' => 'vouchers.anulate',
         ],
         [
             'name' => 'Guías',
             'icon' => 'fa-solid fa-truck',
-            'active' => request()->routeIs('despatchs*'),
             'route' => route('despatchs.index'),
+            'active' => request()->routeIs('despatchs*'),
+            'can' => 'despatches.index',
             /* 'submenu' => [
                 [
                     'name' => 'Lista de guías',
@@ -144,45 +168,54 @@
         [
             'header' => 'Inventario',
             'icon' => 'fa-solid fa-basket-shopping',
+            'can' => ['products'],
         ],
         [
             'name' => 'Productos',
             'icon' => 'fa-solid fa-pallet',
             'route' => route('products.index'),
             'active' => request()->routeIs('products.*'),
+            'can' => 'products',
         ],
         [
             'header' => 'Maestras',
             'icon' => 'fa-solid fa-cogs',
+            'can' => ['clients','providers','brokers','transports'],
         ],
         [
             'name' => 'Terceros',
             'icon' => 'fa-solid fa-briefcase',
             'active' => request()->routeIs(['clients.*', 'providers.*', 'brokers.*', 'transports.*', 'transport.*']),
+            'can' => ['clients','providers','brokers','transports'],
+
             'submenu' => [
                 [
                     'name' => 'Clientes',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('clients.index'),
                     'active' => request()->routeIs('clients.*'),
+                    'can' => 'clients',
                 ],
                 [
                     'name' => 'Proveedores',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('providers.index'),
                     'active' => request()->routeIs('providers.*'),
+                    'can' => 'providers',
                 ],
                 [
                     'name' => 'Agentes de Aduana',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('brokers.index'),
                     'active' => request()->routeIs('brokers.index'),
+                    'can' => 'brokers',
                 ],
                 [
                     'name' => 'Transportistas',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('transports.index'),
                     'active' => request()->routeIs(['transports.*', 'transport.*']),
+                    'can' => 'transports',
                 ],
             ],
         ],
@@ -190,30 +223,36 @@
             'name' => 'Códigos Inspección',
             'icon' => 'fa-solid fa-magnifying-glass',
             'active' => request()->routeIs(['damages.*', 'components.*', 'methods.*', 'locations.*']),
+            'can' => ['damages', 'components', 'methods', 'locations'],
+
             'submenu' => [
                 [
                     'name' => 'Daños',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('damages.index'),
                     'active' => request()->routeIs('damages.*'),
+                    'can' => 'damages',
                 ],
                 [
                     'name' => 'Componentes',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('components.index'),
                     'active' => request()->routeIs('components.*'),
+                    'can' => 'components',
                 ],
                 [
                     'name' => 'Métodos',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('methods.index'),
                     'active' => request()->routeIs('methods.*'),
+                    'can' => 'methods',
                 ],
                 [
                     'name' => 'Ubicaciones',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('locations.index'),
                     'active' => request()->routeIs('locations.*'),
+                    'can' => 'locations',
                 ],
             ],
         ],
@@ -227,24 +266,29 @@
                 'container-types.*',
                 'reefer-technologies.*',
             ]),
+            'can' => ['lines', 'ports', 'container-types.index'],
+
             'submenu' => [
                 [
                     'name' => 'Líneas',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('lines.index'),
                     'active' => request()->routeIs(['lines.*', 'line.*']),
+                    'can' => 'lines',
                 ],
                 [
                     'name' => 'Puertos',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('ports.index'),
                     'active' => request()->routeIs('ports.*'),
+                    'can' => 'ports',
                 ],
                 [
                     'name' => 'Tipos y Tecnologias',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('container-types.index'),
                     'active' => request()->routeIs('container-types.*'),
+                    'can' => 'container-types.index',
                 ],
             ],
         ],
@@ -254,16 +298,19 @@
             'icon' => 'fa-solid fa-users-gear',
             'route' => route('users.index'),
             'active' => request()->routeIs('users.*'),
+            'can' => 'users',
         ],
         [
             'header' => 'Panel de Configuración',
             'icon' => 'fa-solid fa-building',
+            'can' => ['branches','companies'],
         ],
         [
             'name' => 'Sucursales',
             'icon' => 'fa-solid fa-store',
             'route' => route('branches.index'),
             'active' => request()->routeIs('branches.*'),
+            'can' => 'branches',
         ],
         [
             'name' => 'Empresa',
@@ -273,19 +320,25 @@
                 /* 'branches.*', */
                 /* 'users.*', */
             ]),
+            'can' => 'companies',
+
             'submenu' => [
                 [
                     'name' => 'Datos de la empresa',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('companies.edit'),
                     'active' => request()->routeIs('companies.edit'),
+                    'can' => 'companies.edit',
                 ],
+
                 [
                     'name' => 'API Token',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('companies.api-token'),
                     'active' => request()->routeIs('companies.api-token'),
+                    'can' => 'companies.api-token',
                 ],
+
                 /* [
                     'name' => 'Sucursales',
                     'icon' => 'fa-regular fa-circle',
@@ -312,7 +365,16 @@
     <div class="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
         <ul class="space-y-2 font-medium">
             @foreach ($links as $link)
-                @canany($link['can'] ?? [null])
+                @php
+                    $canShow = true;
+                    if (isset($link['can'])) {
+                        $canShow = is_array($link['can'])
+                            ? auth()->user()->hasAnyPermission($link['can'])
+                            : auth()->user()->can($link['can']);
+                    }
+                @endphp
+
+                @if ($canShow)
                     <li>
                         @isset($link['header'])
                             <div class="pt-4 border-b border-gray-200 dark:border-gray-700">
@@ -352,26 +414,35 @@
                                         :class="{
                                             'hidden': !open,
                                         }">
-                                        @foreach ($link['submenu'] as $link)
-                                            <li>
+                                        @foreach ($link['submenu'] as $sublink)
+                                            @php
+                                                $canShowSub = true;
+                                                if (isset($sublink['can'])) {
+                                                    $canShowSub = is_array($sublink['can'])
+                                                        ? auth()->user()->hasAnyPermission($sublink['can'])
+                                                        : auth()->user()->can($sublink['can']);
+                                                }
+                                            @endphp
 
-                                                <a href="{{ $link['route'] }}"
-                                                    class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-4 group hover:bg-blue-500 hover:text-white dark:text-white dark:hover:bg-gray-700 {{ $link['active'] ? 'bg-blue-700 text-white' : 'hover:bg-blue-500 hover:text-white' }}">
+                                            @if ($canShowSub)
+                                                <li>
+                                                    <a href="{{ $sublink['route'] }}"
+                                                        class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-4 group hover:bg-blue-500 hover:text-white dark:text-white dark:hover:bg-gray-700 {{ $sublink['active'] ? 'bg-blue-700 text-white' : 'hover:bg-blue-500 hover:text-white' }}">
 
-                                                    @isset($link['icon'])
-                                                        <span class="inline-flex w-6 h-6 justify-center items-center mr-2">
-                                                            <i
-                                                                class="{{ $link['icon'] }} {{ $link['active'] ? 'text-white' : 'text-gray-500 group-hover:text-white' }}"></i>
+                                                        @isset($sublink['icon'])
+                                                            <span class="inline-flex w-6 h-6 justify-center items-center mr-2">
+                                                                <i
+                                                                    class="{{ $sublink['icon'] }} {{ $sublink['active'] ? 'text-white' : 'text-gray-500 group-hover:text-white' }}"></i>
+                                                            </span>
+                                                        @endisset
+
+                                                        <span>
+                                                            {{ $sublink['name'] }}
                                                         </span>
-                                                    @endisset
-
-                                                    <span>
-                                                        {{ $link['name'] }}
-                                                    </span>
-                                                </a>
-                                            </li>
+                                                    </a>
+                                                </li>
+                                            @endif
                                         @endforeach
-
                                     </ul>
                                 </div>
                             @else
@@ -390,9 +461,8 @@
                             @endisset
                         @endisset
                     </li>
-                @endcanany
+                @endif
             @endforeach
-
         </ul>
     </div>
 </aside>

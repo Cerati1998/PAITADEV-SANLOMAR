@@ -43,6 +43,7 @@ class DocumentService
             ->setFormaPago($this->getFormaPago($data['formaPago'] ?? null))
             ->setCuotas($this->getCuotas($data['cuotas'] ?? []))
             ->setTipoMoneda($data['tipoMoneda']) // Sol - Catalog. 02
+            ->setTipoCambio($data['tipoCambio']) // de SUNAT
 
             ->setGuias($data['guias'] ?? [])
 
@@ -64,7 +65,7 @@ class DocumentService
             ->setMtoOperGratuitas($data['mtoOperGratuitas'] ?: null)
             ->setMtoBaseIvap($data['mtoBaseIvap'] ?: null)
             ->setMtoBaseIsc($data['mtoBaseIsc'] ?: null)
-            
+
             //Impuestos
             ->setMtoIGV($data['mtoIGV'] ?? 0) // 18
             ->setMtoIGVGratuitas($data['mtoIGVGratuitas'] ?? 0)
@@ -97,7 +98,7 @@ class DocumentService
             ->setUblVersion($data['ublVersion'] ?? '2.1')
             ->setTipoDoc($data['tipoDoc']) // Factura - Catalog. 01 
             ->setSerie($data['serie'])
-            ->setCorrelativo($data['correlativo'])
+            ->setCorrelativo(str_pad($data['correlativo'],8,0,STR_PAD_LEFT))
             ->setFechaEmision(new DateTime($data['fechaEmision'] ?? null))
 
             //Documento Afectado
@@ -134,7 +135,7 @@ class DocumentService
             ->setIcbper($data['icbper'] ?? 0)
             ->setMtoISC($data['mtoISC'] ?? 0)
             ->setTotalImpuestos($data['totalImpuestos'] ?? 0) // 18
-            
+
             //Totales
             ->setValorVenta($data['valorVenta'] ?? 0) // 100
             ->setSubTotal($data['subTotal'] ?? 0) // 118
@@ -161,7 +162,7 @@ class DocumentService
 
     public function getFormaPago($formaPago)
     {
-        
+
         if (!$formaPago) {
             return null;
         }
@@ -195,11 +196,11 @@ class DocumentService
             ->setNombreComercial($company['nombreComercial'])
             ->setAddress(
                 (new Address())
-                ->setDireccion($company['address']['direccion'])
-                ->setDistrito($company['address']['distrito'])
-                ->setProvincia($company['address']['provincia'])
-                ->setDepartamento($company['address']['departamento'])
-                ->setUbigueo($company['address']['ubigueo'])
+                    ->setDireccion($company['address']['direccion'])
+                    ->setDistrito($company['address']['distrito'])
+                    ->setProvincia($company['address']['provincia'])
+                    ->setDepartamento($company['address']['departamento'])
+                    ->setUbigueo($company['address']['ubigueo'])
             );
     }
 
@@ -217,11 +218,11 @@ class DocumentService
         if (isset($client['address'])) {
             $greenClient->setAddress(
                 (new Address())
-                ->setDireccion($client['address']['direccion'] ?? null)
-                ->setDepartamento($client['address']['departamento'] ?? null)
-                ->setProvincia($client['address']['provincia'] ?? null)
-                ->setDistrito($client['address']['distrito'] ?? null)
-                ->setUbigueo($client['address']['ubigueo'] ?? null)
+                    ->setDireccion($client['address']['direccion'] ?? null)
+                    ->setDepartamento($client['address']['departamento'] ?? null)
+                    ->setProvincia($client['address']['provincia'] ?? null)
+                    ->setDistrito($client['address']['distrito'] ?? null)
+                    ->setUbigueo($client['address']['ubigueo'] ?? null)
             );
         }
 
@@ -284,7 +285,6 @@ class DocumentService
         }
 
         return null;
-
     }
 
     public function getDetails($details, $atributos = null)
@@ -293,7 +293,7 @@ class DocumentService
 
         foreach ($details as $detail) {
             $greenDetails[] = (new SaleDetail())
-                
+
                 ->setCodProducto($detail['codProducto'])
                 ->setCodProdSunat($detail['codProdSunat'] ?? null)
                 ->setUnidad($detail['unidad'])

@@ -68,7 +68,7 @@ class InvoiceForm extends Form
     public $totalImpuestos = 0;
     public $valorVenta = 0;
     public $subTotal = 0;
-    public $redondeo = 0;
+    public $redondeo = false;
     public $mtoImpVenta = 0;
 
     public $anticipos = [];
@@ -293,7 +293,6 @@ class InvoiceForm extends Form
 
         $util = new UtilService(session('company'));
         $document = new DocumentService();
-
         $invoiceGreenter = $document->getInvoice($invoice);
 
         //Directorio
@@ -421,8 +420,9 @@ class InvoiceForm extends Form
         $this->valorVenta = $details->whereIn('tipAfeIgv', ['10', '17', '20', '30', '40'])->sum('mtoValorVenta') - $descuentos->where('codTipo', '02')->sum('monto');
         $this->subTotal = $this->valorVenta + $this->totalImpuestos + $descuentos->where('codTipo', '04')->sum('monto') * 0.18;
         $mtoImpVenta = $this->subTotal - $this->sumOtrosDescuentos - $this->totalAnticipos;
-        $this->mtoImpVenta = floor($mtoImpVenta * 10) / 10;
-        $this->redondeo =  $mtoImpVenta - $this->mtoImpVenta;
+        //$this->mtoImpVenta = floor($mtoImpVenta * 10) / 10;
+        $this->mtoImpVenta = round($mtoImpVenta, 2);
+        $this->redondeo =  $this->redondeo ? $mtoImpVenta - $this->mtoImpVenta : false;
     }
 
     public function setLegends()
@@ -496,7 +496,11 @@ class InvoiceForm extends Form
     }
     public function setDetraccion()
     {
-        $this->detraccion['mount'] = $this->detraccion['percent'] ? $this->mtoImpVenta * $this->detraccion['percent'] / 100 : '';
+        if ($this->tipoOperacion === '1001' && $this->tipoMoneda === 'USD') {
+            $this->detraccion['mount'] = $this->detraccion['percent'] ? round($this->tipoCambio * ($this->mtoImpVenta * $this->detraccion['percent'] / 100), 2) : '';
+        } else {
+            $this->detraccion['mount'] = $this->detraccion['percent'] ? round($this->mtoImpVenta * $this->detraccion['percent'] / 100, 2) : '';
+        }
     }
 
     public function setPerception()

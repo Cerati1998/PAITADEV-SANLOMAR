@@ -60,7 +60,7 @@
                     Correlativo
                 </x-label>
 
-                <x-input class="w-full" disabled value="{{ str_pad($invoice->correlativo, 4, '0', STR_PAD_LEFT) }}" />
+                <x-input class="w-full" disabled value="{{ str_pad($invoice->correlativo, 6, '0', STR_PAD_LEFT) }}" />
             </div>
 
             {{-- Moneda --}}
@@ -69,7 +69,7 @@
                     Moneda
                 </x-label>
 
-                <x-select wire:model="invoice.tipoMoneda" class="w-full">
+                <x-select wire:model.live="invoice.tipoMoneda" class="w-full">
                     <option value="PEN">
                         Soles
                     </option>

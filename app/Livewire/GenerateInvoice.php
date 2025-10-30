@@ -164,6 +164,9 @@ class GenerateInvoice extends Component
         if ($property === 'invoice.fechaEmision') {
             $this->invoice->setTipoCambio();
         }
+        if ($property === 'invoice.tipoMoneda') {
+            $this->invoice->setDetraccion();
+        }
 
         if ($property === 'invoice.detraccion.codBienDetraccion') {
             $detraction = $this->detractions

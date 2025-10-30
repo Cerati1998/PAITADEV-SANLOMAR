@@ -25,6 +25,7 @@
         "maatwebsite/excel": "^3.1",
         "rappasoft/laravel-livewire-tables": "^3.4",
         "simplesoftwareio/simple-qrcode": "^4.2",
+        "spatie/laravel-permission": "^6.22",
         "tymon/jwt-auth": "^2.1",
         "wireui/wireui": "^2.1"
     },

@@ -70,6 +70,14 @@ class LocationTable extends DataTableComponent
 
     public function save()
     {
+        if (!auth()->user()->can('locations.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
         $this->validate(
             [
                 'location.code' => [
@@ -110,6 +118,10 @@ class LocationTable extends DataTableComponent
     public function destroy(Location $location)
     {
         try {
+            if (!auth()->user()->can('locations.delete')) {
+            throw new Exception("No tienes el permiso para ejecutar esta acción");
+        }
+
             if (!$location->delete()) {
                 throw new Exception("Ocurrió un problema al intentar eliminar la ubicación");
             }

@@ -78,6 +78,14 @@ class DamageTable extends DataTableComponent
 
     public function save()
     {
+        if (!auth()->user()->can('damages.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
 
         $this->validate([
             'damage.code' => [
@@ -120,6 +128,14 @@ class DamageTable extends DataTableComponent
 
     public function destroy(Damage $damage)
     {
+        if (!auth()->user()->can('damages.delete')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
         try {
             $damage->delete();
             $this->dispatch('swal', [

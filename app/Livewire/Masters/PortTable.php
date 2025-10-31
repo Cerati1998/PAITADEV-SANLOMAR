@@ -78,6 +78,14 @@ class PortTable extends DataTableComponent
 
     public function save()
     {
+        if (!auth()->user()->can('ports.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
         $this->validate([
             'port.code' => [
                 'required',
@@ -106,6 +114,15 @@ class PortTable extends DataTableComponent
 
     public function destroy(Port $port)
     {
+        if (!auth()->user()->can('ports.delete')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $port->delete();
 
         $this->dispatch('swal', [

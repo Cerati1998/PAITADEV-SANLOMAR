@@ -70,6 +70,15 @@ class MethodTable extends DataTableComponent
 
     public function save()
     {
+        if (!auth()->user()->can('methods.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $this->validate([
             'method.code' => [
                 'required',
@@ -106,6 +115,9 @@ class MethodTable extends DataTableComponent
     public function destroy(Method $method)
     {
         try {
+            if (!auth()->user()->can('methods.delete')) {
+                throw new Exception("No tienes el permiso para ejecutar esta acción");
+            }
             $method->delete();
             $this->dispatch('swal', [
                 'title' => 'Éxito',

@@ -81,6 +81,15 @@ class VesselTable extends DataTableComponent
 
     public function edit(Vessel $vessel)
     {
+        if (!auth()->user()->can('line.vessels.edit')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $this->vesselId = $vessel->id;
         $this->vessel = $vessel->only(['imo_number', 'name', 'type', 'pallets']);
         $this->openModal = true;
@@ -103,7 +112,7 @@ class VesselTable extends DataTableComponent
             ],
             'vessel.type' => 'required|string|in:container,bulk,tanker',
             'vessel.pallets' => 'integer'
-        ],[],[
+        ], [], [
             'vessel.imo_number' => 'IMO de Nave',
             'vessel.name' => 'Nombre de Nave',
             'vessel.type' => 'Categoria',
@@ -122,6 +131,15 @@ class VesselTable extends DataTableComponent
 
     public function destroy(Vessel $vessel)
     {
+        if (!auth()->user()->can('line.vessels.delete')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $vessel->delete();
 
         $this->dispatch('swal', [

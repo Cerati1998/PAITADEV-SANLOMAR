@@ -62,6 +62,14 @@ class LineCategoryContainerTable extends DataTableComponent
 
     public function update()
     {
+        if (!auth()->user()->can('line.categories.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
 
         $this->validate([
             'lineCategory.code' => 'required|string|max:5',
@@ -87,6 +95,15 @@ class LineCategoryContainerTable extends DataTableComponent
 
     public function destroy(ContainerLineCategory $containerLineCategory)
     {
+        if (!auth()->user()->can('line.categories.delete')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $containerLineCategory->delete();
         
         $this->dispatch('swal', [

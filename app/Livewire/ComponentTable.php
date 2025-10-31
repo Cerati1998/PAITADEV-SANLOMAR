@@ -73,6 +73,15 @@ class ComponentTable extends DataTableComponent
 
     public function save()
     {
+        if (!auth()->user()->can('components.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $this->validate(
             [
                 'component.code' => [
@@ -112,6 +121,15 @@ class ComponentTable extends DataTableComponent
     }
     public function destroy(Component $component)
     {
+        if (!auth()->user()->can('components.delete')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $component->delete();
     }
 }

@@ -9,7 +9,7 @@ use Livewire\Component;
 class PortCreate extends Component
 {
 
-    
+
     public $countryOptions = [];
     public $openModal = false;
     public $port = [
@@ -26,6 +26,14 @@ class PortCreate extends Component
 
     public function save()
     {
+        if (!auth()->user()->can('ports.create')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
         $this->validate([
             'port.code' => 'required|string|min:5|max:6|unique:ports,code',
             'port.name' => 'required|string|min:4',
@@ -52,7 +60,7 @@ class PortCreate extends Component
     {
         $this->countryOptions = Country::all()->toArray();
     }
-    
+
     public function render()
     {
         return view('livewire.masters.port-create');

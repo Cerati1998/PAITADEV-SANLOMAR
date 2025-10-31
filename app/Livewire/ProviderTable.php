@@ -143,6 +143,15 @@ class ProviderTable extends DataTableComponent
 
     public function save()
     {
+        if (!auth()->user()->can('providers.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $this->validate([
             'provider.tipoDoc' => 'required|exists:identities,id',
             'provider.numDoc' => [
@@ -176,6 +185,14 @@ class ProviderTable extends DataTableComponent
 
     public function destroy(Provider $provider)
     {
+        if (!auth()->user()->can('providers.delete')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
         $provider->delete();
     }
 }

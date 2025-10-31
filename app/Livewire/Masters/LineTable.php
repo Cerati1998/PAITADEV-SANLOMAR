@@ -75,6 +75,15 @@ class LineTable extends DataTableComponent
 
     public function save()
     {
+        if (!auth()->user()->can('lines.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $this->validate([
             'line.code' => [
                 'required',
@@ -101,6 +110,15 @@ class LineTable extends DataTableComponent
 
     public function destroy(ShippingLine $line)
     {
+        if (!auth()->user()->can('lines.delete')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $line->delete();
         $this->dispatch('swal', [
             'title' => 'Eliminado',

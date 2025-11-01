@@ -23,6 +23,7 @@ class RoleSeeder extends Seeder
         $role7 = Role::create(['name' => 'Tecnico']);
         $role8 = Role::create(['name' => 'Facturacion']);
         $role9 = Role::create(['name' => 'Contabilidad']);
+        $role10 = Role::create(['name' => 'Depot']);
 
         Permission::create(['name' => 'companies'])->assignRole([$role1, $role2]);
         Permission::create(['name' => 'companies.edit'])->assignRole([$role1, $role2]);
@@ -33,7 +34,7 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'branches.choose'])->assignRole([$role1, $role2, $role3]);
         Permission::create(['name' => 'branches.series'])->assignRole([$role1, $role2, $role3, $role9]);
         Permission::create(['name' => 'branches.integrations'])->assignRole([$role1, $role2, $role3]);
-        Permission::create(['name' => 'users'])->assignRole([$role1, $role2]);
+        Permission::create(['name' => 'users'])->assignRole([$role1, $role2, $role3]);
         Permission::create(['name' => 'damages'])->assignRole([$role1, $role2, $role3, $role4, $role5]);
         Permission::create(['name' => 'damages.update'])->assignRole([$role1, $role2, $role3, $role4, $role5]);
         Permission::create(['name' => 'damages.delete'])->assignRole([$role1, $role2, $role3]);
@@ -105,9 +106,9 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'dispatches.delete'])->assignRole([$role1, $role2, $role3]);
         Permission::create(['name' => 'dispatches.photos.delete'])->assignRole([$role1, $role2]);
         Permission::create(['name' => 'containers.traces'])->assignRole([$role1, $role2, $role3, $role4, $role5]);
-        Permission::create(['name' => 'inspections.eir.list'])->assignRole([$role1, $role2, $role3, $role4, $role5]);
+        Permission::create(['name' => 'inspections.eir.list'])->assignRole([$role1, $role2, $role3, $role4, $role5, $role10]);
         Permission::create(['name' => 'inspections.eir.create'])->assignRole([$role1, $role2, $role3, $role4, $role5]);
-        Permission::create(['name' => 'inspections.eir.edit'])->assignRole([$role1, $role2, $role3, $role4, $role5]);
+        Permission::create(['name' => 'inspections.eir.edit'])->assignRole([$role1, $role2, $role3, $role4, $role5, $role10]);
         Permission::create(['name' => 'inspections.eir.update'])->assignRole([$role1, $role2, $role3, $role4, $role5]);
         Permission::create(['name' => 'inspections.eir.delete'])->assignRole([$role1, $role2, $role3]);
         Permission::create(['name' => 'inspections.eir.create-detail'])->assignRole([$role1, $role2, $role3, $role4, $role5]);

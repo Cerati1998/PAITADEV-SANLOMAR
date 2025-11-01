@@ -45,6 +45,9 @@ class EirPhotoService
     /**
      * Crea un archivo ZIP a partir de un array de rutas de fotos
      */
+    /**
+     * Crea un archivo ZIP a partir de un array de rutas de fotos
+     */
     private function createZipFromPaths(array $photoPaths, string $zipFileName): string
     {
         $zipPath = storage_path("app/temp/{$zipFileName}");
@@ -55,7 +58,7 @@ class EirPhotoService
         }
 
         if (file_exists($zipPath)) {
-            unlink($zipPath);
+            @unlink($zipPath);
         }
 
         $zip = new ZipArchive();
@@ -81,7 +84,7 @@ class EirPhotoService
                 $addedFiles++;
 
                 register_shutdown_function(function () use ($tempFile) {
-                    if (file_exists($tempFile)) unlink($tempFile);
+                    if (file_exists($tempFile)) @unlink($tempFile);
                 });
             }
         }
@@ -89,7 +92,7 @@ class EirPhotoService
         $zip->close();
 
         if ($addedFiles === 0) {
-            unlink($zipPath);
+            @unlink($zipPath);
             throw new \RuntimeException("No se encontraron fotos válidas para comprimir");
         }
 

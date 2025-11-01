@@ -360,6 +360,15 @@ class EirEdit extends Component
 
     public function save()
     {
+        if (!auth()->user()->can('inspections.eir.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         if (!$this->ensureDraft()) return;
 
         DB::transaction(function () {
@@ -420,6 +429,15 @@ class EirEdit extends Component
 
     public function saveDetail()
     {
+        if (!auth()->user()->can('inspections.eir.create-detail')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         if ($this->eirStatus !== 'borrador') {
             $this->dispatch('swal', [
                 'title' => 'Error!',
@@ -508,6 +526,15 @@ class EirEdit extends Component
 
     public function removeDetail(EirInspectionDetail $eirDetail)
     {
+        if (!auth()->user()->can('inspections.eir.delete-detail')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         if (!$this->ensureDraft()) return;
 
         $eirDetail->delete();
@@ -633,6 +660,15 @@ class EirEdit extends Component
 
     public function deletePhoto($photoId)
     {
+        if (!auth()->user()->can('inspections.eir.delete-photos')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         if (!$this->ensureDraft()) return;
 
         $this->photoService->deleteDetailPhoto($photoId);
@@ -669,6 +705,15 @@ class EirEdit extends Component
      */
     public function close()
     {
+        if (!auth()->user()->can('inspections.eir.close')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         try {
             // Validaciones previas
             if ($this->statusBox === 'pending') {
@@ -880,6 +925,15 @@ class EirEdit extends Component
      */
     public function void()
     {
+        if (!auth()->user()->can('inspections.eir.void')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         try {
             $this->eir->void_inspection($this->idEir);
             $this->eirStatus = 'borrador';

@@ -240,6 +240,15 @@ class DContainerTable extends DataTableComponent
     #[On('bulkAnulate')]
     public function bulkAnulate()
     {
+        if (!auth()->user()->can('discharges.containers.anulate')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $selected = $this->getSelected();
 
         if (empty($selected)) {
@@ -286,6 +295,15 @@ class DContainerTable extends DataTableComponent
     #[On('bulkMachineOp')]
     public function bulkMachineOp()
     {
+        if (!auth()->user()->can('discharges.containers.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $traceService = new ContainerOperationalTraceService();
 
         $selectedTraces = $this->getSelected();

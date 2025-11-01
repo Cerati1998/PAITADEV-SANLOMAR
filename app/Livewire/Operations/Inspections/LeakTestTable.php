@@ -62,9 +62,9 @@ class LeakTestTable extends DataTableComponent
             Column::make("Inicio", "started_at")
                 ->sortable(),
             Column::make("Tiempo", "hours")
-            ->format(function($value){
-                return $value . ' mins';
-            }),
+                ->format(function ($value) {
+                    return $value . ' mins';
+                }),
             Column::make('Inspector', 'inspector')
                 ->label(function ($row) {
                     //dd($row);
@@ -201,6 +201,15 @@ class LeakTestTable extends DataTableComponent
 
     public function edit(LeakTest $leakTest)
     {
+        if (!auth()->user()->can('inspections.leak.edit')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         try {
             $this->leaktest = $leakTest->only([
                 'serie',
@@ -259,6 +268,15 @@ class LeakTestTable extends DataTableComponent
 
     public function save()
     {
+        if (!auth()->user()->can('inspections.leak.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         DB::transaction(function () {
             $this->validate([
                 'leaktest.serie' => 'required|string|max:4',
@@ -304,6 +322,14 @@ class LeakTestTable extends DataTableComponent
 
     public function destroy(LeakTest $leakTest)
     {
+        if (!auth()->user()->can('inspections.leak.delete')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
 
         if ($leakTest->status !== 'borrador') {
             $this->dispatch('swal', [

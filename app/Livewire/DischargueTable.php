@@ -129,6 +129,15 @@ class DischargueTable extends DataTableComponent
 
     public function edit(Dischargue $dischargue)
     {
+        if (!auth()->user()->can('discharges.edit')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $this->dischargueId = $dischargue->id;
         $this->dischargue = $dischargue->only([
             'shipping_line_id',
@@ -196,6 +205,15 @@ class DischargueTable extends DataTableComponent
 
     public function destroy()
     {
+        if (!auth()->user()->can('discharges.anulate')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         //valido que tengo el id
         if (!$this->selectedDischargeId) {
             $this->dispatch('swal', [

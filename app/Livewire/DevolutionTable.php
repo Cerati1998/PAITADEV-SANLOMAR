@@ -160,6 +160,15 @@ class DevolutionTable extends DataTableComponent
 
     public function edit(Devolution $devolution)
     {
+        if (!auth()->user()->can('devolution.edit')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $this->devolutionId = $devolution->id;
         $this->devolution = $devolution->only([
             'shipping_line_id',
@@ -233,6 +242,15 @@ class DevolutionTable extends DataTableComponent
 
     public function destroy()
     {
+        if (!auth()->user()->can('devolution.anulate')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         //valido que tengo el id
         if (!$this->selectedDevolutionId) {
             $this->dispatch('swal', [

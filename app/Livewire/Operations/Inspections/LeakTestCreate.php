@@ -163,6 +163,14 @@ class LeakTestCreate extends Component
 
     public function save()
     {
+        if (!auth()->user()->can('inspections.leak.create')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
         DB::transaction(function () {
             $this->validate([
                 'leaktest.serie' => 'required|string|max:4',

@@ -54,11 +54,19 @@ class DischargueCreate extends Component
     }
 
     public function updatedDischargueEtaDate($value)
-    {   
+    {
         $this->dischargue['week'] = 'WK' . Carbon::parse($value)->isoWeek;
     }
     public function save()
     {
+        if (!auth()->user()->can('discharges.upload')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
 
         FacadesDB::beginTransaction();
         try {
@@ -82,7 +90,7 @@ class DischargueCreate extends Component
 
             //Guardar archivo en disco
             if ($this->attach) {
-                $filePath = $this->attach->store('imports','public');
+                $filePath = $this->attach->store('imports', 'public');
                 //importo los contenedores
                 Excel::import(new ContainerImport($newDischargue->id, $this->dischargue['shipping_line_id']), $filePath);
             }

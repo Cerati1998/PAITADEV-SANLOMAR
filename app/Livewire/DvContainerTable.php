@@ -232,6 +232,15 @@ class DVContainerTable extends DataTableComponent
     #[On('bulkAnulate')]
     public function bulkAnulate()
     {
+        if (!auth()->user()->can('devolution.containers.anulate')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $selected = $this->getSelected();
 
         if (empty($selected)) {

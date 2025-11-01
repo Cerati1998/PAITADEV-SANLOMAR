@@ -63,6 +63,15 @@ class DevolutionCreate extends Component
 
     public function save()
     {
+        if (!auth()->user()->can('devolution.upload')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         FacadesDB::beginTransaction();
         try {
             $this->validate([

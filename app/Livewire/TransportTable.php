@@ -86,6 +86,15 @@ class TransportTable extends DataTableComponent
 
     public function save()
     {
+        if (!auth()->user()->can('transports.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $this->validate([
             'transport.tipoDoc' => 'required|exists:identities,id',
             'transport.numDoc' => [
@@ -165,6 +174,15 @@ class TransportTable extends DataTableComponent
 
     public function destroy(Transport $transport)
     {
+        if (!auth()->user()->can('transports.delete')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $transport->delete();
         $this->dispatch('swal', [
             'title' => 'Exito!',

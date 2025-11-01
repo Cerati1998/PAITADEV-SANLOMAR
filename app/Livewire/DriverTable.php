@@ -97,6 +97,15 @@ class DriverTable extends DataTableComponent
 
     public function save()
     {
+        if (!auth()->user()->can('transport.drivers.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $this->validate([
             'driver.tipoDoc' => 'required|exists:identities,id',
             'driver.numDoc' => [
@@ -174,6 +183,15 @@ class DriverTable extends DataTableComponent
 
     public function destroy(Driver $driver)
     {
+        if (!auth()->user()->can('transport.drivers.delete')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $driver->delete();
 
         $this->dispatch('swal', [

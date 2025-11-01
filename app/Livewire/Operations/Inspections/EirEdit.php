@@ -768,6 +768,15 @@ class EirEdit extends Component
      */
     public function saveApprovalChanges()
     {
+        if (!auth()->user()->can('manage_work.eir')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         try {
             // Validar que sea una cotización
             if (!$this->eir->quoted_repair) {

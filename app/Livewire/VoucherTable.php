@@ -293,6 +293,14 @@ class VoucherTable extends DataTableComponent
     //Anular comprobante
     public function voidReason(Invoice $invoice)
     {
+        if (!auth()->user()->can('vouchers.anulate')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
 
         if (empty($invoice->sunatResponse && $invoice->sunatResponse['success'] && $invoice->sunatResponse['cdrResponse']['code'] == '0')) {
             $this->dispatch('swal', [

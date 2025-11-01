@@ -134,6 +134,15 @@ class CustomBrokerTable extends DataTableComponent
 
     public function save()
     {
+        if (!auth()->user()->can('brokers.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $this->validate([
             'broker.tipoDoc' => 'required|exists:identities,id',
             'broker.numDoc' => [
@@ -158,6 +167,15 @@ class CustomBrokerTable extends DataTableComponent
 
     public function destroy(CustomBroker $broker)
     {
+        if (!auth()->user()->can('brokers.delete')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $broker->delete();
         $this->dispatch('swal',[
             'title' => 'Exito!',

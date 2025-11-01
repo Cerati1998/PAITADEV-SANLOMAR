@@ -106,7 +106,7 @@
         [
             'header' => 'Panel de CPE',
             'icon' => 'fa-solid fa-file-invoice',
-            'can' => ['vouchers.index','vouchers.anulate','despatches.index'],
+            'can' => ['vouchers.index','voideds','despatches.index'],
         ],
         /* [
             'name' => 'Ventas',
@@ -142,7 +142,7 @@
             'icon' => 'fa-solid fa-ban',
             'route' => route('voideds.index'),
             'active' => request()->routeIs('voideds.*'),
-            'can' => 'vouchers.anulate',
+            'can' => 'voideds',
         ],
         [
             'name' => 'Guías',

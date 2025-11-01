@@ -118,6 +118,15 @@ class ProductTable extends DataTableComponent
 
     public function store()
     {
+        if (!auth()->user()->can('products.create')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $product = $this->product;
         $product['branch_id'] = session('branch')->id;
 
@@ -155,6 +164,15 @@ class ProductTable extends DataTableComponent
 
     public function save()
     {
+        if (!auth()->user()->can('products.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $this->validate([
             'product.codProducto' => [
                 'required',
@@ -229,6 +247,15 @@ class ProductTable extends DataTableComponent
 
     public function destroy(Product $product)
     {
+        if (!auth()->user()->can('products.delete')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $product->delete();
 
         $this->dispatch('swal', [

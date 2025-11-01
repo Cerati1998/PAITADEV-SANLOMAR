@@ -257,6 +257,15 @@ class WorkOrderTable extends DataTableComponent
 
     public function edit(WorkOrder $workOrder)
     {
+        if (!auth()->user()->can('manage_work.edit')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         // Cargar todos los datos de la orden
         $this->workOrderForm->setWorkOrder($workOrder);
         $this->repair = $this->workOrderForm->loadRepair($workOrder->eir_inspection_id);
@@ -334,6 +343,15 @@ class WorkOrderTable extends DataTableComponent
     }
     public function destroyLabor(WorkOrderLabor $workOrderLabor)
     {
+        if (!auth()->user()->can('manage_work.labors')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         if ($this->workOrderForm->status !== 'borrador') {
             $this->dispatch('swal', [
                 'title' => 'Error!',
@@ -636,6 +654,15 @@ class WorkOrderTable extends DataTableComponent
 
     public function destroyLaborWorker(LaborWorker $laborWorker)
     {
+        if (!auth()->user()->can('manage_work.workers')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         if ($this->workOrderForm->status !== 'borrador') {
             $this->dispatch('swal', [
                 'title' => 'Error!',
@@ -660,6 +687,15 @@ class WorkOrderTable extends DataTableComponent
      */
     public function closeWorkOrder()
     {
+        if (!auth()->user()->can('manage_work.status')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         try {
             // Validar permisos si es necesario
             // $this->authorize('close', $this->workOrderForm->workOrder);
@@ -876,6 +912,15 @@ class WorkOrderTable extends DataTableComponent
      */
     public function deleteLaborPhoto($photoId)
     {
+        if (!auth()->user()->can('manage_work.photos.delete')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         if (!$this->ensureDraft()) return;
 
         try {

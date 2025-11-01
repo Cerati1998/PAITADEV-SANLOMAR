@@ -146,6 +146,15 @@ class DispatchCreate extends Component
 
     public function save()
     {
+        if (!auth()->user()->can('dispatches.create')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $this->validate([
             'dispatchData.wash_date' => 'required|date',
             'dispatchData.dispatch_date' => 'nullable|date',

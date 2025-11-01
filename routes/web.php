@@ -56,7 +56,7 @@ Route::middleware([
         Route::get('vouchers/note', [VoucherController::class, 'note'])->name('vouchers.note')->middleware('can:vouchers.note');
         Route::get('vouchers/{invoice}', [VoucherController::class, 'show'])->name('vouchers.show')->middleware('can:vouchers.show');
 
-        Route::get('voideds', [VoidedController::class, 'index'])->name('voideds.index')->middleware('can:vouchers.anulate');
+        Route::get('voideds', [VoidedController::class, 'index'])->name('voideds.index')->middleware('can:voideds');
 
         Route::get('despatchs', [DespatchController::class, 'index'])->name('despatchs.index')->middleware('can:despatches.index');
         Route::get('despatchs/create', [DespatchController::class, 'create'])->name('despatchs.create')->middleware('can:despatches.create');
@@ -189,7 +189,7 @@ Route::middleware([
         Route::get('searchClient', [ClientController::class, 'searchClients'])->name('client.search');
         Route::get('searchBroker', [CustomBrokerController::class, 'searchBrokers'])->name('broker.search');
         Route::get('searchContainer', [ContainerController::class, 'getContainers'])->name('container.search');
-        Route::get('searchTrace', [ContainerOperationalTraceController::class, 'getContainers'])->name('trace.search');
+        Route::get('searchTrace', [ContainerOperationalTraceController::class, 'getContainers'])->name('trace.search')->middleware('can:container.traces');
         Route::get('searchWorkers', [WorkerController::class, 'searchWorkers'])->name('worker.search');
 
         Route::get('searchLocation', [LocationController::class, 'getLocations'])->name('location.search');

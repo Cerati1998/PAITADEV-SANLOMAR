@@ -18,7 +18,7 @@ class LocationCreate extends Component
     public function save()
     {
         $this->validate([
-            'location.code' => 'required|string|min:4|unique:locations,code',
+            'location.code' => 'required|string|min:2|unique:locations,code',
             'location.description' => 'required|string|min:5'
         ], [], [
             'location.code' => 'Código de Ubicación',

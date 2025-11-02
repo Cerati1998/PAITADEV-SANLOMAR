@@ -83,7 +83,7 @@ class LocationTable extends DataTableComponent
                 'location.code' => [
                     'required',
                     'string',
-                    'min:4',
+                    'min:2',
                     Rule::unique('locations', 'code')->ignore($this->location_id)
                 ],
                 'location.description' => 'required|min:5|string'

@@ -290,6 +290,7 @@ class InvoiceForm extends Form
         $this->getData();
 
         $invoice = Invoice::create($this->all());
+        $fileName = $this->client['numDoc'] . '-' . $this->tipoDoc . '-' . $this->serie . '-' . str_pad($this->correlativo, 6, 0, STR_PAD_LEFT);
 
         $util = new UtilService(session('company'));
         $document = new DocumentService();
@@ -304,13 +305,15 @@ class InvoiceForm extends Form
 
         //Guardar XML
         /* $invoice->xml_path = $directory . 'xml/' . $invoiceGreenter->getName() . '.xml'; */
-        $invoice->xml_path = $directory . 'xml/' . Str::uuid() . '.xml';
+        //$invoice->xml_path = $directory . 'xml/' . Str::uuid() . '.xml';
+        $invoice->xml_path = $directory . 'xml/' . $fileName . '.xml';
         Storage::put($invoice->xml_path, $xml);
 
         //PDF
         $pdf = $util->getReportPdf($invoiceGreenter, $invoice->hash);
         /* $invoice->pdf_path = $directory . 'cpe/' . $invoiceGreenter->getName() . '.pdf'; */
-        $invoice->pdf_path = $directory . 'cpe/' . Str::uuid() . '.pdf';
+        //$invoice->pdf_path = $directory . 'cpe/' . Str::uuid() . '.pdf';
+        $invoice->pdf_path = $directory . 'cpe/' . $fileName . '.pdf';
         Storage::put($invoice->pdf_path, $pdf);
 
         //Guardamos cambios
@@ -327,7 +330,8 @@ class InvoiceForm extends Form
             // Guardamos el CDR
             if ($result->getCdrZip()) {
                 /* $invoice->cdr_path = $directory . 'cdr/R-' . $invoiceGreenter->getName() . '.zip'; */
-                $invoice->cdr_path = $directory . 'cdr/R-' . Str::uuid() . '.zip';
+                //$invoice->cdr_path = $directory . 'cdr/R-' . Str::uuid() . '.zip';
+                $invoice->cdr_path = $directory . 'cdr/R-' . $fileName . '.zip';
                 Storage::put($invoice->cdr_path, $result->getCdrZip());
             }
 

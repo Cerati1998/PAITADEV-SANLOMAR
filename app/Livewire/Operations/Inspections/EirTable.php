@@ -5,7 +5,7 @@ namespace App\Livewire\Operations\Inspections;
 use App\Models\Container;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Column;
-use App\Models\Inspections\EirInspection;
+use App\Models\inspections\EirInspection;
 use App\Models\ShippingLine;
 use Illuminate\Database\Eloquent\Builder;
 use Rappasoft\LaravelLivewireTables\Views\Filters\DateRangeFilter;
@@ -33,9 +33,10 @@ class EirTable extends DataTableComponent
                 }),
             Column::make("Inicio", "started_at")
                 ->sortable(),
-            Column::make("Termino", "closed_at")
-                ->sortable(),
-            Column::make("Estado", "eir_inspections.status")
+            Column::make("Nave", "trace")
+                ->label(fn($row) => $row->trace?->nave)
+                ->searchable(),
+            Column::make("Estado", "status")
                 ->label(callback: function ($row) {
                     $icon = match ($row->status) {
                         'completado' => '<i class="text-xl fas fa-circle-check text-green-500" title="Culminado"></i>',
@@ -64,7 +65,7 @@ class EirTable extends DataTableComponent
     public function builder(): Builder
     {
         return EirInspection::with(['trace', 'inspector'])
-            ->addSelect('eir_inspections.status')
+            ->select('eir_inspections.*')
             ->whereDate('eir_inspections.created_at', '>=', now()->subMonths(6))
             ->whereHas('trace', function ($query) {
                 $query->whereHas('gateInDetail', function ($q) {

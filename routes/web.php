@@ -189,7 +189,7 @@ Route::middleware([
         Route::get('searchClient', [ClientController::class, 'searchClients'])->name('client.search');
         Route::get('searchBroker', [CustomBrokerController::class, 'searchBrokers'])->name('broker.search');
         Route::get('searchContainer', [ContainerController::class, 'getContainers'])->name('container.search');
-        Route::get('searchTrace', [ContainerOperationalTraceController::class, 'getContainers'])->name('trace.search')->middleware('can:container.traces');
+        Route::get('searchTrace', [ContainerOperationalTraceController::class, 'getContainers'])->name('trace.search');
         Route::get('searchWorkers', [WorkerController::class, 'searchWorkers'])->name('worker.search');
 
         Route::get('searchLocation', [LocationController::class, 'getLocations'])->name('location.search');

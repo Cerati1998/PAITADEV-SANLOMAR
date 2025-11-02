@@ -44,7 +44,8 @@ class ContainerTraceTable extends DataTableComponent
             Column::make("Linea")
                 ->label(function ($row) {
                     return $row->linea ?? '-';
-                }),
+                })
+                ->searchable(),
             Column::make("EIR", 'EirInspection')
                 ->label(function ($row) {
                     if ($row->EirInspection->isEmpty()) {
@@ -206,7 +207,23 @@ class ContainerTraceTable extends DataTableComponent
                         })
                         ->pluck('name', 'id')
                         ->toArray()
-                ),
+                )
+                 ->filter(function (Builder $builder, $shippingLineId) {
+                    if (!empty($shippingLineId)) {
+                            $builder->whereHas('gateInDetail', function ($gateQuery) use ($shippingLineId) {
+                                $gateQuery->where(function ($originQuery) use ($shippingLineId) {
+                                    // Para Descarga (Dischargue)
+                                    $originQuery->whereHasMorph('originable', ['App\Models\Dischargue'], function ($dischargueQuery) use ($shippingLineId) {
+                                        $dischargueQuery->where('shipping_line_id', $shippingLineId);
+                                    })
+                                        // Para Devolución (Devolution)
+                                        ->orWhereHasMorph('originable', ['App\Models\Devolution'], function ($devolutionQuery) use ($shippingLineId) {
+                                            $devolutionQuery->where('shipping_line_id', $shippingLineId);
+                                        });
+                                });
+                            });
+                    }
+                }),
 
             SelectFilter::make('Estado')
                 ->options([

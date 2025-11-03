@@ -5,6 +5,8 @@ namespace App\Livewire\Operations\Inspections;
 use App\Models\Container;
 use App\Models\ContainerOperationalTrace;
 use App\Models\inspections\LeakTest;
+use App\Models\ReeferMachine;
+use App\Models\ReeferTechnology;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -17,6 +19,8 @@ class LeakTestCreate extends Component
     public $openModal = false;
     public $branch_id;
     public $series;
+    public $reefer_technologies;
+    public $reefer_machines;
 
     #[Computed]
     public function traces()
@@ -57,6 +61,7 @@ class LeakTestCreate extends Component
     ];
 
     public $containerData = [
+        'id' => '',
         'machine' => '',
         'technology' => '',
         'year' => '',
@@ -127,8 +132,9 @@ class LeakTestCreate extends Component
             }
 
             // Asignar los datos del contenedor
-            $this->containerData['technology'] = $container->reefer_technology?->name ?? 'N/A';
-            $this->containerData['machine'] = $container->machine?->code ?? 'N/A';
+            $this->containerData['id'] = $container->id;
+            $this->containerData['technology'] = $container->reefer_technology?->id ?? 'N/A';
+            $this->containerData['machine'] = $container->machine?->id ?? 'N/A';
             $this->containerData['year'] = $container->build_year ?? 'N/A';
 
             //  Asignar las horas de trabajo por tecnología/máquina
@@ -157,6 +163,8 @@ class LeakTestCreate extends Component
     public function mount()
     {
         $this->getSeries();
+        $this->reefer_technologies = ReeferTechnology::all();
+        $this->reefer_machines = ReeferMachine::all();
         $this->leaktest['inspector_id'] = auth()->id();
         $this->leaktest['branch_id'] = $this->branch_id;
     }
@@ -212,6 +220,14 @@ class LeakTestCreate extends Component
             }
 
             LeakTest::create($this->leaktest);
+
+            if (!empty($this->containerData['id'])) {
+                Container::findOrFail($this->containerData['id'])->update([
+                    'build_year' => $this->containerData['year'],
+                    'reefer_technology_id' => $this->containerData['technology'],
+                    'reefer_machine_id' => $this->containerData['machine'],
+                ]);
+            }
         });
 
         $this->dispatch('swal', [
@@ -220,6 +236,12 @@ class LeakTestCreate extends Component
             'icon' => 'success'
         ]);
         $this->dispatch('leakTestCreated');
-        $this->reset('openModal', 'leaktest', 'containerData');
+        $this->reset('openModal', 'containerData');
+
+        $this->leaktest['started_at'] = null;
+        $this->leaktest['finished_at'] = null;
+        $this->leaktest['hours'] = null;
+        $this->leaktest['trace_id'] = null;
+        $this->leaktest['status'] = 'pending';
     }
 }

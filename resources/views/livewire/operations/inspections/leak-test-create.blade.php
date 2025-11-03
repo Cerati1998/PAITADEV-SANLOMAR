@@ -43,9 +43,17 @@
             </div>
 
             <div class="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-4">
-                <x-wire-input label="Tecnologia" wire:model="containerData.technology" readonly />
-                <x-wire-input label="Maquina" wire:model="containerData.machine" readonly />
-                <x-wire-input label="Año" wire:model="containerData.year" readonly />
+                <div class="col-span-1">
+                    <x-label>Tecnología</x-label>
+                    <x-wire-select wirex-bind:key="select-technology-{{ $containerData['technology'] ?? 'null' }}"
+                        :options="$this->reefer_technologies" option-label="name" option-value="id" wire:model="containerData.technology" />
+                </div>
+                <div class="col-span-1">
+                    <x-label>Máquina</x-label>
+                    <x-wire-select wirex-bind:key="select-machine-{{ $containerData['machine'] ?? 'null' }}"
+                        :options="$this->reefer_machines" option-label="code" option-value="id" wire:model="containerData.machine" />
+                </div>
+                <x-wire-input label="Año" wire:model="containerData.year" />
                 <x-wire-number :min="0" :max="12" label="Duración(minutos)" wire:model="leaktest.hours"
                     readonly />
                 <div class="col-span-2">

@@ -92,8 +92,8 @@ class EirTable extends DataTableComponent
                 ])
                 ->filter(function (Builder $builder, array $dateRange) {
                     $builder
-                        ->whereDate('eir_inspections.created_at', '>=', $dateRange['minDate'])
-                        ->whereDate('eir_inspections.created_at', '<=', $dateRange['maxDate']);
+                        ->whereDate('eir_inspections.started_at', '>=', $dateRange['minDate'])
+                        ->whereDate('eir_inspections.closed_at', '<=', $dateRange['maxDate']);
                 }),
             SelectFilter::make('Linea')
                 ->options(

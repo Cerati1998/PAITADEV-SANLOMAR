@@ -251,10 +251,14 @@ class InspectionController extends Controller
                     'ancho' => $detail->width ?? '',
                     'altura' => $detail->height ?? '',
                     'comentario' => $detail->comments ?? '',
-                    'foto1' => $photos->get(0) ? Storage::url($photos->get(0)->path) : asset('img/no-image.jpg'),
+                    'foto1' => $photos->get(0) ? $photos->get(0)->path : asset('img/no-image.jpg'),
+                    'foto2' => $photos->get(1) ? $photos->get(1)->path : asset('img/no-image.jpg'),
+                    'foto3' => $photos->get(2) ? $photos->get(2)->path : asset('img/no-image.jpg'),
+                    'foto4' => $photos->get(3) ? $photos->get(3)->path : asset('img/no-image.jpg'),
+                    /* 'foto1' => $photos->get(0) ? Storage::url($photos->get(0)->path) : asset('img/no-image.jpg'),
                     'foto2' => $photos->get(1) ? Storage::url($photos->get(1)->path) : asset('img/no-image.jpg'),
                     'foto3' => $photos->get(2) ? Storage::url($photos->get(2)->path) : asset('img/no-image.jpg'),
-                    'foto4' => $photos->get(3) ? Storage::url($photos->get(3)->path) : asset('img/no-image.jpg'),
+                    'foto4' => $photos->get(3) ? Storage::url($photos->get(3)->path) : asset('img/no-image.jpg'), */
                 ];
             })->toArray(),
             'criterioIICL' => true,

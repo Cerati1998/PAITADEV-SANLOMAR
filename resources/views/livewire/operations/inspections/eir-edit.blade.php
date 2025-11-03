@@ -402,28 +402,48 @@
     {{-- Modal para añadir las 4 fotos de cabecera --}}
     <div x-data="photoHeaderUploader()">
         <x-wire-modal-card title="Fotografías de Cabecera" name="galleryModal" width="5xl" :hide-close="true">
+            {{-- Toggle para elegir modo de captura --}}
+            <div class="mb-4 flex items-center justify-center gap-2 sm:gap-4 p-2 sm:p-3 bg-gray-100 rounded-lg">
+                <span class="text-xs sm:text-sm font-medium text-gray-700">Modo:</span>
+                <button @click="captureMode = 'camera'"
+                    :class="captureMode === 'camera' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'"
+                    class="px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg border transition-colors duration-200 flex items-center gap-1 sm:gap-2">
+                    <i class="fas fa-camera text-xs sm:text-base"></i>
+                    <span>Cámara</span>
+                </button>
+                <button @click="captureMode = 'gallery'"
+                    :class="captureMode === 'gallery' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'"
+                    class="px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg border transition-colors duration-200 flex items-center gap-1 sm:gap-2">
+                    <i class="fas fa-images text-xs sm:text-base"></i>
+                    <span>Galería</span>
+                </button>
+            </div>
 
             <div class="grid grid-cols-2 gap-2">
                 @foreach ([1, 2, 3, 4] as $i)
                     <div class="relative">
                         <img src="{{ $urls[$i] ?? asset('img/gallery/empty2.png') }}"
                             class="{{ $urls[$i] ? 'w-full h-48 lg:h-96 rounded-lg shadow-md transition-transform duration-200 hover:scale-105' : 'w-full h-auto' }} object-cover">
-
+                        {{-- Input file con capture dinámico --}}
                         <input type="file" x-on:change="uploadPhoto($event, {{ $i }})"
-                            class="absolute inset-0 opacity-0 cursor-pointer" capture="environment" accept="image/*">
-
-                        {{-- Agregar indicador de carga --}}
+                            :capture="captureMode === 'camera' ? 'environment' : null"
+                            class="absolute inset-0 opacity-0 cursor-pointer" accept="image/*">
+                        {{-- Indicador de carga --}}
                         <div x-show="uploading[{{ $i }}]"
-                            class="absolute inset-0 flex items-center justify-center bg-black/50">
+                            class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
                             <div class="text-white text-center">
-                                <i class="fas fa-spinner fa-spin text-3xl"></i>
-                                <p class="text-sm mt-2" x-text="`${progress[{{ $i }}]}%`"></p>
+                                <i class="fas fa-spinner fa-spin text-2xl sm:text-3xl"></i>
+                                <p class="text-xs sm:text-sm mt-2" x-text="`${progress[{{ $i }}]}%`"></p>
                             </div>
+                        </div>
+                        {{-- Badge indicador de modo --}}
+                        <div class="absolute top-1 right-1 sm:top-2 sm:right-2 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs font-medium"
+                            :class="captureMode === 'camera' ? 'bg-blue-500 text-white' : 'bg-purple-500 text-white'">
+                            <i :class="captureMode === 'camera' ? 'fas fa-camera' : 'fas fa-images'"></i>
                         </div>
                     </div>
                 @endforeach
             </div>
-
             <x-slot name="footer" class="flex justify-end gap-x-4">
                 <x-wire-button flat label="Cerrar" x-on:click="close" />
                 <x-wire-button red icon="arrow-down-tray" label="Descargar" wire:click="download_photos" />
@@ -437,18 +457,61 @@
 
             <div class="w-full space-y-6">
 
+                {{-- Toggle para elegir modo de captura --}}
+                <div class="flex items-center justify-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gray-100 rounded-lg">
+                    <div class="flex items-center gap-1 sm:gap-2">
+                        <i class="fas fa-images text-xs sm:text-base"
+                            :class="captureMode === 'gallery' ? 'text-blue-500' : 'text-gray-400'"></i>
+                        <span class="text-xs sm:text-sm font-medium"
+                            :class="captureMode === 'gallery' ? 'text-blue-500' : 'text-gray-500'">
+                            Galería
+                        </span>
+                    </div>
+
+                    {{-- Switch --}}
+                    <button @click="toggleCaptureMode()"
+                        class="relative w-12 h-7 sm:w-14 sm:h-8 rounded-full transition-colors duration-300"
+                        :class="captureMode === 'camera' ? 'bg-blue-500' : 'bg-gray-300'">
+                        <span
+                            class="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 w-6 h-6 bg-white rounded-full shadow-md transition-all duration-300"
+                            :style="{
+                                transform: captureMode === 'camera' ?
+                                    (window.innerWidth >= 640 ? 'translateX(1.5rem)' : 'translateX(1.25rem)') :
+                                    'translateX(0)'
+                            }">
+                        </span>
+                    </button>
+
+                    <div class="flex items-center gap-1 sm:gap-2">
+                        <span class="text-xs sm:text-sm font-medium"
+                            :class="captureMode === 'camera' ? 'text-blue-500' : 'text-gray-500'">
+                            Cámara
+                        </span>
+                        <i class="fas fa-camera text-xs sm:text-base"
+                            :class="captureMode === 'camera' ? 'text-blue-500' : 'text-gray-400'"></i>
+                    </div>
+                </div>
+
                 {{-- Zona de subida de foto --}}
                 <div
                     class="relative group border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-400 transition">
                     <input type="file" x-on:change="uploadDetailPhoto($event)"
-                        class="absolute inset-0 opacity-0 cursor-pointer" capture="environment" accept="image/*">
+                        :capture="captureMode === 'camera' ? 'environment' : null"
+                        class="absolute inset-0 opacity-0 cursor-pointer" accept="image/*">
 
-                    {{-- Agregar indicador de carga --}}
-                    <div x-show="uploading" class="absolute inset-0 flex items-center justify-center bg-black/50">
-                        <div class="text-blue-500 text-center">
+                    {{-- Indicador de carga --}}
+                    <div x-show="uploading"
+                        class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+                        <div class="text-white text-center">
                             <i class="fas fa-spinner fa-spin text-3xl"></i>
                             <p class="text-sm mt-2" x-text="`${progress}%`"></p>
                         </div>
+                    </div>
+
+                    {{-- Badge indicador de modo --}}
+                    <div class="absolute top-2 right-2 px-2 py-1 rounded text-xs font-medium"
+                        :class="captureMode === 'camera' ? 'bg-blue-500 text-white' : 'bg-purple-500 text-white'">
+                        <i :class="captureMode === 'camera' ? 'fas fa-camera' : 'fas fa-images'"></i>
                     </div>
 
                     <div class="flex flex-col items-center justify-center text-gray-500">
@@ -619,6 +682,7 @@
                     urls: @entangle('urls'), // Sincronizar con Livewire
                     uploading: {},
                     progress: {},
+                    captureMode: 'gallery',
 
                     async uploadPhoto(event, position) {
                         const file = event.target.files[0];
@@ -636,10 +700,10 @@
                         }
 
                         /* if (file.size > 10 * 1024 * 1024) {
-                                            Swal.fire('Error', 'La imagen no debe superar 10MB', 'error');
-                                            return;
-                                        }
-                 */
+                                                    Swal.fire('Error', 'La imagen no debe superar 10MB', 'error');
+                                                    return;
+                                                }
+                         */
                         // Comprimir antes de enviar
                         const options = {
                             maxSizeMB: 0.7,
@@ -700,7 +764,10 @@
                             this.progress[position] = 0;
                             event.target.value = '';
                         }
-                    }
+                    }, // Método auxiliar para cambiar el modo (opcional)
+                    toggleCaptureMode() {
+                        this.captureMode = this.captureMode === 'camera' ? 'gallery' : 'camera';
+                    },
                 }
             }
 
@@ -709,14 +776,15 @@
                 return {
                     detailId: @entangle('currentDetailId'),
                     status: @entangle('eir.status'),
-                    photos: [],
                     uploading: false,
                     progress: 0,
+                    captureMode: 'gallery', // ← AGREGAR ESTA LÍNEA
 
                     async uploadDetailPhoto(event) {
                         const file = event.target.files[0];
                         if (!file) return;
-
+                        console.log(this.detailId);
+                        // Validaciones
                         if (this.status !== 'borrador') {
                             Swal.fire('Error', 'No puedes agregar fotos, el EIR ya se encuentra cerrado', 'error');
                             return;
@@ -726,11 +794,6 @@
                             Swal.fire('Error', 'Solo se permiten imágenes', 'error');
                             return;
                         }
-
-                        /* if (file.size > 10 * 1024 * 1024) {
-                            Swal.fire('Error', 'La imagen no debe superar 10MB', 'error');
-                            return;
-                        } */
 
                         // Comprimir antes de enviar
                         const options = {
@@ -769,15 +832,14 @@
                             });
 
                             if (response.data.success) {
-                                this.photos = response.data.photos;
-
-                                // Sincronizar con Livewire
-                                @this.call('loadPhotoDetail', this.detailId);
+                                await @this.call('loadPhotoDetail', this.detailId);
 
                                 Swal.fire({
                                     icon: 'success',
                                     title: '¡Éxito!',
-                                    text: 'Foto de evidencia subida correctamente',
+                                    text: 'Foto subida correctamente',
+                                    timer: 2000,
+                                    showConfirmButton: false
                                 });
                             }
 
@@ -795,21 +857,10 @@
                         }
                     },
 
-                    confirmDelete(photoId) {
-                        Swal.fire({
-                            title: '¿Estás seguro?',
-                            text: '¡No podrás revertir esto!',
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonColor: '#3085d6',
-                            cancelButtonColor: '#d33',
-                            confirmButtonText: '¡Sí, eliminar!'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                @this.call('deletePhoto', photoId);
-                            }
-                        });
-                    }
+                    // Método auxiliar para cambiar el modo
+                    toggleCaptureMode() {
+                        this.captureMode = this.captureMode === 'camera' ? 'gallery' : 'camera';
+                    },
                 }
             }
 

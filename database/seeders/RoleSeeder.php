@@ -133,5 +133,6 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'devolution.containers.anulate'])->assignRole([$role1, $role2, $role3]);
         Permission::create(['name' => 'devolution.containers.update'])->assignRole([$role1, $role2, $role3, $role4]);
         Permission::create(['name' => 'devolution.edit'])->assignRole([$role1, $role2, $role3, $role4]);
+        Permission::create(['name' => 'reports'])->assignRole([$role1, $role2, $role3, $role4, $role8, $role9]);
     }
 }

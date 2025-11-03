@@ -301,6 +301,13 @@
             'can' => 'users',
         ],
         [
+            'name' => 'Reportes',
+            'icon' => 'fa-solid fa-file-export',
+            'route' => route('reports.index'),
+            'active' => request()->routeIs('reports.index'),
+            'can' => 'reports',
+        ],
+        [
             'header' => 'Panel de Configuración',
             'icon' => 'fa-solid fa-building',
             'can' => ['branches','companies'],

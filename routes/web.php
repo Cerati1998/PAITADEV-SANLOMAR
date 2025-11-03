@@ -23,6 +23,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\ReeferConditionController;
 use App\Http\Controllers\ReeferTechnologyController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ShippingLineController;
 use App\Http\Controllers\TransportController;
 use App\Http\Controllers\UserController;
@@ -180,6 +181,11 @@ Route::middleware([
         });
 
         Route::get('dispatches', [DispatchController::class, 'manage_dispatches'])->name('dispatches.index')->middleware('can:dispatches.index');
+
+        //endpoint para reportes
+        Route::get('reports',[ReportController::class,'index'])->name('reports.index')->middleware('can:reports');
+        Route::post('reports/dispatches',[DispatchController::class,'exportDispatches'])->name('report.dispatches');
+        Route::post('reports/dispatches',[DispatchController::class,'exportDispatches'])->name('report.dispatches');
 
         //endpoint para selectores
         Route::get('searchLine', [ShippingLineController::class, 'searchLines'])->name('line.search');

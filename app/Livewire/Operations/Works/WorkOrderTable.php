@@ -70,13 +70,41 @@ class WorkOrderTable extends DataTableComponent
                     return $row->started_at_date . ' ' . $row->started_at_time;
                 })
                 ->sortable(),
-            Column::make("Termino")
+            /*  Column::make("Termino")
                 ->label(function ($row) {
                     return "<div class='text-center'> 
                     {$row->closed_at_date}  {$row->closed_at_time}
                     </div>";
                 })
-                ->html(),
+                ->html(), */
+            Column::make('Tipo')
+                ->label(function ($row) {
+                    $icon = '';
+                    $color = '';
+                    $text = '';
+                    if ($row->eirInspection->fast_repair) {
+                        //$text = "<span class='text-sm lg:text-xs font-medium text-green-500'>Rapida</span>";
+                        $icon = "fas fa-screwdriver";
+                        $color = "bg-green-500";
+                        $text = "Rápida";
+                    } else if ($row->eirInspection->normal_repair) {
+                        //$text = "<span class='text-sm lg:text-xs font-medium text-yellow-500'>Normal</span>";
+                        $icon = "fas fa-hammer";
+                        $color = "bg-yellow-500";
+                        $text = "Normal";
+                    } else if ($row->eirInspection->quoted_repair) {
+                        //$text = "<span class='text-sm lg:text-xs font-medium text-red-500'>Alta</span>";
+                        $icon = "fa-solid fa-circle-dollar-to-slot";
+                        $color = "bg-red-500";
+                        $text = "Alta";
+                    }
+
+                    return view('components.badge', [
+                        'icon' => $icon,
+                        'styleBg' => $color,
+                        'slot' => $text,
+                    ]);
+                })->html(),
             Column::make("Estado", "work_orders.status")
                 ->label(function ($row) {
                     $icon = match ($row->status) {
@@ -132,7 +160,7 @@ class WorkOrderTable extends DataTableComponent
                 'container:id,code',
                 'openedBy:id,name',
                 'closedBy:id,name',
-                'eirInspection:id,serie,correlativo'
+                'eirInspection:id,serie,correlativo,fast_repair,normal_repair,quoted_repair'
             ])
             ->addSelect(['work_orders.*'])
             //->where('work_orders.type', $this->type)

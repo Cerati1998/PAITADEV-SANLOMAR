@@ -348,17 +348,43 @@
 
                 {{-- Zona de subida de foto (solo si está en borrador) --}}
                 @if ($workOrderForm->status === 'borrador')
+                    {{-- Toggle para elegir modo de captura --}}
+                    <div
+                        class="mb-4 flex items-center justify-center gap-2 sm:gap-4 p-2 sm:p-3 bg-gray-100 rounded-lg">
+                        <span class="text-xs sm:text-sm font-medium text-gray-700">Modo:</span>
+                        <button @click="captureMode = 'camera'"
+                            :class="captureMode === 'camera' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'"
+                            class="px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg border transition-colors duration-200 flex items-center gap-1 sm:gap-2">
+                            <i class="fas fa-camera text-xs sm:text-base"></i>
+                            <span>Cámara</span>
+                        </button>
+                        <button @click="captureMode = 'gallery'"
+                            :class="captureMode === 'gallery' ? 'bg-blue-500 text-white' : 'bg-white text-gray-700'"
+                            class="px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm rounded-lg border transition-colors duration-200 flex items-center gap-1 sm:gap-2">
+                            <i class="fas fa-images text-xs sm:text-base"></i>
+                            <span>Galería</span>
+                        </button>
+                    </div>
+
                     <div
                         class="relative group border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-indigo-400 transition">
                         <input type="file" x-on:change="uploadLaborPhoto($event)"
-                            class="absolute inset-0 opacity-0 cursor-pointer" capture="environment" accept="image/*">
+                            :capture="captureMode === 'camera' ? 'environment' : null"
+                            class="absolute inset-0 opacity-0 cursor-pointer" accept="image/*">
 
                         {{-- Indicador de carga --}}
-                        <div x-show="uploading" class="absolute inset-0 flex items-center justify-center bg-black/50">
-                            <div class="text-blue-500 text-center">
-                                <i class="fas fa-spinner fa-spin text-3xl"></i>
-                                <p class="text-sm mt-2" x-text="`${progress}%`"></p>
+                        <div x-show="uploading"
+                            class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-lg">
+                            <div class="text-white text-center">
+                                <i class="fas fa-spinner fa-spin text-2xl sm:text-3xl"></i>
+                                <p class="text-xs sm:text-sm mt-2" x-text="`${progress}%`"></p>
                             </div>
+                        </div>
+
+                        {{-- Badge indicador de modo --}}
+                        <div class="absolute top-1 right-1 sm:top-2 sm:right-2 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-xs font-medium"
+                            :class="captureMode === 'camera' ? 'bg-blue-500 text-white' : 'bg-purple-500 text-white'">
+                            <i :class="captureMode === 'camera' ? 'fas fa-camera' : 'fas fa-images'"></i>
                         </div>
 
                         <div class="flex flex-col items-center justify-center text-gray-500">
@@ -569,12 +595,14 @@
         }
 
         // Alpine component para subir fotos de labor
+        // Alpine component para subir fotos de labor
         function photoLaborUploader() {
             return {
                 laborId: @entangle('currentLaborId'),
                 statusOrder: @entangle('workOrderForm.status'),
                 uploading: false,
                 progress: 0,
+                captureMode: 'gallery', // ← AGREGAR ESTA LÍNEA
 
                 async uploadLaborPhoto(event) {
                     const file = event.target.files[0];

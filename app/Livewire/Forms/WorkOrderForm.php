@@ -407,9 +407,9 @@ class WorkOrderForm extends Form
         }
 
         return match (true) {
-            $eir->fast_repair  => 'Reparación Rápida',
-            $eir->normal_repair  => 'Reparación Normal',
-            $eir->quoted_repair  => 'Reparación Mto Alto',
+            $eir->fast_repair  => 'Rápida',
+            $eir->normal_repair  => 'Normal',
+            $eir->quoted_repair  => 'Mto Alto',
             default => 'Sin Reparación'
         };
     }

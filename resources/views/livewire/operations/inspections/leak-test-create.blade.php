@@ -51,7 +51,7 @@
                 <div class="col-span-1">
                     <x-label>Máquina</x-label>
                     <x-wire-select wirex-bind:key="select-machine-{{ $containerData['machine'] ?? 'null' }}"
-                        :options="$this->reefer_machines" option-label="code" option-value="id" wire:model="containerData.machine" />
+                        :options="$this->reefer_machines" option-label="code" option-value="id" wire:model.live="containerData.machine" />
                 </div>
                 <x-wire-input label="Año" wire:model="containerData.year" />
                 <x-wire-number :min="0" :max="12" label="Duración(minutos)" wire:model="leaktest.hours"

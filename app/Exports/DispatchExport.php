@@ -22,7 +22,7 @@ class DispatchExport implements WithEvents
     {
         return [
             BeforeWriting::class => function (BeforeWriting $event) {
-                $templatePath = storage_path('app/templates/plantilla_reportes.xlsx');
+                $templatePath = storage_path('app/templates/DESPACHOS.xlsx');
 
                 $reader = IOFactory::createReader('Xlsx');
                 $reader->setLoadSheetsOnly('Movimientos');

@@ -31,7 +31,7 @@
                 </div>
                 <div class="col-span-2">
                     <x-label>Contenedor</x-label>
-                    <x-wire-select :options="$this->traces" wire:model.live="leaktest.trace_id" option-label="name"
+                    <x-wire-select :options="$this->traces" wire:model="leaktest.trace_id" option-label="name"
                         option-value="id" readonly />
                 </div>
             </div>

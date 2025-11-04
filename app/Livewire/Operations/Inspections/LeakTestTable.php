@@ -192,7 +192,7 @@ class LeakTestTable extends DataTableComponent
 
         return $traces->map(function ($trace) {
             return [
-                'id' => $trace->id,
+                'id' => (int) $trace->id,
                 'name' => $trace->container->code ?? 'N/A',
                 'description' => strtoupper($trace->nave ?? '') . ' - ' . strtoupper($trace->linea ?? ''),
             ];
@@ -219,9 +219,11 @@ class LeakTestTable extends DataTableComponent
                 'hours',
                 'status',
                 'branch_id',
-                'trace_id',
+                //'trace_id',
                 'inspector_id',
             ]);
+            
+            $this->leaktest['trace_id'] = (int) $leakTest->trace_id;
 
             //  buscar el trace
             $trace = ContainerOperationalTrace::with([
@@ -255,7 +257,7 @@ class LeakTestTable extends DataTableComponent
             };
 
             //asigno el id
-            $this->leaktestId = $leakTest->id;
+            $this->leaktestId = (int) $leakTest->id;
             $this->openModal = true;
         } catch (Exception $e) {
             $this->dispatch('swal', [

@@ -9,6 +9,7 @@ use App\Models\ReeferMachine;
 use App\Models\ReeferTechnology;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -138,9 +139,12 @@ class LeakTestCreate extends Component
             $this->containerData['year'] = $container->build_year ?? 'N/A';
 
             //  Asignar las horas de trabajo por tecnología/máquina
-            $machineCode = strtolower($this->containerData['machine']);
+            //$machineCode = strtolower($this->containerData['machine']);
+            $machineCode = ReeferMachine::where('id', $this->containerData['machine'])
+                ->value('code');
+            //Log::info(message: $machineCode);
 
-            $this->leaktest['hours'] = match ($machineCode) {
+            $this->leaktest['hours'] = match (strtolower($machineCode)) {
                 'daikin' => 3,
                 'starcool' => 12,
                 default => 5,
@@ -151,6 +155,20 @@ class LeakTestCreate extends Component
                 'text' => $e->getMessage(),
                 'icon' => 'error'
             ]);
+        }
+    }
+
+    public function updated($property, $value)
+    {
+        if ($property === 'containerData.machine') {
+            $machineCode = ReeferMachine::where('id', $value)
+                ->value('code');
+            //Log::info(message: $machineCode);
+            $this->leaktest['hours'] = match (strtolower($machineCode)) {
+                'daikin' => 3,
+                'starcool' => 12,
+                default => 5,
+            };
         }
     }
 

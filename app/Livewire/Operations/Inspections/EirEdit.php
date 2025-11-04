@@ -571,10 +571,10 @@ class EirEdit extends Component
 
     public function loadPhotoDetail(EirInspectionDetail $eirInspectionDetail)
     {
-        $this->dispatch('photosUpdated');
-        $this->photosDetail = $eirInspectionDetail->photos;
+        $this->photosDetail = $eirInspectionDetail->photos->toArray();
         $this->currentDetailId = (int) $eirInspectionDetail->id;
         $this->openModalDetailPhoto = true;
+        $this->dispatch('photosUpdated');
     }
 
     /* public function updatedNewPhotoDetail()
@@ -673,7 +673,7 @@ class EirEdit extends Component
 
         $this->photoService->deleteDetailPhoto($photoId);
 
-        $this->photosDetail = EirInspectionDetail::find($this->currentDetailId)->photos;
+        $this->photosDetail = EirInspectionDetail::find($this->currentDetailId)->photos->toArray();
 
         $this->dispatch('swal', [
             'title' => 'Eliminado!',

@@ -126,17 +126,18 @@ class EirPhotoService
     /**
      * Guarda una foto de detalle de inspección (y almacena URL completa)
      */
-    public function saveDetailPhoto(EirInspectionDetail $detail, $file): string
+    public function saveDetailPhoto(EirInspectionDetail $detail, $file)
     {
         $disk = $this->getDisk;
         $path = $file->store("eir/details/{$detail->id}", $disk);
         $url = Storage::disk($disk)->url($path);
 
-        $detail->photos()->create([
+        // Retorna el modelo creado
+        $photo = $detail->photos()->create([
             'path' => $url,
         ]);
 
-        return $url;
+        return $photo;
     }
 
     /**

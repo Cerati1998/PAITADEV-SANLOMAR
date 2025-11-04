@@ -422,7 +422,7 @@
             <div class="grid grid-cols-2 gap-2">
                 @foreach ([1, 2, 3, 4] as $i)
                     <div class="relative">
-                        <img src="{{ $urls[$i] ?? asset('img/gallery/empty2.png') }}"
+                        <img src="{{ $urls[$i] ?? asset('img/gallery/empty2.png') }}" loading="lazy"
                             class="{{ $urls[$i] ? 'w-full h-48 lg:h-96 rounded-lg shadow-md transition-transform duration-200 hover:scale-105' : 'w-full h-auto' }} object-cover">
                         {{-- Input file con capture dinámico --}}
                         <input type="file" x-on:change="uploadPhoto($event, {{ $i }})"
@@ -520,31 +520,41 @@
                     </div>
                 </div>
 
-                {{-- Lista de fotos ya subidas --}}
-                @if (count($photosDetail))
-                    <div class="h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            @foreach ($photosDetail as $photo)
-                                <div class="relative group rounded-lg overflow-hidden shadow-md">
-                                    <img src="{{ $photo->url }}" class="w-full h-40 object-cover rounded-md">
-                                    <div
-                                        class="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-3">
-                                        <x-wire-button xs icon="eye" blue href="{{ $photo->url }}"
-                                            target="_blank" />
-                                        <x-wire-button xs icon="arrow-down-tray" white
-                                            wire:click="downloadPhoto({{ $photo->id }})" />
-                                        <x-wire-button xs icon="trash" red
-                                            onclick="confirmAction('¡No podrás revertir esto!','deletePhoto',{{ $photo->id }})" />
-                                    </div>
+                <!-- Lista de fotos ya subidas (versión Alpine) -->
+                <div x-show="photosDetail.length"
+                    class="h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        <template x-for="photo in photosDetail" :key="photo.id">
+                            <div class="relative group rounded-lg overflow-hidden shadow-md">
+                                <img :src="photo.path" loading="lazy" decoding="async"
+                                    class="w-full h-40 object-cover rounded-md">
+
+                                <div
+                                    class="absolute inset-0 bg-black bg-opacity-40 opacity-0 
+                            group-hover:opacity-100 transition flex items-center justify-center gap-3">
+
+                                    <a x-bind:href="photo.path"
+                                        class="inline-flex justify-center items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md px-2.5 py-2 text-xs font-medium transition-all duration-200 ease-in-out shadow-sm hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                        target="_blank">
+                                        <i class="fas fa-eye text-[10px]"></i>
+                                    </a>
+
+                                    <x-wire-button xs icon="arrow-down-tray" white
+                                        x-on:click="downloadPhoto(photo.id)" />
+
+                                    <x-wire-button xs icon="trash" red x-on:click="deleteDetailPhoto(photo.id)" />
                                 </div>
-                            @endforeach
-                        </div>
+                            </div>
+                        </template>
                     </div>
-                @else
-                    <div class="text-center text-gray-400 text-sm">
-                        Aún no se han añadido evidencias fotográficas a este detalle.
-                    </div>
-                @endif
+                </div>
+
+                <!-- Mensaje cuando no hay fotos -->
+                <div x-show="!photosDetail.length" class="text-center text-gray-400 text-sm">
+                    Aún no se han añadido evidencias fotográficas a este detalle.
+                </div>
+
 
             </div>
 
@@ -775,27 +785,41 @@
             function photoDetailUploader() {
                 return {
                     detailId: @entangle('currentDetailId'),
-                    status: @entangle('eir.status'),
+                    photosDetail: @entangle('photosDetail'),
                     uploading: false,
                     progress: 0,
-                    captureMode: 'gallery', // ← AGREGAR ESTA LÍNEA
+                    captureMode: 'gallery',
+
+                    init() {
+                        if (!this.photosDetail) {
+                            this.photosDetail = [];
+                        }
+                        console.log(' Inicializado con:', this.photosDetail);
+
+                        // Escuchar el evento cuando se cargan nuevas fotos desde el backend
+                        this.$watch('detailId', (newId) => {
+                            if (newId) {
+                                console.log(' detailId cambiado a:', newId);
+                            }
+                        });
+
+                        // Escuchar el evento dispatch para forzar actualización
+                        @this.on('photosUpdated', () => {
+                            console.log(' Evento photosUpdated recibido');
+                            // Forzar re-render del array
+                            this.photosDetail = [...this.photosDetail];
+                        });
+                    },
 
                     async uploadDetailPhoto(event) {
                         const file = event.target.files[0];
                         if (!file) return;
-                        console.log(this.detailId);
-                        // Validaciones
-                        if (this.status !== 'borrador') {
-                            Swal.fire('Error', 'No puedes agregar fotos, el EIR ya se encuentra cerrado', 'error');
-                            return;
-                        }
 
                         if (!file.type.startsWith('image/')) {
                             Swal.fire('Error', 'Solo se permiten imágenes', 'error');
                             return;
                         }
 
-                        // Comprimir antes de enviar
                         const options = {
                             maxSizeMB: 0.7,
                             maxWidthOrHeight: 1920,
@@ -803,48 +827,59 @@
                             useWebWorker: true
                         };
 
-                        let compressedFile = file;
-                        try {
-                            compressedFile = await imageCompression(file, options);
-                            console.log(`Original: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
-                            console.log(`Comprimido: ${(compressedFile.size / 1024 / 1024).toFixed(2)} MB`);
-                        } catch (e) {
-                            console.error('Error al comprimir:', e);
-                        }
-
-                        const formData = new FormData();
-                        formData.append('photo', compressedFile);
-                        formData.append('detail_id', this.detailId);
-
                         this.uploading = true;
                         this.progress = 0;
 
                         try {
+                            const compressed = await imageCompression(file, options);
+                            console.log(`Original: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+                            console.log(`Comprimido: ${(compressed.size / 1024 / 1024).toFixed(2)} MB`);
+
+                            const formData = new FormData();
+                            formData.append('photo', compressed);
+                            formData.append('detail_id', this.detailId);
+
                             const response = await axios.post('/eir/upload-detail-photo', formData, {
                                 headers: {
                                     'Content-Type': 'multipart/form-data'
                                 },
                                 onUploadProgress: (progressEvent) => {
-                                    this.progress = Math.round(
-                                        (progressEvent.loaded * 100) / progressEvent.total
-                                    );
+                                    this.progress = Math.round((progressEvent.loaded * 100) / progressEvent
+                                        .total);
                                 }
                             });
 
                             if (response.data.success) {
-                                await @this.call('loadPhotoDetail', this.detailId);
+                                console.log(' ANTES:', this.photosDetail);
+                                console.log(' Nueva foto:', response.data.photo);
+
+                                // Asegurar que sea array
+                                if (!Array.isArray(this.photosDetail)) {
+                                    this.photosDetail = [];
+                                }
+
+                                const newPhoto = {
+                                    id: response.data.photo.id,
+                                    path: response.data.photo.path,
+                                    eir_inspection_detail_id: this.detailId
+                                };
+
+                                //  Usar spread operator (fuerza reactividad)
+                                this.photosDetail = [...this.photosDetail, newPhoto];
+
+                                console.log(' DESPUÉS:', this.photosDetail);
 
                                 Swal.fire({
                                     icon: 'success',
                                     title: '¡Éxito!',
                                     text: 'Foto subida correctamente',
-                                    timer: 2000,
+                                    timer: 1500,
                                     showConfirmButton: false
                                 });
                             }
 
                         } catch (error) {
-                            console.error(error);
+                            console.error('Upload error:', error);
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Error',
@@ -856,11 +891,57 @@
                             event.target.value = '';
                         }
                     },
+                    downloadPhoto(photoId) {
+                        if (!photoId) {
+                            return;
+                        }
+                        @this.call('downloadPhoto', photoId);
+                    },
+                    async deleteDetailPhoto(photoId) {
+                        const result = await Swal.fire({
+                            title: '¿Estás seguro?',
+                            text: "¡No podrás revertir esto!",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#d33',
+                            cancelButtonColor: '#3085d6',
+                            confirmButtonText: 'Sí, eliminar!',
+                            cancelButtonText: 'Cancelar'
+                        });
 
-                    // Método auxiliar para cambiar el modo
+                        if (result.isConfirmed) {
+                            try {
+                                // Llamar al método de Livewire - USANDO @this.call como antes
+                                const response = await @this.call('deletePhoto', photoId);
+
+                                // Si la eliminación fue exitosa, remover del array local
+                                if (response) {
+                                    // Filtrar el array para quitar la foto eliminada
+                                    this.photosDetail = this.photosDetail.filter(photo => photo.id !== photoId);
+
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Eliminado!',
+                                        text: 'La foto ha sido eliminada.',
+                                        timer: 1500,
+                                        showConfirmButton: false
+                                    });
+                                }
+                            } catch (error) {
+                                console.error('Error al eliminar:', error);
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'No se pudo eliminar la foto'
+                                });
+                            }
+                        }
+                    },
+
+
                     toggleCaptureMode() {
                         this.captureMode = this.captureMode === 'camera' ? 'gallery' : 'camera';
-                    },
+                    }
                 }
             }
 

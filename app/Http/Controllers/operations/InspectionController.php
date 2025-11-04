@@ -126,33 +126,30 @@ class InspectionController extends Controller
             'detail_id' => 'required|exists:eir_inspection_details,id',
         ]);
 
-        $detail = EirInspectionDetail::with('inspectionHeader')->findOrFail($request->detail_id);
-        /*   Log::info($detail);
-        if ($detail->inspectionHeader->status !== 'borrador') {
-            return response()->json([
-                'success' => false,
-                'message' => 'No puedes agregar fotos, el EIR ya se encuentra cerrado'
-            ], 403);
-        } */
-
         try {
+            $detail = EirInspectionDetail::findOrFail($request->detail_id);
+
             $photoService->validateImage($request->file('photo'));
 
-            $path = $photoService->saveDetailPhoto($detail, $request->file('photo'));
+            // Guarda y obtiene el modelo
+            $newPhoto = $photoService->saveDetailPhoto($detail, $request->file('photo'));
 
             return response()->json([
                 'success' => true,
-                'photos' => $detail->fresh()->photos->map(function ($photo) {
-                    return [
-                        'id' => $photo->id,
-                        'url' => $photo->url,
-                    ];
-                })->toArray(),
+                'photo' => [
+                    'id' => $newPhoto->id,
+                    'path' => $newPhoto->url, // Usa el accessor
+                ]
             ]);
         } catch (\Exception $e) {
+            Log::error('Error uploading detail photo', [
+                'detail_id' => $request->detail_id,
+                'error' => $e->getMessage()
+            ]);
+
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage()
+                'message' => 'Error al subir la foto'
             ], 500);
         }
     }

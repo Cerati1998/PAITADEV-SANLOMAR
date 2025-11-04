@@ -5,6 +5,7 @@ namespace App\Livewire\Operations\Works;
 use App\Livewire\Forms\WorkOrderForm;
 use App\Models\inspections\EirInspection;
 use App\Models\Provider;
+use App\Models\ShippingLine;
 use App\Models\works\LaborWorker;
 use Exception;
 use Livewire\Attributes\Computed;
@@ -126,8 +127,15 @@ class WorkOrderTable extends DataTableComponent
                 ->label(function ($row) {
                     return "<img class='h-8' src='$row->type_formatted'/>";
                 })->html(),
-            Column::make("Estimado", "estimate_number")
-                ->searchable(),
+            /* Column::make("Estimado", "estimate_number")
+                ->searchable(), */
+            Column::make('Nave')
+                ->label(fn($row) => $row->eirInspection?->trace?->nave ?? 'N/A')
+                ->searchable(function (Builder $query, string $search) {
+                    $query->whereHas('eirInspection.trace.gateInDetail.originable.vessel', function ($vesselQuery) use ($search) {
+                        $vesselQuery->where('name', 'like', "%{$search}%");
+                    });
+                }),
             Column::make("Nº EIR", "eir_inspection_id")
                 ->sortable()
                 ->format(function ($value, $row) {
@@ -160,7 +168,8 @@ class WorkOrderTable extends DataTableComponent
                 'container:id,code',
                 'openedBy:id,name',
                 'closedBy:id,name',
-                'eirInspection:id,serie,correlativo,fast_repair,normal_repair,quoted_repair'
+                'eirInspection:id,serie,correlativo,fast_repair,normal_repair,quoted_repair,trace_id',
+                'eirInspection.trace.gateInDetail.originable.vessel:id,name', // Cargar las relaciones necesarias para el accessor
             ])
             ->addSelect(['work_orders.*'])
             //->where('work_orders.type', $this->type)
@@ -197,6 +206,38 @@ class WorkOrderTable extends DataTableComponent
                 ->filter(function (Builder $builder, $status) {
                     if (!empty($status)) {
                         $builder->where('work_orders.type', $status);
+                    }
+                }),
+            SelectFilter::make('Linea')
+                ->options(
+                    ['' => 'Todas'] + ShippingLine::query()
+                        ->where(function ($query) {
+                            $query->whereHas('dischargues', function ($dischargeQuery) {
+                                $dischargeQuery->where('branch_id', session('branch')->id)
+                                    ->whereHas('gateInDetails.containerOperationalTrace.EirInspection.workOrder');
+                            })
+                                ->orWhereHas('devolutions', function ($devolutionQuery) {
+                                    $devolutionQuery->where('branch_id', session('branch')->id)
+                                        ->whereHas('gateInDetails.containerOperationalTrace.EirInspection.workOrder');
+                                });
+                        })
+                        ->pluck('name', 'id')
+                        ->toArray()
+                )
+                ->filter(function (Builder $builder, $shippingLineId) {
+                    if (!empty($shippingLineId)) {
+                        $builder->whereHas('eirInspection', function ($eirQuery) use ($shippingLineId) {
+                            $eirQuery->whereHas('trace', function ($traceQuery) use ($shippingLineId) {
+                                $traceQuery->whereHas('gateInDetail', function ($gateQuery) use ($shippingLineId) {
+                                    $gateQuery->whereHasMorph('originable', [
+                                        'App\Models\Dischargue',
+                                        'App\Models\Devolution'
+                                    ], function ($originableQuery) use ($shippingLineId) {
+                                        $originableQuery->where('shipping_line_id', $shippingLineId);
+                                    });
+                                });
+                            });
+                        });
                     }
                 }),
             SelectFilter::make('Estado')

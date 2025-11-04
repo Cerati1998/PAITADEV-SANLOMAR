@@ -51,7 +51,7 @@ class DispatchCreate extends Component
             ->whereHas('container.container_type', function ($typeQuery) {
                 $typeQuery->whereIn('iso_code', ['45R1', '22R1']);
             })
-            ->whereBetween('container_operational_traces.status', [2, 4])
+            ->whereBetween('container_operational_traces.status', [3, 4])
             ->orderBy('id', 'desc')
             ->get();
 
@@ -181,6 +181,7 @@ class DispatchCreate extends Component
 
         DB::transaction(function () use ($message) {
             // Creo el despacho
+            $this->dispatchData['dispatcher_id'] = $this->dispatchData['dispatch_date'] ? auth()->user()->id : null;
             $dispatch = Dispatch::create($this->dispatchData);
 
             // Si hay fecha de despacho => actualizar trace como DESPACHADO

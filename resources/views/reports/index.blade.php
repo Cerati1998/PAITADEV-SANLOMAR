@@ -13,25 +13,26 @@
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-white sm:text-2xl">Filtros</h2>
 
                 <div class="mt-6 sm:mt-8 lg:flex lg:items-start lg:gap-12">
-                    <form action="#"
+                    <form method="POST" id="reportFilters"
                         class="w-full rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-6 lg:max-w-xl lg:p-8">
+                        @csrf
                         <div class="mb-6 grid grid-cols-2 gap-4">
                             <div class="col-span-2 sm:col-span-1">
-                                <x-wire-input type="date" label="Desde:" name="since" />
+                                <x-wire-input type="date" label="Desde:" name="since" x-model="since" />
                             </div>
 
                             <div class="col-span-2 sm:col-span-1">
-                                <x-wire-input type="date" label="Hasta:" name="until" />
+                                <x-wire-input type="date" label="Hasta:" name="until" x-model="until" />
                             </div>
 
                             <div class="col-span-2 sm:col-span-1">
                                 <x-wire-select :async-data="route('line.search')" option-value="id" option-label="name" label="Linea:"
                                     name="line" x-model="line" />
                             </div>
+
                             <div class="col-span-2 sm:col-span-1">
                                 <x-wire-select :async-data="route('client.search')" option-value="id" option-label="rznSocial"
                                     label="Cliente" name="client" x-model="client" />
-
                             </div>
                         </div>
 
@@ -44,36 +45,33 @@
                         <div
                             class="space-y-4 rounded-lg border border-gray-100 bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-800">
                             <div class="space-y-2">
-                                <dl class="flex items-center justify-between gap-4">
-                                    <dt class="text-base font-normal text-gray-500 dark:text-gray-400">Original price
-                                    </dt>
-                                    <dd class="text-base font-medium text-gray-900 dark:text-white">$6,592.00</dd>
-                                </dl>
+                                <div class="flex items-center justify-between gap-4">
+                                    <dt class="text-base font-normal text-gray-500 dark:text-gray-400">Despachos</dt>
+                                    <x-wire-button label="Exportar" blue sm icon="arrow-down-on-square"
+                                        x-on:click.prevent="submitForm('{{ route('reports.dispatches') }}')" />
+                                </div>
 
-                                <dl class="flex items-center justify-between gap-4">
-                                    <dt class="text-base font-normal text-gray-500 dark:text-gray-400">Savings</dt>
-                                    <dd class="text-base font-medium text-green-500">-$299.00</dd>
-                                </dl>
+                                <div class="flex items-center justify-between gap-4">
+                                    <dt class="text-base font-normal text-gray-500 dark:text-gray-400">Leak Test</dt>
+                                    <x-wire-button label="Exportar" green sm icon="arrow-down-on-square"
+                                        x-on:click.prevent="submitForm('{{ route('reports.leaktests') }}')" />
+                                </div>
 
-                                <dl class="flex items-center justify-between gap-4">
-                                    <dt class="text-base font-normal text-gray-500 dark:text-gray-400">Store Pickup</dt>
-                                    <dd class="text-base font-medium text-gray-900 dark:text-white">$99</dd>
-                                </dl>
+                                <div class="flex items-center justify-between gap-4">
+                                    <dt class="text-base font-normal text-gray-500 dark:text-gray-400">Comprobantes</dt>
+                                    <x-wire-button label="Exportar" red sm icon="arrow-down-on-square"
+                                        x-on:click.prevent="submitForm('{{ route('reports.invoices') }}')" />
+                                </div>
 
-                                <dl class="flex items-center justify-between gap-4">
-                                    <dt class="text-base font-normal text-gray-500 dark:text-gray-400">Tax</dt>
-                                    <dd class="text-base font-medium text-gray-900 dark:text-white">$799</dd>
-                                </dl>
+                                <div class="flex items-center justify-between gap-4">
+                                    <dt class="text-base font-normal text-gray-500 dark:text-gray-400">Inspecciones</dt>
+                                    <x-wire-button label="Exportar" yellow sm icon="arrow-down-on-square"
+                                        x-on:click.prevent="submitForm('{{ route('reports.inspections') }}')" />
+                                </div>
                             </div>
-
-                            <dl
-                                class="flex items-center justify-between gap-4 border-t border-gray-200 pt-2 dark:border-gray-700">
-                                <dt class="text-base font-bold text-gray-900 dark:text-white">Total</dt>
-                                <dd class="text-base font-bold text-gray-900 dark:text-white">$7,191.00</dd>
-                            </dl>
                         </div>
 
-                        <div class="mt-6 flex items-center justify-center gap-8">
+                        {{-- <div class="mt-6 flex items-center justify-center gap-8">
                             <img class="h-8 w-auto dark:hidden"
                                 src="https://flowbite.s3.amazonaws.com/blocks/e-commerce/brand-logos/paypal.svg"
                                 alt="">
@@ -92,7 +90,7 @@
                             <img class="hidden h-8 w-auto dark:flex"
                                 src="https://flowbite.s3.amazonaws.com/blocks/e-commerce/brand-logos/mastercard-dark.svg"
                                 alt="">
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
 
@@ -106,13 +104,26 @@
         <script>
             function dataReport() {
                 return {
+                    since: null,
+                    until: null,
                     line: null,
                     client: null,
+                    actionUrl: '',
+
                     cleanSelects() {
-                        this.line = null,
-                        this.client = null
-                    }
-                }
+                        this.since = null;
+                        this.until = null;
+                        this.line = null;
+                        this.client = null;
+                    },
+
+                    submitForm(url) {
+                        this.actionUrl = url;
+                        const form = document.getElementById("reportFilters");
+                        form.action = url;
+                        form.submit();
+                    },
+                };
             }
         </script>
     @endpush

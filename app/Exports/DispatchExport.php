@@ -2,11 +2,13 @@
 
 namespace App\Exports;
 
+use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\BeforeWriting;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Illuminate\Support\Collection;
 
-class DispatchExport implements WithEvents
+class DispatchExport implements FromCollection, WithEvents
 {
     protected $datos;
 
@@ -15,48 +17,44 @@ class DispatchExport implements WithEvents
         $this->datos = $datos;
     }
 
-    /**
-     * @return array
-     */
+    public function collection()
+    {
+        // Retorna una colección vacía porque usaremos el template
+        return new Collection([]);
+    }
+
     public function registerEvents(): array
     {
         return [
             BeforeWriting::class => function (BeforeWriting $event) {
+                // Cargar el template
                 $templatePath = storage_path('app/templates/DESPACHOS.xlsx');
-
+                
                 $reader = IOFactory::createReader('Xlsx');
-                $reader->setLoadSheetsOnly('Movimientos');
-
+                $reader->setLoadSheetsOnly('Hoja1');
                 $spreadsheet = $reader->load($templatePath);
-
-                $spreadsheet->getProperties()
-                    ->setCreator('Macrosoft 1.2')
-                    ->setLastModifiedBy('Eddy Barranzuela')
-                    ->setTitle("Reporte Macrosoft 1.2")
-                    ->setSubject("Archivo para reporte de Movimientos GRUPOMACROMAR")
-                    ->setDescription("Aréa de Sistemas de un solo miembro XD")
-                    ->setCategory("Operaciones Macromar");
-
+                
+                // Obtener la hoja activa
                 $sheet = $spreadsheet->getActiveSheet();
-                $numeroFila = 5;
+                $numeroFila = 4;
 
-                foreach ($this->datos as $dato) {
-                    $sheet->setCellValue([1, $numeroFila], $dato['id_movimiento']);
-                    $sheet->setCellValue([2, $numeroFila], $dato['fecha']);
-                    $sheet->setCellValue([3, $numeroFila], $dato['categoria']);
-                    $sheet->setCellValue([4, $numeroFila], $dato['codigo_producto']);
-                    $sheet->setCellValue([5, $numeroFila], $dato['nombre_producto']);
-                    $sheet->setCellValue([6, $numeroFila], $dato['unidades']);
-                    $sheet->setCellValue([7, $numeroFila], $dato['nombre_proveedor']);
-                    $sheet->setCellValue([8, $numeroFila], $dato['receptor_despacho']);
-                    $sheet->setCellValue([9, $numeroFila], $dato['factura_movimiento']);
-                    $sheet->setCellValue([10, $numeroFila], $dato['orden_servicio']);
-                    $sheet->setCellValue([11, $numeroFila], $dato['destino_salida']);
-
+                // Rellenar las filas con los datos
+                foreach ($this->datos as $index => $dato) {
+                    $sheet->setCellValue("A{$numeroFila}", $index + 1);
+                    $sheet->setCellValue("B{$numeroFila}", $dato['container']);
+                    $sheet->setCellValue("C{$numeroFila}", $dato['despacho']);
+                    $sheet->setCellValue("D{$numeroFila}", $dato['booking']);
+                    $sheet->setCellValue("E{$numeroFila}", $dato['nave']);
+                    $sheet->setCellValue("F{$numeroFila}", $dato['despachador']);
+                    $sheet->setCellValue("G{$numeroFila}", $dato['repair_box']);
+                    $sheet->setCellValue("H{$numeroFila}", $dato['wash_oxalic']);
+                    $sheet->setCellValue("I{$numeroFila}", $dato['leak_test']);
                     $numeroFila++;
                 }
 
-                $event->writer->reopen($spreadsheet, $event->writer->getDefaultExtension());
+                // Reemplazar el delegate sheet con nuestro spreadsheet
+                $event->writer->getDelegate()->removeSheetByIndex(0);
+                $event->writer->getDelegate()->addExternalSheet($sheet);
             },
         ];
     }

@@ -440,7 +440,7 @@ class WorkOrderForm extends Form
             'inspectionDetail.damage',
             'inspectionDetail.component',
             'inspectionDetail.method'
-        ])
+        ])->withCount('photos')
             ->where('work_order_id', $this->workOrder->id)->get();
         //  CARGAR DAÑOS ÚNICOS AUTOMÁTICAMENTE
         $this->loadUniqueDamages();
@@ -624,7 +624,7 @@ class WorkOrderForm extends Form
             'inspectionDetail.damage',
             'inspectionDetail.component',
             'inspectionDetail.method'
-        ])
+        ])->withCount('photos')
             ->where('work_order_id', $this->workOrder->id)
             ->get();
 

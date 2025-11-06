@@ -53,8 +53,8 @@ class WorkerController extends Controller
             'numDoc' => $data['numDoc'],
             'branch_id' => $data['branch_id'],
             'cargo' => $data['cargo'],
-            'telefono' => $data['telefono'],
-            'email' => $data['email'],
+            'telefono' => $data['telefono'] ?? null,
+            'email' => $data['email'] ?? null,
         ]);
 
         return $worker;

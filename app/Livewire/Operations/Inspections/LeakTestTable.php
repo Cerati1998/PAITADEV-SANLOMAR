@@ -44,11 +44,11 @@ class LeakTestTable extends DataTableComponent
                 ->format(function ($value) {
                     return str_pad($value, 6, 0, STR_PAD_LEFT);
                 }),
-            Column::make('Contenedor', 'trace.container')
-                ->label(function ($row) {
+            Column::make('Contenedor', 'trace.container.code')
+                /* ->label(function ($row) {
                     //dd($row);
                     return $row->trace?->container->code ?? 'N/A';
-                })
+                }) */
                 ->searchable(),
             Column::make("Estado", "work_orders.status")
                 ->label(function ($row) {

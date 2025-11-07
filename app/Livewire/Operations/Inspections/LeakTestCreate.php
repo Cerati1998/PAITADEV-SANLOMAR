@@ -261,5 +261,8 @@ class LeakTestCreate extends Component
         $this->leaktest['hours'] = null;
         $this->leaktest['trace_id'] = null;
         $this->leaktest['status'] = 'pending';
+
+        //refresco las series
+        $this->getSeries();
     }
 }

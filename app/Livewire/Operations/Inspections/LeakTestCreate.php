@@ -134,9 +134,9 @@ class LeakTestCreate extends Component
 
             // Asignar los datos del contenedor
             $this->containerData['id'] = $container->id;
-            $this->containerData['technology'] = $container->reefer_technology?->id ?? 'N/A';
-            $this->containerData['machine'] = $container->machine?->id ?? 'N/A';
-            $this->containerData['year'] = $container->build_year ?? 'N/A';
+            $this->containerData['technology'] = $container->reefer_technology?->id ?? NULL;
+            $this->containerData['machine'] = $container->machine?->id ?? NULL;
+            $this->containerData['year'] = $container->build_year ?? NULL;
 
             //  Asignar las horas de trabajo por tecnología/máquina
             //$machineCode = strtolower($this->containerData['machine']);

@@ -234,7 +234,7 @@ class LeakTestCreate extends Component
                 ->max('correlativo');
 
             if ($correlativo) {
-                //$this->eir->correlativo = $correlativo + 1;
+                $this->leaktest['correlativo'] = $correlativo + 1;
             }
 
             LeakTest::create($this->leaktest);
@@ -261,5 +261,8 @@ class LeakTestCreate extends Component
         $this->leaktest['hours'] = null;
         $this->leaktest['trace_id'] = null;
         $this->leaktest['status'] = 'pending';
+
+        //refresco las series
+        $this->getSeries();
     }
 }

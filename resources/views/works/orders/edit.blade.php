@@ -154,8 +154,13 @@
                                                         wire:click="editLabor({{ $item->id }})" />
                                                     <x-wire-mini-button blue icon="user-plus"
                                                         wire:click="editWorkerLabor({{ $item->id }})" sm />
-                                                    <x-wire-mini-button primary icon="camera"
-                                                        wire:click="loadPhotoLabor({{ $item->id }})" sm />
+                                                    @if ($item->photos_count > 0)
+                                                        <x-wire-mini-button yellow icon="camera"
+                                                            wire:click="loadPhotoLabor({{ $item->id }})" sm />
+                                                    @else
+                                                        <x-wire-mini-button primary icon="camera"
+                                                            wire:click="loadPhotoLabor({{ $item->id }})" sm />
+                                                    @endif
                                                     <x-wire-mini-button red
                                                         onclick="confirmAction('¡No podrás revertir esto!','destroyLabor',{{ $item->id }} )"
                                                         icon="trash" sm />

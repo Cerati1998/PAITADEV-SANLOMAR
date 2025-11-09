@@ -875,6 +875,7 @@ class WorkOrderTable extends DataTableComponent
     {
         $this->dispatch('photosUpdated');
         $this->photosLabor = $workOrderLabor->photos;
+        $this->workOrderForm->refreshLabors();
         $this->currentLaborId = $workOrderLabor->id;
         $this->openModalLaborPhoto = true;
     }
@@ -998,6 +999,8 @@ class WorkOrderTable extends DataTableComponent
             // Recargar las fotos
             $this->photosLabor = WorkOrderLabor::find($this->currentLaborId)->photos;
 
+            $this->workOrderForm->refreshLabors();
+
             $this->dispatch('swal', [
                 'title' => 'Eliminado!',
                 'text' => 'Foto eliminada correctamente',
@@ -1018,6 +1021,7 @@ class WorkOrderTable extends DataTableComponent
     public function closePhotoModal()
     {
         $this->openModalLaborPhoto = false;
+        $this->workOrderForm->refreshLabors();
         $this->photosLabor = [];
         $this->currentLaborId = null;
         $this->newPhotoLabor = null;

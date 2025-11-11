@@ -4,7 +4,7 @@ namespace App\Livewire\Operations\Dispatches;
 
 use App\Models\Client;
 use App\Models\ContainerOperationalTrace;
-use App\Models\dispatches\Dispatch;
+use App\Models\Dispatches\Dispatch;
 use App\Models\Vessel;
 use App\Services\Container\ContainerOperationalTraceService;
 use App\Services\Container\ContainerStatusService;

@@ -5,6 +5,7 @@ namespace App\Livewire\Operations\Works;
 use App\Livewire\Forms\WorkOrderForm;
 use App\Models\inspections\EirInspection;
 use App\Models\Provider;
+use App\Models\ShippingLine;
 use App\Models\works\LaborWorker;
 use Exception;
 use Livewire\Attributes\Computed;
@@ -18,6 +19,8 @@ use App\Services\inspections\EirPhotoService;
 use App\Services\WorkOrders\WorkLaborPhotoService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Livewire\WithFileUploads;
 use Rappasoft\LaravelLivewireTables\Views\Filters\DateRangeFilter;
@@ -188,6 +191,26 @@ class WorkOrderTable extends DataTableComponent
                         ->whereDate('work_orders.started_at', '>=', $dateRange['minDate']);
                     //->orWhereDate('work_orders.started_at', '<=', $dateRange['maxDate']);
                 }),
+            SelectFilter::make('Linea')
+                ->options($this->getShippingLinesOptions())
+                ->filter(function (Builder $builder, $shippingLineId) {
+                    if (!empty($shippingLineId)) {
+                        $builder->whereRaw("
+                EXISTS (
+                    SELECT 1 
+                    FROM eir_inspections ei
+                    INNER JOIN container_operational_traces cot ON ei.trace_id = cot.id
+                    INNER JOIN gate_in_details gid ON cot.gate_in_detail_id = gid.id
+                    LEFT JOIN dischargues d ON gid.originable_id = d.id 
+                        AND gid.originable_type = 'App\\\\Models\\\\Dischargue'
+                    LEFT JOIN devolutions dev ON gid.originable_id = dev.id 
+                        AND gid.originable_type = 'App\\\\Models\\\\Devolution'
+                    WHERE ei.id = work_orders.eir_inspection_id
+                    AND (d.shipping_line_id = ? OR dev.shipping_line_id = ?)
+                )
+            ", [$shippingLineId, $shippingLineId]);
+                    }
+                }),
             SelectFilter::make('Tipo')
                 ->options(
                     [
@@ -245,6 +268,47 @@ class WorkOrderTable extends DataTableComponent
                     }
                 }) */
         ];
+    }
+
+    private function getShippingLinesOptions(): array
+    {
+        $branchId = session('branch')->id;
+
+        return Cache::remember("shipping_lines_branch_{$branchId}", now()->addMinutes(30), function () use ($branchId) {
+            $lines = DB::table('shipping_lines as sl')
+                ->select('sl.id', 'sl.name')
+                ->join('dischargues as d', function ($join) use ($branchId) {
+                    $join->on('d.shipping_line_id', '=', 'sl.id')
+                        ->where('d.branch_id', '=', $branchId);
+                })
+                ->join('gate_in_details as gid', function ($join) {
+                    $join->on('gid.originable_id', '=', 'd.id')
+                        ->where('gid.originable_type', '=', 'App\Models\Dischargue');
+                })
+                ->join('container_operational_traces as cot', 'cot.gate_in_detail_id', '=', 'gid.id')
+                ->join('eir_inspections as ei', 'ei.trace_id', '=', 'cot.id')
+                ->whereNotNull('ei.id')
+                ->union(
+                    DB::table('shipping_lines as sl')
+                        ->select('sl.id', 'sl.name')
+                        ->join('devolutions as dev', function ($join) use ($branchId) {
+                            $join->on('dev.shipping_line_id', '=', 'sl.id')
+                                ->where('dev.branch_id', '=', $branchId);
+                        })
+                        ->join('gate_in_details as gid', function ($join) {
+                            $join->on('gid.originable_id', '=', 'dev.id')
+                                ->where('gid.originable_type', '=', 'App\Models\Devolution');
+                        })
+                        ->join('container_operational_traces as cot', 'cot.gate_in_detail_id', '=', 'gid.id')
+                        ->join('eir_inspections as ei', 'ei.trace_id', '=', 'cot.id')
+                        ->whereNotNull('ei.id')
+                )
+                ->distinct()
+                ->pluck('name', 'id')
+                ->toArray();
+
+            return ['' => 'Todas'] + $lines;
+        });
     }
 
     #[Computed]

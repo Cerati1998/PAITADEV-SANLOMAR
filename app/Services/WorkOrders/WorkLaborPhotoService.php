@@ -59,7 +59,7 @@ class WorkLaborPhotoService
      * @return string Path completo del ZIP generado
      * @throws \RuntimeException
      */
-    private function createZipFromPaths(array $photoPaths, string $zipFileName): string
+    public function createZipFromPaths(array $photoPaths, string $zipFileName): string
     {
         $zipPath = storage_path("app/temp/{$zipFileName}");
         $disk = $this->getDisk;

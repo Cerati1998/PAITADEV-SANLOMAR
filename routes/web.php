@@ -178,6 +178,11 @@ Route::middleware([
 
             Route::post('upload-photos', [WorkOrderController::class, 'upload_labor_photos'])
                 ->name('work_orders.upload');
+
+            Route::get('photo-download/{photoId}', [WorkOrderController::class, 'download_photo'])
+                ->name('work-order.photo.download');
+            Route::get('photo-downloads/{workOrderId}', [WorkOrderController::class, 'download_photos'])
+                ->name('work-order.photos.download');
         });
 
         Route::get('dispatches', [DispatchController::class, 'manage_dispatches'])->name('dispatches.index')->middleware('can:dispatches.index');

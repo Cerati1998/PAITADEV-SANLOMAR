@@ -231,7 +231,7 @@
             </div>
 
             <x-slot name="footer" class="flex justify-end gap-x-4">
-                <x-wire-button flat label="Cancelar" x-on:click="close" wire:click="resetea" />
+                <x-wire-button flat label="Cancelar" x-on:click="close" {{-- wire:click="resetea" --}} />
                 <template x-if="statusOrder === 'borrador'">
                     <x-wire-button red label="Cerrar" icon="lock-closed"
                         onclick="confirmAction('¡La Orden no podrá volver a editarse!','closeWorkOrder')" sm />
@@ -418,8 +418,7 @@
                                         <x-wire-button xs icon="eye" blue href="{{ $photo->url }}"
                                             target="_blank" />
                                         <x-wire-button xs icon="arrow-down-tray" white
-                                            wire:target="downloadLaborPhoto" spinner
-                                            wire:click="downloadLaborPhoto({{ $photo->id }})" />
+                                            href="{{ route('work-order.photo.download', $photo->id) }}" />
 
                                         {{-- Botón eliminar solo si está en borrador --}}
                                         @if ($workOrderForm->status === 'borrador')
@@ -443,8 +442,8 @@
             <x-slot name="footer" class="flex justify-end gap-x-4">
                 <x-wire-button flat label="Cerrar" x-on:click="close" wire:click="closePhotoModal" />
                 @if (count($photosLabor))
-                    <x-wire-button red icon="arrow-down-tray" label="Descargar todas"
-                        wire:click="downloadLaborPhotos" />
+                    <x-wire-button sm icon="arrow-down-tray" red label="Descargar Todas"
+                    href="{{ route('work-order.photos.download', $this->workOrderId) }}" />
                 @endif
             </x-slot>
         </x-wire-modal-card>

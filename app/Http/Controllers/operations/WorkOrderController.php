@@ -5,10 +5,14 @@ namespace App\Http\Controllers\operations;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Identity;
+use App\Models\works\WorkOrder;
 use App\Models\works\WorkOrderLabor;
+use App\Models\works\WorkOrderLaborImage;
 use App\Services\WorkOrders\WorkLaborPhotoService;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class WorkOrderController extends Controller
 {
@@ -66,6 +70,78 @@ class WorkOrderController extends Controller
                 'success' => false,
                 'message' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    public function download_photos($workOrderId)
+    {
+        try {
+            //Log::info('Iniciando descarga de fotos', ['work_order_id' => $workOrderId]);
+
+            $workOrder = WorkOrder::findOrFail($workOrderId);
+
+            // Obtener todas las fotos de todos los labors de esta orden de trabajo
+            $photos = WorkOrderLaborImage::whereHas('workOrderLabor', function ($query) use ($workOrderId) {
+                $query->where('work_order_id', $workOrderId);
+            })->pluck('path')->toArray();
+
+            //Log::info('Fotos encontradas', ['count' => count($photos)]);
+
+            if (empty($photos)) {
+                throw new \RuntimeException('No hay fotos disponibles para descargar');
+            }
+
+            $zipFileName = "work_order_{$workOrderId}_photos.zip";
+            $photoService = app(WorkLaborPhotoService::class);
+            $zipPath = $photoService->createZipFromPaths($photos, $zipFileName);
+
+            return response()->download($zipPath)->deleteFileAfterSend(true);
+        } catch (\RuntimeException $e) {
+            Log::error('Error RuntimeException downloading work order photos', [
+                'work_order_id' => $workOrderId,
+                'error' => $e->getMessage()
+            ]);
+
+            session()->flash('error', $e->getMessage());
+            return back();
+        } catch (\Exception $e) {
+            Log::error('Error Exception downloading work order photos', [
+                'work_order_id' => $workOrderId,
+                'error' => $e->getMessage()
+            ]);
+
+            session()->flash('error', 'No se pudo descargar las fotos');
+            return back();
+        }
+    }
+    public function download_photo($photoId)
+    {
+        try {
+            $photo = WorkOrderLaborImage::findOrFail($photoId);
+
+            $relativePath = parse_url($photo->path, PHP_URL_PATH);
+            $relativePath = ltrim($relativePath, '/');
+            $disk = 'do';
+
+            // Obtener el contenido del archivo
+            $file = Storage::disk($disk)->get($relativePath);
+            $fileName = basename($relativePath);
+            $mimeType = Storage::disk($disk)->mimeType($relativePath);
+
+            // Forzar descarga con headers correctos
+            return response($file, 200)
+                ->header('Content-Type', $mimeType)
+                ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"')
+                ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->header('Pragma', 'no-cache')
+                ->header('Expires', '0');
+        } catch (\Exception $e) {
+            Log::error('Error downloading photo', [
+                'photo_id' => $photoId,
+                'error' => $e->getMessage()
+            ]);
+
+            return back()->with('error', 'No se pudo descargar la foto');
         }
     }
 }

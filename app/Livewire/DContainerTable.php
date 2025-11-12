@@ -20,6 +20,7 @@ class DContainerTable extends DataTableComponent
     public $originType; // Ej: App\Models\Dischargue o App\Models\Devolution
     public $originId;
     public $gateInInfo;
+    public $ownLine;
     public array $bulkActions = [
         'bulkAnulateConsult' => 'Anular Seleccionados',
         'MachineOpConsult' => 'Actualizar Maquina'
@@ -61,8 +62,6 @@ class DContainerTable extends DataTableComponent
             Column::make("Tipo", "container.container_type.code"),
             Column::make("T. Descripcion", "container.container_type.description")
                 ->sortable(),
-            Column::make("Origén", "port.code")
-                ->sortable(),
             Column::make("Condition", "container_condition")
                 ->sortable(),
             Column::make("Estado", "containerOperationalTrace.status")
@@ -98,7 +97,8 @@ class DContainerTable extends DataTableComponent
     public function mount()
     {
         $this->gateInInfo = $this->originType::find($this->originId);
-        $this->container['own_line_id'] = $this->gateInInfo->shipping_line_id;
+        $this->ownLine = $this->gateInInfo->shipping_line_id;
+        $this->container['own_line_id'] = $this->ownLine;
     }
 
     // Propiedades computadas (se calculan solo cuando se acceden)
@@ -177,7 +177,7 @@ class DContainerTable extends DataTableComponent
             'iso_code' => $this->container['iso_code'],
             'container_type_id' => $this->container['container_type_id'],
             'reefer_technology_id' => $this->container['reefer_technology_id'],
-            'own_line_id' => $this->container['own_line_id'],
+            'own_line_id' => $this->ownLine,
         ]);
 
         //agrego validador, si el contenedor ya se encuentra anunciado aborto la subida

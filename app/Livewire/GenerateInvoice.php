@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\Operation;
 use App\Models\Product;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rule;
@@ -482,10 +483,27 @@ class GenerateInvoice extends Component
     //Agregar cuota
     public function addCuota()
     {
-        $this->invoice->cuotas[] = [
+        //agregar solo si es detraccion, no hay cuotas y el importe es mayor a 0
+        if (empty($this->invoice->cuotas) && $this->invoice->tipoOperacion == '1001' && $this->invoice->mtoImpVenta > 0) {
+
+            $montoDet = $this->invoice->detraccion['percent'] ? round($this->invoice->mtoImpVenta * $this->invoice->detraccion['percent'] / 100, 2) : 0;
+            
+            $this->invoice->cuotas[] = [    
+                'monto' => $this->invoice->mtoImpVenta - $montoDet,
+                'fechaPago' => Carbon::now()->addDays(15)->format('Y-m-d'),
+            ];
+
+        } else {
+            $this->invoice->cuotas[] = [
+                'monto' => null,
+                'fechaPago' => null,
+            ];
+        }
+
+        /* $this->invoice->cuotas[] = [
             'monto' => null,
             'fechaPago' => null,
-        ];
+        ]; */
     }
 
     public function removeCuota($key)

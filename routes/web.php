@@ -188,11 +188,14 @@ Route::middleware([
         Route::get('dispatches', [DispatchController::class, 'manage_dispatches'])->name('dispatches.index')->middleware('can:dispatches.index');
 
         //endpoint para reportes
-        Route::get('reports', [ReportController::class, 'index'])->name('reports.index')->middleware('can:reports');
-        Route::post('reports/dispatches', [ReportController::class, 'exportDispatches'])->name('reports.dispatches');
-        Route::post('reports/leaktests', [ReportController::class, 'exportDispatches'])->name('reports.leaktests');
-        Route::post('reports/invoices', [ReportController::class, 'exportDispatches'])->name('reports.invoices');
-        Route::post('reports/inspections', [ReportController::class, 'exportDispatches'])->name('reports.inspections');
+        Route::prefix('/')->group(function () {
+            Route::get('reports', [ReportController::class, 'index'])->name('reports.index')->middleware('can:reports');
+            Route::post('dispatches', [ReportController::class, 'exportDispatches'])->name('reports.dispatches');
+            Route::post('leaktests', [ReportController::class, 'exportDispatches'])->name('reports.leaktests');
+            Route::post('invoices', [ReportController::class, 'exportDispatches'])->name('reports.invoices');
+            Route::post('inspections', [ReportController::class, 'exportDispatches'])->name('reports.inspections');
+        });
+
 
         //endpoint para selectores
         Route::get('searchLine', [ShippingLineController::class, 'searchLines'])->name('line.search');

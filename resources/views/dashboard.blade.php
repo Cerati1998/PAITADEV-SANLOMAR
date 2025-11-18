@@ -3,34 +3,6 @@
         'name' => 'Dashboard',
     ],
 ]">
-    {{-- <div class="hidden md:grid grid-cols-1 lg:grid-cols-2 gap-6 mb-4">
-
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <div class="flex items-center">
-                <img class="h-8 w-8 rounded-full object-cover" src="{{ auth()->user()->profile_photo_url }}"
-                    alt="{{ auth()->user()->name }}" />
-
-                <div class="ml-4 flex-1">
-                    <h2 class="text-lg font-semibold">
-                        Bienvenido, {{ auth()->user()->name }}
-                    </h2>
-
-                    <form action="{{ route('logout') }}" method="POST">
-                        <button class="text-sm hover:text-blue-500">
-                            Cerrar sesión
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow-lg p-6 flex justify-center items-center">
-            <h2 class="text-2xl font-semibold truncate">
-                Sucursal {{ Str::limit(session('branch')->name, 25) }}
-            </h2>
-        </div>
-    </div> --}}
-
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
         <x-wire-card>
             <p class="text-sm font-semibold text-gray-500">Total de Inspecciones Hoy:</p>
@@ -46,22 +18,26 @@
         </x-wire-card>
     </div>
 
-     <!-- Sección de Gráficos -->
+    <!-- Sección de Gráficos -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
         <!-- Gráfico de líneas: Tendencia semanal -->
         <x-wire-card>
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Tendencia Semanal</h3>
+                <h3 class="text-lg font-semibold text-gray-900">Tendencia Semanal (Últimos 7 días)</h3>
             </div>
-            <div id="weekly-trend-chart"></div>
+            <div id="weekly-trend-chart" class="min-h-[350px] flex items-center justify-center">
+                <div class="text-gray-500">Cargando datos...</div>
+            </div>
         </x-wire-card>
 
-        <!-- Gráfico de dona: Distribución por tipo -->
+        <!-- Gráfico de dona: Distribución por tipo de reparación -->
         <x-wire-card>
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Distribución por Tipo</h3>
+                <h3 class="text-lg font-semibold text-gray-900">Tipos de Reparación (Último mes)</h3>
             </div>
-            <div id="distribution-chart"></div>
+            <div id="distribution-chart" class="min-h-[350px] flex items-center justify-center">
+                <div class="text-gray-500">Cargando datos...</div>
+            </div>
         </x-wire-card>
     </div>
 
@@ -69,13 +45,15 @@
     <div class="grid grid-cols-1 mb-4">
         <x-wire-card>
             <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Comparativa Mensual</h3>
+                <h3 class="text-lg font-semibold text-gray-900">Comparativa Mensual (Últimos 6 meses)</h3>
             </div>
-            <div id="monthly-comparison-chart"></div>
+            <div id="monthly-comparison-chart" class="min-h-[350px] flex items-center justify-center">
+                <div class="text-gray-500">Cargando datos...</div>
+            </div>
         </x-wire-card>
     </div>
 
-    <div class="grid grid-cold-1 lg:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div class="lg:col-span-2">
             <x-wire-card>
                 <p class="text-lg font-semibold text-gray-900">Ultimas reparaciones cerradas:</p>
@@ -121,135 +99,272 @@
             </x-wire-card>
         </div>
     </div>
-    @push('js')
-        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-        <script>
-        // Gráfico de Tendencia Semanal (Líneas)
-        const weeklyTrendOptions = {
-            series: [{
-                name: 'Inspecciones',
-                data: [31, 40, 28, 51, 42, 109, 100]
-            }, {
-                name: 'Reparaciones',
-                data: [11, 32, 45, 32, 34, 52, 41]
-            }, {
-                name: 'Leak Test',
-                data: [15, 11, 22, 27, 13, 22, 37]
-            }],
-            chart: {
-                height: 350,
-                type: 'line',
-                toolbar: {
-                    show: false
+
+    <!-- Scripts al final del contenido -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        //console.log('=== INICIO DEL SCRIPT ===');
+        //console.log('Axios disponible:', typeof axios !== 'undefined');
+        //console.log('ApexCharts disponible:', typeof ApexCharts !== 'undefined');
+
+        // Variables para almacenar las instancias de los gráficos
+        let weeklyTrendChart = null;
+        let distributionChart = null;
+        let monthlyComparisonChart = null;
+
+        // Función para cargar datos
+        async function loadChartData() {
+            try {
+                //console.log('Iniciando carga de datos...');
+                //console.log('URL de la petición:', '{{ route('dashboard.chart-data') }}');
+
+                const response = await axios.get('{{ route('dashboard.chart-data') }}');
+
+                //console.log('Respuesta recibida:', response.data);
+
+                if (response.data.success) {
+                    const data = response.data.data;
+
+                    //console.log('Datos extraídos:', data);
+
+                    // Renderizar los gráficos con los datos
+                    renderWeeklyTrendChart(data.weekly_data);
+                    renderDistributionChart(data.repair_types);
+                    renderMonthlyComparisonChart(data.monthly_data);
+
+                    //console.log('Gráficos renderizados exitosamente');
+                } else {
+                    console.error('Error en la respuesta:', response.data);
+                    showError('Error al cargar los datos');
                 }
-            },
-            colors: ['#6366f1', '#3b82f6', '#6b7280'],
-            stroke: {
-                width: 3,
-                curve: 'smooth'
-            },
-            xaxis: {
-                categories: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-            },
-            legend: {
-                position: 'top',
-            },
-            grid: {
-                borderColor: '#f1f1f1',
+            } catch (error) {
+                console.error('Error completo:', error);
+                console.error('Respuesta del servidor:', error.response);
+                showError('Error: ' + (error.response?.data?.message || error.message));
             }
-        };
+        }
 
-        const weeklyTrendChart = new ApexCharts(document.querySelector("#weekly-trend-chart"), weeklyTrendOptions);
-        weeklyTrendChart.render();
+        function renderWeeklyTrendChart(data) {
+            //console.log('Renderizando gráfico semanal:', data);
 
-        // Gráfico de Distribución (Dona)
-        const distributionOptions = {
-            series: [{{ $data['total_inspections'] }}, {{ $data['total_works'] }}, {{ $data['total_leaks'] }}],
-            chart: {
-                type: 'donut',
-                height: 350,
-            },
-            labels: ['Inspecciones', 'Reparaciones', 'Leak Test'],
-            colors: ['#6366f1', '#3b82f6', '#6b7280'],
-            legend: {
-                position: 'bottom',
-            },
-            dataLabels: {
-                enabled: true,
-            },
-            plotOptions: {
-                pie: {
-                    donut: {
-                        size: '70%',
-                        labels: {
-                            show: true,
-                            total: {
+            // Limpiar el contenido de "Cargando..."
+            const container = document.querySelector("#weekly-trend-chart");
+            container.innerHTML = '';
+
+            const options = {
+                series: [{
+                    name: 'Inspecciones',
+                    data: data.inspections
+                }, {
+                    name: 'Reparaciones',
+                    data: data.works
+                }, {
+                    name: 'Leak Test',
+                    data: data.leaks
+                }],
+                chart: {
+                    height: 350,
+                    type: 'line',
+                    toolbar: {
+                        show: false
+                    },
+                    zoom: {
+                        enabled: false
+                    }
+                },
+                colors: ['#6366f1', '#3b82f6', '#6b7280'],
+                stroke: {
+                    width: 3,
+                    curve: 'smooth'
+                },
+                xaxis: {
+                    categories: data.days,
+                },
+                legend: {
+                    position: 'top',
+                    horizontalAlign: 'left',
+                },
+                grid: {
+                    borderColor: '#f1f1f1',
+                },
+                tooltip: {
+                    shared: true,
+                    intersect: false,
+                }
+            };
+
+            if (weeklyTrendChart) {
+                weeklyTrendChart.destroy();
+            }
+
+            weeklyTrendChart = new ApexCharts(document.querySelector("#weekly-trend-chart"), options);
+            weeklyTrendChart.render();
+        }
+
+        function renderDistributionChart(data) {
+            //console.log('Renderizando gráfico de distribución:', data);
+            // Limpiar el contenido de "Cargando..."
+            const container = document.querySelector("#distribution-chart");
+            container.innerHTML = '';
+
+            const options = {
+                series: data.values,
+                chart: {
+                    type: 'donut',
+                    height: 350,
+                },
+                labels: data.labels,
+                colors: ['#10b981', '#3b82f6', '#f59e0b'],
+                legend: {
+                    position: 'bottom',
+                },
+                dataLabels: {
+                    enabled: true,
+                },
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '70%',
+                            labels: {
                                 show: true,
-                                label: 'Total Hoy',
-                                fontSize: '16px',
-                                fontWeight: 600,
+                                total: {
+                                    show: true,
+                                    label: 'Total',
+                                    fontSize: '16px',
+                                    fontWeight: 600,
+                                    formatter: function(w) {
+                                        return w.globals.seriesTotals.reduce((a, b) => a + b, 0)
+                                    }
+                                }
                             }
                         }
                     }
-                }
-            }
-        };
-
-        const distributionChart = new ApexCharts(document.querySelector("#distribution-chart"), distributionOptions);
-        distributionChart.render();
-
-        // Gráfico de Comparativa Mensual (Barras)
-        const monthlyComparisonOptions = {
-            series: [{
-                name: 'Inspecciones',
-                data: [440, 505, 414, 671, 227, 413]
-            }, {
-                name: 'Reparaciones',
-                data: [230, 421, 352, 452, 315, 298]
-            }, {
-                name: 'Leak Test',
-                data: [180, 280, 250, 320, 290, 310]
-            }],
-            chart: {
-                type: 'bar',
-                height: 350,
-                toolbar: {
-                    show: false
-                }
-            },
-            colors: ['#6366f1', '#3b82f6', '#6b7280'],
-            plotOptions: {
-                bar: {
-                    horizontal: false,
-                    columnWidth: '55%',
-                    borderRadius: 4,
                 },
-            },
-            dataLabels: {
-                enabled: false
-            },
-            stroke: {
-                show: true,
-                width: 2,
-                colors: ['transparent']
-            },
-            xaxis: {
-                categories: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
-            },
-            legend: {
-                position: 'top',
-            },
-            fill: {
-                opacity: 1
-            },
-            grid: {
-                borderColor: '#f1f1f1',
-            }
-        };
+                responsive: [{
+                    breakpoint: 480,
+                    options: {
+                        chart: {
+                            height: 300
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }]
+            };
 
-        const monthlyComparisonChart = new ApexCharts(document.querySelector("#monthly-comparison-chart"), monthlyComparisonOptions);
-        monthlyComparisonChart.render();
+            if (distributionChart) {
+                distributionChart.destroy();
+            }
+
+            distributionChart = new ApexCharts(document.querySelector("#distribution-chart"), options);
+            distributionChart.render();
+        }
+
+        function renderMonthlyComparisonChart(data) {
+            //console.log('Renderizando gráfico mensual:', data);
+            const container = document.querySelector("#monthly-comparison-chart");
+            container.innerHTML = '';
+
+            const options = {
+                series: [{
+                    name: 'Inspecciones',
+                    data: data.inspections
+                }, {
+                    name: 'Reparaciones',
+                    data: data.works
+                }, {
+                    name: 'Leak Test',
+                    data: data.leaks
+                }],
+                chart: {
+                    type: 'bar',
+                    height: 350,
+                    toolbar: {
+                        show: false
+                    }
+                },
+                colors: ['#6366f1', '#3b82f6', '#6b7280'],
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '55%',
+                        borderRadius: 4,
+                    },
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                stroke: {
+                    show: true,
+                    width: 2,
+                    colors: ['transparent']
+                },
+                xaxis: {
+                    categories: data.months,
+                },
+                legend: {
+                    position: 'top',
+                    horizontalAlign: 'left',
+                },
+                fill: {
+                    opacity: 1
+                },
+                grid: {
+                    borderColor: '#f1f1f1',
+                },
+                tooltip: {
+                    y: {
+                        formatter: function(val) {
+                            return val + " registros"
+                        }
+                    }
+                }
+            };
+
+            if (monthlyComparisonChart) {
+                monthlyComparisonChart.destroy();
+            }
+
+            monthlyComparisonChart = new ApexCharts(document.querySelector("#monthly-comparison-chart"), options);
+            monthlyComparisonChart.render();
+        }
+
+        function showError(message) {
+            console.error('Mostrando error:', message);
+            ['#weekly-trend-chart', '#distribution-chart', '#monthly-comparison-chart'].forEach(selector => {
+                const element = document.querySelector(selector);
+                if (element) {
+                    element.innerHTML = `<div class="text-red-500 text-center py-8">${message}</div>`;
+                }
+            });
+        }
+
+        // Verificar si el DOM ya está listo
+        function initCharts() {
+            if (typeof ApexCharts === 'undefined') {
+                //console.log('ApexCharts aún no está disponible, reintentando en 100ms...');
+                setTimeout(initCharts, 100);
+                return;
+            }
+
+            //console.log('ApexCharts cargado correctamente, iniciando...');
+
+            if (document.readyState === 'loading') {
+                //console.log('DOM aún cargando, esperando DOMContentLoaded...');
+                document.addEventListener('DOMContentLoaded', function() {
+                    //console.log('DOM cargado, iniciando carga de datos...');
+                    loadChartData();
+                });
+            } else {
+                //console.log('DOM ya cargado, iniciando carga de datos inmediatamente...');
+                loadChartData();
+            }
+        }
+
+        // Iniciar cuando el script se ejecute
+        initCharts();
     </script>
-    @endpush
 
 </x-dashboard-layout>

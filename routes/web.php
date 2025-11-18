@@ -50,6 +50,8 @@ Route::middleware([
         CheckCompanySelected::class
     ])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])
+            ->name('dashboard.chart-data');
 
         //Ventas
         Route::get('vouchers', [VoucherController::class, 'index'])->name('vouchers.index')->middleware('can:vouchers.index');

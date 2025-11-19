@@ -178,7 +178,7 @@ class WorkOrderTable extends DataTableComponent
         $branchId = session('branch')->id;
 
         return [
-            DateRangeFilter::make('Fecha Creado')
+             DateRangeFilter::make('Fecha Termino')
                 ->config([
                     'altFormat' => 'F j, Y', // Date format that will be displayed once selected
                     'ariaDateFormat' => 'F j, Y', // An aria-friendly date format
@@ -188,7 +188,8 @@ class WorkOrderTable extends DataTableComponent
                 ])
                 ->filter(function (Builder $builder, array $dateRange) {
                     $builder
-                        ->whereDate('work_orders.started_at', '>=', $dateRange['minDate']);
+                        ->whereDate('work_orders.closed_at', '>=', $dateRange['minDate'])
+                        ->whereDate('work_orders.closed_at', '<=', $dateRange['maxDate']);
                     //->orWhereDate('work_orders.started_at', '<=', $dateRange['maxDate']);
                 }),
             SelectFilter::make('Linea')

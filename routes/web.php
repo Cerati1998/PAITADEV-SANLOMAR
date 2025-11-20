@@ -195,7 +195,7 @@ Route::middleware([
             Route::post('dispatches', [ReportController::class, 'exportDispatches'])->name('reports.dispatches');
             Route::post('leaktests', [ReportController::class, 'exportDispatches'])->name('reports.leaktests');
             Route::post('invoices', [ReportController::class, 'exportDispatches'])->name('reports.invoices');
-            Route::post('inspections', [ReportController::class, 'exportDispatches'])->name('reports.inspections');
+            Route::post('inspections', [ReportController::class, 'exportInspections'])->name('reports.inspections');
         });
 
 

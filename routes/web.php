@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ArchingCashController;
 use App\Http\Controllers\BranchController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompanyController;
@@ -70,6 +71,11 @@ Route::middleware([
         Route::resource('transports', TransportController::class)->names('transports')->middleware('can:transports');
         Route::get('transport/{transport}/drivers', [TransportController::class, 'drivers'])->name('transport.drivers')->middleware('can:transport.drivers');
         Route::get('transport/{transport}/vehicles', [TransportController::class, 'vehicles'])->name('transport.vehicles')->middleware('can:transport.vehicles');
+
+        //Gastos
+        Route::get('cashes',[ArchingCashController::class,'get_cashes'])->name('cashes.index');
+        Route::get('bills',[ArchingCashController::class,'get_bills'])->name('cashes.index');
+        Route::get('cash-deposits',[ArchingCashController::class,'get_deposits'])->name('cashes.index');
 
         //Inventario
         Route::get('products', [ProductController::class, 'index'])->name('products.index')->middleware('can:products');

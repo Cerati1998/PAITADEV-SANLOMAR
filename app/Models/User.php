@@ -177,4 +177,13 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(WorkOrder::class, 'closed_by');
     }
+
+    public function archingCashOpened()
+    {
+        return $this->hasMany(ArchingCash::class,'opened_by');
+    }
+    public function archingCashClosed()
+    {
+        return $this->hasMany(ArchingCash::class,'closed_by');
+    }
 }

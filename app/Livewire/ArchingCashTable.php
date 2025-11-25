@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Livewire\Attributes\On;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
@@ -33,16 +34,16 @@ class ArchingCashTable extends DataTableComponent
             Column::make("Id", "id")
                 ->hideIf(true),
             Column::make('Acciones')
-            ->label(function($row){
-                return view('cashes.actions',['cash'=>$row]);
-            }),
+                ->label(function ($row) {
+                    return view('cashes.actions', ['cash' => $row]);
+                }),
             Column::make("Correlativo", "correlativo")
                 ->sortable()
                 ->searchable()
                 ->format(function ($value, $row) {
                     $badge = $row->estado == 'abierta'
                         ? '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Abierta</span>'
-                        : '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Cerrada</span>';
+                        : '<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Cerrada</span>';
                     return '<div class="flex items-center gap-2">
                                 <span class="font-semibold text-gray-900">' . $value . '</span>
                                 ' . $badge . '
@@ -54,8 +55,8 @@ class ArchingCashTable extends DataTableComponent
                 ->sortable()
                 ->format(function ($value) {
                     return '<div class="text-sm">
-                                <div class="font-medium text-gray-900">' . \Carbon\Carbon::parse($value)->format('d/m/Y') . '</div>
-                                <div class="text-gray-500">' . \Carbon\Carbon::parse($value)->format('H:i') . '</div>
+                                <div class="font-medium text-gray-900">' . Carbon::parse($value)->format('d/m/Y') . '</div>
+                                <div class="text-gray-500">' . Carbon::parse($value)->format('H:i') . '</div>
                             </div>';
                 })
                 ->html(),
@@ -67,8 +68,8 @@ class ArchingCashTable extends DataTableComponent
                         return '<span class="text-gray-400 text-sm">-</span>';
                     }
                     return '<div class="text-sm">
-                                <div class="font-medium text-gray-900">' . \Carbon\Carbon::parse($value)->format('d/m/Y') . '</div>
-                                <div class="text-gray-500">' . \Carbon\Carbon::parse($value)->format('H:i') . '</div>
+                                <div class="font-medium text-gray-900">' . Carbon::parse($value)->format('d/m/Y') . '</div>
+                                <div class="text-gray-500">' . Carbon::parse($value)->format('H:i') . '</div>
                             </div>';
                 })
                 ->html(),
@@ -155,9 +156,54 @@ class ArchingCashTable extends DataTableComponent
 
     }
 
-    public function closeCash($id)
+    public function closeCash(ArchingCash $archingCash)
     {
         // Aquí redirigir al modal de cierre o abrir un modal
-        $this->dispatch('open-close-modal', cashId: $id);
+        $archingCash->update([
+            'estado' => 'cerrada',
+            'fecha_fin' => Carbon::now(),
+            'closed_by' => auth()->user()->id
+        ]);
+
+        $this->dispatch('cashUpdated');
+
+        $this->dispatch('swal', [
+            'title' => 'Exito!',
+            'text' => 'Caja cerrada correctamente',
+            'icon' => 'success'
+        ]);
+    }
+    public function voidCash(ArchingCash $archingCash)
+    {
+        //primero valido si no hay nuevas cajas
+        $lastCaja = ArchingCash::where('branch_id', session('branch')->id)
+            ->where('estado', "abierta")
+            ->where('id', '!=', $archingCash->id)
+            ->orderBy('fecha_fin', 'desc')
+            ->count();
+
+        //dd($lastCaja);
+
+        if ($lastCaja > 0) {
+            $this->dispatch('swal', [
+                'title' => 'Error!',
+                'text' => 'No se puede reaperturar, ya hay una nueva caja abierta disponible',
+                'icon' => 'warning'
+            ]);
+            return;
+        }
+
+        // Aquí redirigir al modal de cierre o abrir un modal
+        $archingCash->update([
+            'estado' => 'abierta',
+        ]);
+
+        $this->dispatch('cashUpdated');
+
+        $this->dispatch('swal', [
+            'title' => 'Exito!',
+            'text' => 'Caja reaperturada correctamente',
+            'icon' => 'success'
+        ]);
     }
 }

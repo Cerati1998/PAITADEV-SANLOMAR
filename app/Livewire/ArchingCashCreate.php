@@ -5,6 +5,8 @@ namespace App\Livewire;
 use App\Models\ArchingCash;
 use App\Models\Branch;
 use App\Models\CashDeposit;
+use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
@@ -25,12 +27,7 @@ class ArchingCashCreate extends Component
     public $observaciones;
 
     public $branch_id;
-
-    public function mount()
-    {
-        $this->branch_id = session('branch')->id ?? null;
-        $this->fecha_inicio = now()->format('Y-m-d\TH:i');
-    }
+    public $existeCajaAbierta = false;
 
     #[Computed]
     public function ultimaCaja()
@@ -40,9 +37,7 @@ class ArchingCashCreate extends Component
         }
 
         return ArchingCash::where('branch_id', $this->branch_id)
-            ->where('estado', '>', 0)
             ->whereNotNull('fecha_fin')
-            ->whereNotNull('monto_final')
             ->orderBy('fecha_fin', 'desc')
             ->first();
     }
@@ -63,18 +58,24 @@ class ArchingCashCreate extends Component
         return $this->saldoHeredado + ($this->deposito_inicial ?? 0);
     }
 
-    #[Computed]
-    public function existeCajaAbierta()
+    //#[Computed]
+    public function validaCajaAbierta()
     {
+        //Log::info($this->branch_id);
         if (!$this->branch_id) {
             return false;
         }
-
         return ArchingCash::where('branch_id', $this->branch_id)
-            ->where('estado', '>', 0)
-            ->whereNull('fecha_fin')
+            ->where('estado', 'abierta')
             ->exists();
     }
+
+    #[On('cashUpdated')]
+    public function refreshArching()
+    {
+        $this->existeCajaAbierta = $this->validaCajaAbierta();
+    }
+
 
     public function updatedHeredarSaldo()
     {
@@ -86,6 +87,13 @@ class ArchingCashCreate extends Component
     {
         // Trigger recalculation
         $this->dispatch('montoActualizado');
+    }
+
+       public function mount()
+    {
+        $this->branch_id = session('branch')->id ?? null;
+        $this->existeCajaAbierta =  $this->validaCajaAbierta();
+        $this->fecha_inicio = now()->format('Y-m-d\TH:i');
     }
 
     public function save()
@@ -178,7 +186,8 @@ class ArchingCashCreate extends Component
 
             $this->dispatch('archingAdded');
             $this->dispatch('close-modal', 'archingCreate');
-            $this->reset(['deposito_inicial', 'heredar_saldo', 'observaciones']);
+            $this->reset(['fecha_inicio','deposito_inicial', 'heredar_saldo', 'observaciones']);
+            $this->refreshArching();
 
         } catch (\Exception $e) {
             DB::rollBack();

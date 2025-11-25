@@ -63,7 +63,7 @@
                 <!-- Fecha de Inicio -->
                 <div class="col-span-2 sm:col-span-1">
                     <x-wire-datetime-picker label="Fecha de Inicio *" wire:model="fecha_inicio"
-                        placeholder="Seleccione fecha y hora" required />
+                        placeholder="Seleccione fecha y hora" :max="now()->setTimezone('America/Lima')->format('Y-m-d')" required />
                 </div>
 
                 <!-- Sucursal (readonly) -->

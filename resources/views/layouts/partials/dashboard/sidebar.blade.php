@@ -106,7 +106,7 @@
         [
             'header' => 'Panel de CPE',
             'icon' => 'fa-solid fa-file-invoice',
-            'can' => ['vouchers.index','voideds','despatches.index'],
+            'can' => ['vouchers.index', 'voideds', 'despatches.index'],
         ],
         /* [
             'name' => 'Ventas',
@@ -114,7 +114,7 @@
             'active' => request()->routeIs([
                 'vouchers.*',
                 'clients.*',
-            ]),
+                ]),
             "submenu" => [
                 [
                     'name' => 'Comprobantes',
@@ -156,15 +156,45 @@
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('despatchs.index'),
                     'active' => request()->routeIs('despatchs.index'),
-                ],
-                [
-                    'name' => 'Nueva guía',
-                    'icon' => 'fa-regular fa-circle',
-                    'route' => route('despatchs.create'),
-                    'active' => request()->routeIs('despatchs.create'),
-                ],
-            ] */
+                    ],
+                    [
+                        'name' => 'Nueva guía',
+                        'icon' => 'fa-regular fa-circle',
+                        'route' => route('despatchs.create'),
+                        'active' => request()->routeIs('despatchs.create'),
+                        ],
+                        ] */
         ],
+        [
+            'header' => 'Gestor de Costos',
+            'icon' => 'fa-solid fa-helmet-safety',
+            'can' => ['manage_work.index', 'workers.index', 'dispatches.index'],
+        ],
+
+        [
+            'name' => 'Gestionar Cajas',
+            'icon' => 'fa-solid fa-vault',
+            'route' => route('cashes.index'),
+            'active' => request()->routeIs('cashes.*'),
+            //'can' => 'devolution.index',
+        ],
+        [
+            'name' => 'Compras',
+            'icon' => 'fa-solid fa-hand-holding-dollar',
+            'active' => request()->routeIs(['bills.*']),
+            //'can' => ['clients', 'providers', 'brokers', 'transports'],
+
+            'submenu' => [
+                [
+                    'name' => 'Gastos',
+                    'icon' => 'fa-regular fa-circle',
+                    'route' => route('bills.index'),
+                    'active' => request()->routeIs('bills.*'),
+                    //'can' => 'clients',
+                ],
+            ],
+        ],
+
         [
             'header' => 'Inventario',
             'icon' => 'fa-solid fa-basket-shopping',
@@ -180,13 +210,13 @@
         [
             'header' => 'Maestras',
             'icon' => 'fa-solid fa-cogs',
-            'can' => ['clients','providers','brokers','transports'],
+            'can' => ['clients', 'providers', 'brokers', 'transports'],
         ],
         [
             'name' => 'Terceros',
             'icon' => 'fa-solid fa-briefcase',
             'active' => request()->routeIs(['clients.*', 'providers.*', 'brokers.*', 'transports.*', 'transport.*']),
-            'can' => ['clients','providers','brokers','transports'],
+            'can' => ['clients', 'providers', 'brokers', 'transports'],
 
             'submenu' => [
                 [
@@ -310,7 +340,7 @@
         [
             'header' => 'Panel de Configuración',
             'icon' => 'fa-solid fa-building',
-            'can' => ['branches','companies'],
+            'can' => ['branches', 'companies'],
         ],
         [
             'name' => 'Sucursales',

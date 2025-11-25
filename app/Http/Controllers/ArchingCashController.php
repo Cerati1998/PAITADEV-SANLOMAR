@@ -8,7 +8,7 @@ class ArchingCashController extends Controller
 {
     public function get_cashes()
     {
-
+        return view("cashes.index");
     }
     public function get_bills()
     {

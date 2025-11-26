@@ -80,7 +80,7 @@
                         <div class="flex items-center gap-3">
                             <x-checkbox wire:model.live="heredar_saldo" id="heredar_saldo" />
                             <label for="heredar_saldo" class="cursor-pointer">
-                                <span class="font-medium text-gray-900">Heredar saldo de caja anterior</span>
+                                <span class="font-medium text-gray-900">Considerar saldo de caja anterior</span>
                                 <span class="block text-sm text-gray-600">
                                     Saldo disponible: S/ {{ number_format($this->ultimaCaja->monto_final, 2) }}
                                 </span>

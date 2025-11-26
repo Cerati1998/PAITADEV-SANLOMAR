@@ -11,13 +11,14 @@
                 </div>
             </x-wire-dropdown.item>
 
-
-            <x-wire-dropdown.item wire:click="register_deposit({{ $cash->id }})" class="group">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-money-bill-transfer mr-2 group-hover:text-green-500"></i>
-                    <span class="group-hover:text-green-500">Registrar Depósito</span>
-                </div>
-            </x-wire-dropdown.item>
+            @if ($cash->estado === 'abierta')
+                <x-wire-dropdown.item wire:click="register_deposit({{ $cash->id }})" class="group">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-money-bill-transfer mr-2 group-hover:text-green-500"></i>
+                        <span class="group-hover:text-green-500">Registrar Depósito</span>
+                    </div>
+                </x-wire-dropdown.item>
+            @endif
 
             <x-wire-dropdown.item href="{{ route('cash.report', $cash->id) }}" class="group">
                 <div class="flex items-center gap-2">

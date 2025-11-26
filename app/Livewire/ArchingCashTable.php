@@ -15,15 +15,20 @@ use App\Models\ArchingCash;
 class ArchingCashTable extends DataTableComponent
 {
     protected $model = ArchingCash::class;
+    public $selectedCashId; // Para el modal de depósito
+    public $showSummaryModal = false;
+    public $summaryData = [];
+
+
 
     public function configure(): void
     {
         $this->setPrimaryKey('id');
         $this->setDefaultSort('id', 'desc');
-        /*         $this->setConfigurableAreas([
-                    'before-table' => ['cashes.stats'],
-                    'after-wrapper' => ['cashes.modal']
-                ]); */
+        $this->setConfigurableAreas([
+            //'before-table' => ['cashes.stats'],
+            'after-wrapper' => ['cashes.summary']
+        ]);
         $this->setPerPageAccepted([10, 25, 50, 100]);
         $this->setPerPage(25);
     }
@@ -154,6 +159,121 @@ class ArchingCashTable extends DataTableComponent
             'icon' => 'success'
         ]);
 
+    }
+
+    public function register_deposit($cashId)
+    {
+        $this->selectedCashId = $cashId;
+        $this->dispatch('open-deposit-modal', cashId: $cashId);
+    }
+public function summary($cashId)
+{
+    $archingCash = ArchingCash::with([
+        'bills' => function ($query) {
+            $query->where('estado', '!=', 'anulado');
+        },
+        'bills.category:id,name',
+        'deposits',
+        'openedBy:id,name',
+        'closedBy:id,name'
+    ])->find($cashId);
+
+    if (!$archingCash) {
+        $this->dispatch('swal', [
+            'title' => 'Error!',
+            'text' => 'Caja no encontrada',
+            'icon' => 'error'
+        ]);
+        return;
+    }
+
+    // CORRECCIÓN: Separar depósito inicial de los demás
+    $depositoInicial = $archingCash->deposits
+        ->where('tipo_deposito', 'inicial')
+        ->sum('monto');
+
+    // Solo sumar depósitos adicionales y reembolsos (NO el inicial)
+    $depositosAdicionales = $archingCash->deposits
+        ->whereIn('tipo_deposito', ['adicional', 'reembolso'])
+        ->sum('monto');
+
+    // Total de todos los depósitos (para mostrar)
+    $totalDepositos = $archingCash->deposits->sum('monto');
+
+    // Agrupar depósitos por tipo
+    $depositosPorTipo = $archingCash->deposits->groupBy('tipo_deposito')->map(function ($deposits, $tipo) {
+        $labels = [
+            'inicial' => 'DEPÓSITO INICIAL',
+            'adicional' => 'DEPÓSITO ADICIONAL',
+            'reembolso' => 'REEMBOLSO'
+        ];
+
+        return [
+            'label' => $labels[$tipo] ?? strtoupper($tipo),
+            'monto' => $deposits->sum('monto'),
+            'cantidad' => $deposits->count()
+        ];
+    })->values()->toArray();
+
+    // Calcular totales de gastos
+    $totalGastos = $archingCash->bills->sum('monto');
+
+    // Agrupar gastos por categoría
+    $gastosPorCategoria = $archingCash->bills->groupBy('category_id')->map(function ($bills) {
+        $category = $bills->first()->category;
+        return [
+            'categoria' => strtoupper($category->name ?? 'SIN CATEGORÍA'),
+            'monto' => $bills->sum('monto'),
+            'cantidad' => $bills->count()
+        ];
+    })->values()->toArray();
+
+    // CORRECCIÓN: Calcular saldo correctamente
+    // monto_inicial YA incluye el depósito inicial, solo sumamos los adicionales
+    $saldoCalculado = $archingCash->monto_inicial + $depositosAdicionales - $totalGastos;
+
+    // Calcular diferencia si la caja está cerrada
+    $diferencia = 0;
+    if ($archingCash->estado === 'cerrada' && $archingCash->monto_final) {
+        $diferencia = $archingCash->monto_final - $saldoCalculado;
+    }
+
+    // Armar el payload
+    $this->summaryData = [
+        'caja' => [
+            'correlativo' => $archingCash->correlativo,
+            'estado' => $archingCash->estado,
+            'fecha_inicio' => $archingCash->fecha_inicio->format('d/m/Y H:i'),
+            'fecha_fin' => $archingCash->fecha_fin ? $archingCash->fecha_fin->format('d/m/Y H:i') : null,
+            'abierta_por' => $archingCash->openedBy->name ?? 'N/A',
+            'cerrada_por' => $archingCash->closedBy->name ?? 'N/A',
+            'monto_inicial' => $archingCash->monto_inicial,
+            'monto_final' => $archingCash->monto_final,
+        ],
+        'depositos' => [
+            'total' => $totalDepositos,
+            'inicial' => $depositoInicial,
+            'adicionales' => $depositosAdicionales, // Nuevo: separar para claridad
+            'cantidad' => $archingCash->deposits->count(),
+            'por_tipo' => $depositosPorTipo
+        ],
+        'gastos' => [
+            'total' => $totalGastos,
+            'cantidad' => $archingCash->bills->count(),
+            'por_categoria' => $gastosPorCategoria
+        ],
+        'saldo_calculado' => $saldoCalculado,
+        'diferencia' => $diferencia
+    ];
+    
+    $this->selectedCashId = $cashId;
+    $this->showSummaryModal = true;
+}
+    public function closeSummaryModal()
+    {
+        $this->showSummaryModal = false;
+        $this->summaryData = [];
+        $this->selectedCashId = null;
     }
 
     public function closeCash(ArchingCash $archingCash)

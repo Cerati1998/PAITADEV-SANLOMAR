@@ -31,5 +31,6 @@
 
     @livewire('arching-cash-table', [], key('arching-cash-table'))
     @livewire('arching-cash-create', [], key('arching-cash-create'))
+    @livewire('cash-deposit-create', [], key('cash-deposit-create'))
 
 </x-dashboard-layout>

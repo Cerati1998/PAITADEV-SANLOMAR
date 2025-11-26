@@ -94,6 +94,7 @@ class ArchingCashCreate extends Component
         $this->branch_id = session('branch')->id ?? null;
         $this->existeCajaAbierta =  $this->validaCajaAbierta();
         $this->fecha_inicio = now()->format('Y-m-d\TH:i');
+        //dd($this->ultimaCaja());
     }
 
     public function save()

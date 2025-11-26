@@ -9,20 +9,16 @@ class Bill extends Model
         'fecha_emision',
         'fecha_registro',       // NUEVO: Fecha en que se registró el gasto
         'tipo_comprobante',     // NUEVO: factura, boleta, recibo, etc.
-        'serie_comprobante',    // NUEVO: Serie del comprobante
         'numero_comprobante',   // NUEVO: Número del comprobante
         'product_id',
         'provider_id',
-        'category_id',          // NUEVO: Categoría del gasto
         'monto',
         'moneda',               // NUEVO: PEN, USD, etc.
         'tipo_cambio',          // NUEVO: Si es necesario convertir
         'comprobante',          // Ruta del archivo
         'detalle',
         'observaciones',        // NUEVO: Observaciones adicionales
-        'estado',               // NUEVO: pendiente, aprobado, rechazado, anulado
         'user_id',              // Usuario que registró
-        'approved_by',          // NUEVO: Usuario que aprobó
         'arching_cash_id',
         'branch_id',            // NUEVO: Sucursal
     ];
@@ -55,11 +51,6 @@ class Bill extends Model
         return $this->belongsTo(Provider::class);
     }
 
-    public function category()
-    {
-        return $this->belongsTo(Category::class);
-    }
-
     public function archingCash()
     {
         return $this->belongsTo(ArchingCash::class);
@@ -76,8 +67,4 @@ class Bill extends Model
         return $query->where('arching_cash_id', $archingId);
     }
 
-    public function scopeApproved($query)
-    {
-        return $query->where('estado', 'aprobado');
-    }
 }

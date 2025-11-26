@@ -62,15 +62,10 @@ return new class extends Migration {
             $table->text('detalle');
             $table->text('observaciones')->nullable();
 
-            $table->enum('estado', ['pendiente', 'aprobado', 'rechazado', 'anulado'])
-                ->default('pendiente');
-
             // Relaciones
             $table->foreignId('product_id')->nullable()->constrained('products');
             $table->foreignId('provider_id')->nullable()->constrained('providers');
-            $table->foreignId('category_id')->nullable()->constrained('categories');
             $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('approved_by')->nullable()->constrained('users');
             $table->foreignId('arching_cash_id')->constrained('arching_cashes');
             $table->foreignId('branch_id')->constrained('branches');
 
@@ -78,7 +73,6 @@ return new class extends Migration {
 
             // Índices
             $table->index('fecha_emision');
-            $table->index('estado');
             $table->index('arching_cash_id');
         });
 

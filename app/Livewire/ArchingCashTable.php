@@ -96,16 +96,6 @@ class ArchingCashTable extends DataTableComponent
                 })
                 ->html(),
 
-            Column::make("Saldo Disponible")
-                ->label(function ($row) {
-                    if ($row->estado == 1) {
-                        $saldo = $row->monto_inicial - $row->total_salidas + $row->total_ingresos;
-                        return '<span class="text-sm font-bold text-green-700">S/ ' . number_format($saldo, 2) . '</span>';
-                    }
-                    return '<span class="text-gray-400 text-sm">-</span>';
-                })
-                ->html(),
-
             Column::make("Abierto por", "opened_by")
                 ->format(function ($value, $row) {
                     return '<div class="text-sm">
@@ -166,109 +156,108 @@ class ArchingCashTable extends DataTableComponent
         $this->selectedCashId = $cashId;
         $this->dispatch('open-deposit-modal', cashId: $cashId);
     }
-public function summary($cashId)
-{
-    $archingCash = ArchingCash::with([
-        'bills' => function ($query) {
-            $query->where('estado', '!=', 'anulado');
-        },
-        'bills.category:id,name',
-        'deposits',
-        'openedBy:id,name',
-        'closedBy:id,name'
-    ])->find($cashId);
+    public function summary($cashId)
+    {
+        $archingCash = ArchingCash::with([
+            'bills',
+            'deposits',
+            'openedBy:id,name',
+            'closedBy:id,name'
+        ])->find($cashId);
 
-    if (!$archingCash) {
-        $this->dispatch('swal', [
-            'title' => 'Error!',
-            'text' => 'Caja no encontrada',
-            'icon' => 'error'
-        ]);
-        return;
+        if (!$archingCash) {
+            $this->dispatch('swal', [
+                'title' => 'Error!',
+                'text' => 'Caja no encontrada',
+                'icon' => 'error'
+            ]);
+            return;
+        }
+
+        // CORRECCIÓN: Separar depósito inicial de los demás
+        $depositoInicial = $archingCash->deposits
+            ->where('tipo_deposito', 'inicial')
+            ->sum('monto');
+
+        // Solo sumar depósitos adicionales y reembolsos (NO el inicial)
+        $depositosAdicionales = $archingCash->deposits
+            ->whereIn('tipo_deposito', ['adicional', 'reembolso'])
+            ->sum('monto');
+
+        // Total de todos los depósitos (para mostrar)
+        $totalDepositos = $archingCash->deposits->sum('monto');
+
+        // Agrupar depósitos por tipo
+        $depositosPorTipo = $archingCash->deposits->groupBy('tipo_deposito')->map(function ($deposits, $tipo) {
+            $labels = [
+                'inicial' => 'DEPÓSITO INICIAL',
+                'adicional' => 'DEPÓSITO ADICIONAL',
+                'reembolso' => 'REEMBOLSO'
+            ];
+
+            return [
+                'label' => $labels[$tipo] ?? strtoupper($tipo),
+                'monto' => $deposits->sum('monto'),
+                'cantidad' => $deposits->count()
+            ];
+        })->values()->toArray();
+
+        // Calcular totales de gastos
+        $totalGastos = $archingCash->bills->sum('monto');
+
+        // Listar gastos individualmente SIN agrupar por categoría
+        $gastosDetalle = $archingCash->bills->map(function ($bill) {
+            return [
+                'producto' => $bill->producto ?? null,
+                'descripcion' => $bill->detalle ?? null,
+                'monto' => $bill->monto,
+                'fecha' => $bill->created_at?->format('d/m/Y H:i'),
+            ];
+        })->toArray();
+
+
+        // CORRECCIÓN: Calcular saldo correctamente
+        // monto_inicial YA incluye el depósito inicial, solo sumamos los adicionales
+        $saldoCalculado = $archingCash->monto_inicial + $depositosAdicionales - $totalGastos;
+
+        // Calcular diferencia si la caja está cerrada
+        $diferencia = 0;
+        if ($archingCash->estado === 'cerrada' && $archingCash->monto_final) {
+            $diferencia = $archingCash->monto_final - $saldoCalculado;
+        }
+
+        // Armar el payload
+        $this->summaryData = [
+            'caja' => [
+                'correlativo' => $archingCash->correlativo,
+                'estado' => $archingCash->estado,
+                'fecha_inicio' => $archingCash->fecha_inicio->format('d/m/Y H:i'),
+                'fecha_fin' => $archingCash->fecha_fin ? $archingCash->fecha_fin->format('d/m/Y H:i') : null,
+                'abierta_por' => $archingCash->openedBy->name ?? 'N/A',
+                'cerrada_por' => $archingCash->closedBy->name ?? 'N/A',
+                'saldo_heredado' => $archingCash->saldo_heredado ?? 0,
+                'monto_inicial' => $archingCash->monto_inicial,
+                'monto_final' => $archingCash->monto_final,
+            ],
+            'depositos' => [
+                'total' => $totalDepositos,
+                'inicial' => $depositoInicial,
+                'adicionales' => $depositosAdicionales, // Nuevo: separar para claridad
+                'cantidad' => $archingCash->deposits->count(),
+                'por_tipo' => $depositosPorTipo
+            ],
+            'gastos' => [
+                'total' => $totalGastos,
+                'cantidad' => $archingCash->bills->count(),
+                'detalle' => $gastosDetalle
+            ],
+            'saldo_calculado' => $saldoCalculado,
+            'diferencia' => $diferencia
+        ];
+
+        $this->selectedCashId = $cashId;
+        $this->showSummaryModal = true;
     }
-
-    // CORRECCIÓN: Separar depósito inicial de los demás
-    $depositoInicial = $archingCash->deposits
-        ->where('tipo_deposito', 'inicial')
-        ->sum('monto');
-
-    // Solo sumar depósitos adicionales y reembolsos (NO el inicial)
-    $depositosAdicionales = $archingCash->deposits
-        ->whereIn('tipo_deposito', ['adicional', 'reembolso'])
-        ->sum('monto');
-
-    // Total de todos los depósitos (para mostrar)
-    $totalDepositos = $archingCash->deposits->sum('monto');
-
-    // Agrupar depósitos por tipo
-    $depositosPorTipo = $archingCash->deposits->groupBy('tipo_deposito')->map(function ($deposits, $tipo) {
-        $labels = [
-            'inicial' => 'DEPÓSITO INICIAL',
-            'adicional' => 'DEPÓSITO ADICIONAL',
-            'reembolso' => 'REEMBOLSO'
-        ];
-
-        return [
-            'label' => $labels[$tipo] ?? strtoupper($tipo),
-            'monto' => $deposits->sum('monto'),
-            'cantidad' => $deposits->count()
-        ];
-    })->values()->toArray();
-
-    // Calcular totales de gastos
-    $totalGastos = $archingCash->bills->sum('monto');
-
-    // Agrupar gastos por categoría
-    $gastosPorCategoria = $archingCash->bills->groupBy('category_id')->map(function ($bills) {
-        $category = $bills->first()->category;
-        return [
-            'categoria' => strtoupper($category->name ?? 'SIN CATEGORÍA'),
-            'monto' => $bills->sum('monto'),
-            'cantidad' => $bills->count()
-        ];
-    })->values()->toArray();
-
-    // CORRECCIÓN: Calcular saldo correctamente
-    // monto_inicial YA incluye el depósito inicial, solo sumamos los adicionales
-    $saldoCalculado = $archingCash->monto_inicial + $depositosAdicionales - $totalGastos;
-
-    // Calcular diferencia si la caja está cerrada
-    $diferencia = 0;
-    if ($archingCash->estado === 'cerrada' && $archingCash->monto_final) {
-        $diferencia = $archingCash->monto_final - $saldoCalculado;
-    }
-
-    // Armar el payload
-    $this->summaryData = [
-        'caja' => [
-            'correlativo' => $archingCash->correlativo,
-            'estado' => $archingCash->estado,
-            'fecha_inicio' => $archingCash->fecha_inicio->format('d/m/Y H:i'),
-            'fecha_fin' => $archingCash->fecha_fin ? $archingCash->fecha_fin->format('d/m/Y H:i') : null,
-            'abierta_por' => $archingCash->openedBy->name ?? 'N/A',
-            'cerrada_por' => $archingCash->closedBy->name ?? 'N/A',
-            'monto_inicial' => $archingCash->monto_inicial,
-            'monto_final' => $archingCash->monto_final,
-        ],
-        'depositos' => [
-            'total' => $totalDepositos,
-            'inicial' => $depositoInicial,
-            'adicionales' => $depositosAdicionales, // Nuevo: separar para claridad
-            'cantidad' => $archingCash->deposits->count(),
-            'por_tipo' => $depositosPorTipo
-        ],
-        'gastos' => [
-            'total' => $totalGastos,
-            'cantidad' => $archingCash->bills->count(),
-            'por_categoria' => $gastosPorCategoria
-        ],
-        'saldo_calculado' => $saldoCalculado,
-        'diferencia' => $diferencia
-    ];
-    
-    $this->selectedCashId = $cashId;
-    $this->showSummaryModal = true;
-}
     public function closeSummaryModal()
     {
         $this->showSummaryModal = false;
@@ -278,8 +267,21 @@ public function summary($cashId)
 
     public function closeCash(ArchingCash $archingCash)
     {
-        // Aquí redirigir al modal de cierre o abrir un modal
+        // Cargar relaciones necesarias para el cálculo
+        $archingCash->load(['deposits', 'bills']);
+
+        // Total depósitos (inicial + adicionales + reembolsos)
+        $totalDepositos = $archingCash->deposits->sum('monto');
+
+        // Total de gastos
+        $totalGastos = $archingCash->bills->sum('monto');
+
+        // Calcular monto final
+        $montoFinal =  $totalDepositos - $totalGastos;
+
+        // Actualizar caja
         $archingCash->update([
+            'monto_final' => $montoFinal,
             'estado' => 'cerrada',
             'fecha_fin' => Carbon::now(),
             'closed_by' => auth()->user()->id
@@ -288,11 +290,12 @@ public function summary($cashId)
         $this->dispatch('cashUpdated');
 
         $this->dispatch('swal', [
-            'title' => 'Exito!',
+            'title' => 'Éxito!',
             'text' => 'Caja cerrada correctamente',
             'icon' => 'success'
         ]);
     }
+
     public function voidCash(ArchingCash $archingCash)
     {
         //primero valido si no hay nuevas cajas

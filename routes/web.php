@@ -212,6 +212,7 @@ Route::middleware([
         Route::get('searchPort', [PortController::class, 'searchPorts'])->name('port.search');
         Route::post('searchDocument', [UserController::class, 'searchDocument'])->name('user.searchDocument');
         Route::get('searchClient', [ClientController::class, 'searchClients'])->name('client.search');
+        Route::get('searchProvider', [ProviderController::class, 'searchProviders'])->name('provider.search');
         Route::get('searchBroker', [CustomBrokerController::class, 'searchBrokers'])->name('broker.search');
         Route::get('searchContainer', [ContainerController::class, 'getContainers'])->name('container.search');
         Route::get('searchTrace', [ContainerOperationalTraceController::class, 'getContainers'])->name('trace.search');

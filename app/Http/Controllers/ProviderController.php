@@ -93,7 +93,7 @@ class ProviderController extends Controller
         //
     }
 
-     public function searchproviders(Request $request){
+     public function searchProviders(Request $request){
         return Provider::query()
         ->select(DB::raw('id,rznSocial'))
         ->when(

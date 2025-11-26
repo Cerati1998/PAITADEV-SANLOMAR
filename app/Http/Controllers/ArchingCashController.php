@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Identity;
 use Illuminate\Http\Request;
 
 class ArchingCashController extends Controller
@@ -12,10 +13,8 @@ class ArchingCashController extends Controller
     }
     public function get_bills()
     {
-
-    }
-    public function get_deposits()
-    {
+        $identities = Identity::all();
+        return view("bills.index",compact('identities'));
 
     }
 }

@@ -20,7 +20,7 @@
                 </x-wire-dropdown.item>
             @endif
 
-            <x-wire-dropdown.item href="{{ route('cash.report', $cash->id) }}" class="group">
+            <x-wire-dropdown.item href="{{ route('cash.report', $cash->id) }}" target="_blank" class="group">
                 <div class="flex items-center gap-2">
                     <i class="fas fa-download mr-2 group-hover:text-blue-500"></i>
                     <span class="group-hover:text-blue-500">Descargar Reporte</span>

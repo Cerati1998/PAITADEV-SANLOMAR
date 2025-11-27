@@ -24,7 +24,7 @@ class BillTable extends DataTableComponent
     #[Validate('required|date')]
     public $fecha_emision;
 
-    #[Validate('required|in:factura,boleta,recibo,ticket')]
+    #[Validate('required|in:factura,boleta,recibo,ticket,otros')]
     public $tipo_comprobante = 'boleta';
 
     #[Validate('nullable|string|max:20')]

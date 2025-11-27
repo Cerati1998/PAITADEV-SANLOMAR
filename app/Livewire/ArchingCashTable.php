@@ -270,6 +270,7 @@ class ArchingCashTable extends DataTableComponent
         // Cargar relaciones necesarias para el cálculo
         $archingCash->load(['deposits', 'bills']);
 
+        $saldoHerencia = $archingCash->saldo_heredado ?? 0;
         // Total depósitos (inicial + adicionales + reembolsos)
         $totalDepositos = $archingCash->deposits->sum('monto');
 
@@ -277,7 +278,7 @@ class ArchingCashTable extends DataTableComponent
         $totalGastos = $archingCash->bills->sum('monto');
 
         // Calcular monto final
-        $montoFinal =  $totalDepositos - $totalGastos;
+        $montoFinal =  $saldoHerencia + $totalDepositos - $totalGastos;
 
         // Actualizar caja
         $archingCash->update([

@@ -141,7 +141,7 @@ class ArchingCashCreate extends Component
                 $numero = isset($matches[0]) ? intval($matches[0]) + 1 : 1;
             }
 
-            $correlativo = 'CC-' . str_pad($numero, 3, '0', STR_PAD_LEFT);
+            $correlativo = 'CC-' . str_pad($numero, 6, '0', STR_PAD_LEFT);
 
             // Crear la caja
             $archingCash = ArchingCash::create([

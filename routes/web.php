@@ -74,7 +74,8 @@ Route::middleware([
 
         //Gastos
         Route::get('cashes',[ArchingCashController::class,'get_cashes'])->name('cashes.index');
-        Route::get('cash-report/{cash}',[ArchingCashController::class,'cash_report'])->name('cash.report');
+        Route::get('/cash/{archingCash}/report', [ArchingCashController::class, 'reportePDF'])
+        ->name('cash.report');
         Route::get('bills',[ArchingCashController::class,'get_bills'])->name('bills.index');
         Route::get('cash-deposits',[ArchingCashController::class,'get_deposits'])->name('deposits.index');
 

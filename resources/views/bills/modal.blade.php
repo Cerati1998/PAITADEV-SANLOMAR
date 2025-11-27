@@ -46,6 +46,7 @@
                         <x-wire-select.option value="boleta" label="Boleta" />
                         <x-wire-select.option value="recibo" label="Recibo" />
                         <x-wire-select.option value="ticket" label="Ticket" />
+                        <x-wire-select.option value="otros" label="Otros" />
                     </x-wire-select>
                 </div>
 

@@ -153,6 +153,15 @@ class ArchingCashTable extends DataTableComponent
 
     public function register_deposit($cashId)
     {
+        if (!auth()->user()->can('deposits.index')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         $this->selectedCashId = $cashId;
         $this->dispatch('open-deposit-modal', cashId: $cashId);
     }
@@ -278,7 +287,7 @@ class ArchingCashTable extends DataTableComponent
         $totalGastos = $archingCash->bills->sum('monto');
 
         // Calcular monto final
-        $montoFinal =  $saldoHerencia + $totalDepositos - $totalGastos;
+        $montoFinal = $saldoHerencia + $totalDepositos - $totalGastos;
 
         // Actualizar caja
         $archingCash->update([
@@ -299,6 +308,15 @@ class ArchingCashTable extends DataTableComponent
 
     public function voidCash(ArchingCash $archingCash)
     {
+        if (!auth()->user()->can('cashes.void')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         //primero valido si no hay nuevas cajas
         $lastCaja = ArchingCash::where('branch_id', session('branch')->id)
             ->where('estado', "abierta")

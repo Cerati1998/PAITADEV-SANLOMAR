@@ -134,5 +134,10 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'devolution.containers.update'])->assignRole([$role1, $role2, $role3, $role4]);
         Permission::create(['name' => 'devolution.edit'])->assignRole([$role1, $role2, $role3, $role4]);
         Permission::create(['name' => 'reports'])->assignRole([$role1, $role2, $role3, $role4, $role8, $role9]);
+        Permission::create(['name' => 'cashes.index'])->assignRole([$role1, $role2, $role3, $role4, $role9]);
+        Permission::create(['name' => 'cashes.void'])->assignRole([$role1, $role2, $role9]);
+        Permission::create(['name' => 'cash.report'])->assignRole([$role1, $role2, $role3, $role4, $role9]);
+        Permission::create(['name' => 'bills.index'])->assignRole([$role1, $role2, $role3, $role4, $role9]);
+        Permission::create(['name' => 'deposits.index'])->assignRole([$role1, $role2, $role9]);
     }
 }

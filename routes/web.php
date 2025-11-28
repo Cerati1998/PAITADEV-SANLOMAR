@@ -73,11 +73,11 @@ Route::middleware([
         Route::get('transport/{transport}/vehicles', [TransportController::class, 'vehicles'])->name('transport.vehicles')->middleware('can:transport.vehicles');
 
         //Gastos
-        Route::get('cashes',[ArchingCashController::class,'get_cashes'])->name('cashes.index');
+        Route::get('cashes',[ArchingCashController::class,'get_cashes'])->name('cashes.index')->middleware('can:cashes.index');
         Route::get('/cash/{archingCash}/report', [ArchingCashController::class, 'reportePDF'])
-        ->name('cash.report');
-        Route::get('bills',[ArchingCashController::class,'get_bills'])->name('bills.index');
-        Route::get('cash-deposits',[ArchingCashController::class,'get_deposits'])->name('deposits.index');
+        ->name('cash.report')->middleware('can:cash.report');
+        Route::get('bills',[ArchingCashController::class,'get_bills'])->name('bills.index')->middleware('can:bills.index');
+        Route::get('cash-deposits',[ArchingCashController::class,'get_deposits'])->name('deposits.index')->middleware('can:deposits.index');
 
         //Inventario
         Route::get('products', [ProductController::class, 'index'])->name('products.index')->middleware('can:products');

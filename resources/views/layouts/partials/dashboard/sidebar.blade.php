@@ -168,7 +168,7 @@
         [
             'header' => 'Gestor de Costos',
             'icon' => 'fa-solid fa-helmet-safety',
-            'can' => ['manage_work.index', 'workers.index', 'dispatches.index'],
+            'can' => ['cashes.index', 'bills.index'],
         ],
 
         [
@@ -176,13 +176,13 @@
             'icon' => 'fa-solid fa-vault',
             'route' => route('cashes.index'),
             'active' => request()->routeIs('cashes.*'),
-            //'can' => 'devolution.index',
+            'can' => 'cashes.index',
         ],
         [
             'name' => 'Compras',
             'icon' => 'fa-solid fa-hand-holding-dollar',
             'active' => request()->routeIs(['bills.*']),
-            //'can' => ['clients', 'providers', 'brokers', 'transports'],
+            'can' => ['bills.index'],
 
             'submenu' => [
                 [
@@ -190,7 +190,7 @@
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('bills.index'),
                     'active' => request()->routeIs('bills.*'),
-                    //'can' => 'clients',
+                    'can' => 'bills.index',
                 ],
             ],
         ],

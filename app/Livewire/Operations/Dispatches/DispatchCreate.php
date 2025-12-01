@@ -201,6 +201,8 @@ class DispatchCreate extends Component
 
         // Limpiar estado del componente
         $this->reset('openModal', 'dispatchData', 'containerData');
+        $this->dispatchData['washer_id'] = auth()->id();
+        $this->dispatchData['branch_id'] = session('branch')->id;
         $this->dispatch('dispatchAdded');
         $this->dispatch('swal', [
             'title' => 'Éxito!',

@@ -18,7 +18,7 @@ class ArchingCashCreate extends Component
     #[Validate('required|date')]
     public $fecha_inicio;
 
-    #[Validate('required|numeric|min:0')]
+    #[Validate('required|numeric|min:1')]
     public $deposito_inicial = 0;
 
     #[Validate('boolean')]
@@ -55,7 +55,7 @@ class ArchingCashCreate extends Component
     #[Computed]
     public function montoInicial()
     {
-        return $this->saldoHeredado + ($this->deposito_inicial ?? 0);
+        return $this->saldoHeredado + $this->deposito_inicial ?? 0;
     }
 
     //#[Computed]

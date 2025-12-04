@@ -118,10 +118,9 @@ class ContainerImport implements
 
                 //agrego validador, si el contenedor ya se encuentra anunciado aborto la subida
                 $containerIn = ContainerOperationalTrace::where('container_id', $container->id)
-                    ->where('status', '<', 5)
+                    ->whereBetween('status', [1, 4])
                     ->whereHas('gateInDetail.originable', function ($query) {
                         $query->where('branch_id', session('branch')->id);
-                        //->where('originable_type', Dischargue::class);
                     })
                     ->exists();
 

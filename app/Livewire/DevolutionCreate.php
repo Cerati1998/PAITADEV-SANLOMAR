@@ -97,7 +97,7 @@ class DevolutionCreate extends Component
 
             //Guardar archivo en disco
             if ($this->attach) {
-                $filePath = $this->attach->store('imports');
+                $filePath = $this->attach->store('imports','public');
 
                 //importo los contenedores
                 Excel::import(new ContainerImport($newDevolution->id, $this->devolution['shipping_line_id']), $filePath);

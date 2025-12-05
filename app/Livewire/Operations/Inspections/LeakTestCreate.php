@@ -30,8 +30,13 @@ class LeakTestCreate extends Component
             'gateInDetail.originable.branch',
             'container.container_type'
         ])
-            ->whereHas('gateInDetail.originable.branch', function ($query) {
-                $query->where('branch_id', $this->branch_id);
+            ->whereHas('gateInDetail', function ($query) {
+                $query->whereHasMorph('originable', [
+                    \App\Models\Dischargue::class,
+                    \App\Models\Devolution::class
+                ], function ($morphQuery) {
+                    $morphQuery->where('branch_id', $this->branch_id);
+                });
             })
             ->whereHas('container.container_type', function ($typeQuery) {
                 $typeQuery->whereIn('iso_code', ['45R1', '22R1']);

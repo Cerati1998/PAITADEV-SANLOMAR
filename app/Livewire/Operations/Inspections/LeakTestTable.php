@@ -141,8 +141,8 @@ class LeakTestTable extends DataTableComponent
                                     })
                                         // Para Devolución (Devolution)
                                         ->orWhereHasMorph('originable', ['App\Models\Devolution'], function ($devolutionQuery) use ($shippingLineId) {
-                                            $devolutionQuery->where('shipping_line_id', $shippingLineId);
-                                        });
+                                        $devolutionQuery->where('shipping_line_id', $shippingLineId);
+                                    });
                                 });
                             });
                         });
@@ -173,26 +173,31 @@ class LeakTestTable extends DataTableComponent
     ];
 
 
-    #[Computed()]
+    #[Computed]
     public function traces()
     {
         $traces = ContainerOperationalTrace::with([
             'gateInDetail.originable.branch',
             'container.container_type'
         ])
-            ->whereHas('gateInDetail.originable.branch', function ($query) {
-                $query->where('branch_id', session('branch')->id);
+            ->whereHas('gateInDetail', function ($query) {
+                $query->whereHasMorph('originable', [
+                    \App\Models\Dischargue::class,
+                    \App\Models\Devolution::class
+                ], function ($morphQuery) {
+                    $morphQuery->where('branch_id', session('branch')->id);
+                });
             })
             ->whereHas('container.container_type', function ($typeQuery) {
                 $typeQuery->whereIn('iso_code', ['45R1', '22R1']);
             })
-            ->where('container_operational_traces.status', '<', 5)
+            ->whereBetween('container_operational_traces.status', [1, 4])
             ->orderBy('id', 'desc')
             ->get();
 
         return $traces->map(function ($trace) {
             return [
-                'id' => (int) $trace->id,
+                'id' => $trace->id,
                 'name' => $trace->container->code ?? 'N/A',
                 'description' => strtoupper($trace->nave ?? '') . ' - ' . strtoupper($trace->linea ?? ''),
             ];
@@ -222,7 +227,7 @@ class LeakTestTable extends DataTableComponent
                 //'trace_id',
                 'inspector_id',
             ]);
-            
+
             $this->leaktest['trace_id'] = (int) $leakTest->trace_id;
 
             //  buscar el trace

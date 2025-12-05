@@ -372,7 +372,7 @@ class BillTable extends DataTableComponent
     public function closeModal()
     {
           $this->reset([
-            'openModal', 'billId', 'fecha_emision', 'tipo_comprobante',
+            'openModal','editMode', 'billId', 'fecha_emision', 'tipo_comprobante',
             'numero_comprobante', 'product_id', 'provider_id', 'monto',
              'tipo_cambio', 'detalle', 'observaciones'
         ]);

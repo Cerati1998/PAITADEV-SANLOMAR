@@ -185,14 +185,14 @@ class DispatchCreate extends Component
             $dispatch = Dispatch::create($this->dispatchData);
 
             // Si hay fecha de despacho => actualizar trace como DESPACHADO
-            if ($this->dispatchData['dispatch_date']) {
+            if (!empty($this->dispatchData['dispatch_date'])) {
                 $traceService = app(ContainerOperationalTraceService::class);
 
                 $traceService->updateStatus(
-                    traceId: (int) $this->dispatchData['trace_id'],
-                    statusBox: 'OP', // puedes ajustar si lo deseas
-                    finalStatus: ContainerStatusService::TRACE_DESPACHADO,
-                    userId: auth()->id()
+                    (int) $this->dispatchData['trace_id'],
+                    'OP', // puedes ajustar si lo deseas
+                    ContainerStatusService::TRACE_DESPACHADO,
+                    auth()->id()
                 );
 
                 $message .= ' y Despacho';

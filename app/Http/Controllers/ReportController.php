@@ -37,10 +37,10 @@ class ReportController extends Controller
         ])
             // Filtro por fecha
             ->when($request->filled('since'), function ($query) use ($request) {
-                $query->whereDate('inspection_date', '>=', $request->since);
+                $query->whereDate('dispatch_date', '>=', $request->since);
             })
             ->when($request->filled('until'), function ($query) use ($request) {
-                $query->whereDate('inspection_date', '<=', $request->until);
+                $query->whereDate('dispatch_date', '<=', $request->until);
             })
             // Filtro por cliente
             ->when($request->filled('client'), function ($query) use ($request) {
@@ -51,7 +51,7 @@ class ReportController extends Controller
                     // Filtro por línea
                     ->when($request->filled('line'), function ($q) use ($request) {
                         $q->whereHas('container', function ($containerQuery) use ($request) {
-                            $containerQuery->where('line_id', $request->line);
+                            $containerQuery->where('own_line_id', $request->line);
                         });
                     })
                     ->whereHas('gateInDetail', function ($query) {

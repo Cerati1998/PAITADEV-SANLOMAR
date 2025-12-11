@@ -51,11 +51,13 @@
                     Datos del Despacho
                 </h1>
             </header>
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                <div class="col-span-2 lg:col-span-1">
-                    <x-wire-select :options="$this->vessels" wire:model="dispatchData.vessel_id" option-label="name"
-                        label="Nave" option-value="id" />
-                </div>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+                <x-wire-select :options="$this->workers" wire:model="dispatchData.dispatcher_id" option-label="name"
+                    label="Nave" option-value="id" />
+                <x-wire-select :options="$this->vessels" wire:model="dispatchData.vessel_id" option-label="name" label="Nave"
+                    option-value="id" />
+            </div>
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                 <div class="col-span-2 lg:col-span-1">
                     <x-wire-select :options="$this->shippers" wire:model="dispatchData.shipper_id" option-label="name"
                         label="Shipper" option-value="id" />

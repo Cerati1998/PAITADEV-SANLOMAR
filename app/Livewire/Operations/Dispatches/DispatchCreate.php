@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Models\ContainerOperationalTrace;
 use App\Models\Dispatches\Dispatch;
 use App\Models\Vessel;
+use App\Models\works\Worker;
 use App\Services\Container\ContainerOperationalTraceService;
 use App\Services\Container\ContainerStatusService;
 use Carbon\Carbon;
@@ -28,6 +29,18 @@ class DispatchCreate extends Component
         });
     }
     #[Computed]
+    public function workers()
+    {
+        return Worker::where('branch_id', session('branch')->id)
+            ->get()->map(function ($worker) {
+                return [
+                    'id' => $worker->id,
+                    'name' => $worker->name,
+                    'description' => $worker->numDoc,
+                ];
+            });
+    }
+    #[Computed]
     public function vessels()
     {
         return Vessel::with('shippingLine')->get()->map(function ($vessel) {
@@ -45,8 +58,13 @@ class DispatchCreate extends Component
             'gateInDetail.originable.branch',
             'container.container_type'
         ])
-            ->whereHas('gateInDetail.originable.branch', function ($query) {
-                $query->where('branch_id', session('branch')->id);
+            ->whereHas('gateInDetail', function ($query) {
+                $query->whereHasMorph('originable', [
+                    \App\Models\Dischargue::class,
+                    \App\Models\Devolution::class
+                ], function ($morphQuery) {
+                    $morphQuery->where('branch_id', session('branch')->id);
+                });
             })
             ->whereHas('container.container_type', function ($typeQuery) {
                 $typeQuery->whereIn('iso_code', ['45R1', '22R1']);
@@ -163,7 +181,7 @@ class DispatchCreate extends Component
             'dispatchData.vessel_id' => 'nullable|exists:vessels,id',
             'dispatchData.trace_id' => 'nullable|exists:container_operational_traces,id',
             'dispatchData.washer_id' => 'required|exists:users,id',
-            'dispatchData.dispatcher_id' => 'nullable|exists:users,id',
+            'dispatchData.dispatcher_id' => 'required|exists:users,id',
             'dispatchData.shipper_id' => 'nullable|exists:clients,id',
         ], [], [
             'dispatchData.wash_date' => 'Fecha de Lavado',
@@ -181,7 +199,7 @@ class DispatchCreate extends Component
 
         DB::transaction(function () use ($message) {
             // Creo el despacho
-            $this->dispatchData['dispatcher_id'] = $this->dispatchData['dispatch_date'] ? auth()->user()->id : null;
+            //$this->dispatchData['dispatcher_id'] = $this->dispatchData['dispatch_date'] ? auth()->user()->id : null;
             $dispatch = Dispatch::create($this->dispatchData);
 
             // Si hay fecha de despacho => actualizar trace como DESPACHADO
@@ -191,6 +209,7 @@ class DispatchCreate extends Component
                 $traceService->updateStatus(
                     (int) $this->dispatchData['trace_id'],
                     'OP', // puedes ajustar si lo deseas
+                    null,
                     ContainerStatusService::TRACE_DESPACHADO,
                     auth()->id()
                 );

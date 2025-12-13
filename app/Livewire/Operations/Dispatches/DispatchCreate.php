@@ -5,6 +5,7 @@ namespace App\Livewire\Operations\Dispatches;
 use App\Models\Client;
 use App\Models\ContainerOperationalTrace;
 use App\Models\Dispatches\Dispatch;
+use App\Models\User;
 use App\Models\Vessel;
 use App\Models\works\Worker;
 use App\Services\Container\ContainerOperationalTraceService;
@@ -28,18 +29,26 @@ class DispatchCreate extends Component
             ];
         });
     }
+
     #[Computed]
-    public function workers()
+    public function users()
     {
-        return Worker::where('branch_id', session('branch')->id)
-            ->get()->map(function ($worker) {
-                return [
-                    'id' => $worker->id,
-                    'name' => $worker->name,
-                    'description' => $worker->numDoc,
-                ];
-            });
+        return User::whereHas('branches', function ($query) {
+            $query->where('branches.id', session('branch')->id)
+                ->where('branch_company_user.company_id', session('company')->id);
+        })
+            ->whereDoesntHave('roles', function ($query) {
+                $query->where('name', 'Super');
+            })
+            ->get()
+            ->map(fn($user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'description' => $user->numDoc,
+            ]);
     }
+
+
     #[Computed]
     public function vessels()
     {

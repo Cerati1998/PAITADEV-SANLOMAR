@@ -52,8 +52,8 @@
                 </h1>
             </header>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-                <x-wire-select :options="$this->workers" wire:model="dispatchData.dispatcher_id" option-label="name"
-                    label="Nave" option-value="id" />
+                <x-wire-select :options="$this->users" wire:model="dispatchData.dispatcher_id" option-label="name"
+                    label="Despachador" option-value="id" />
                 <x-wire-select :options="$this->vessels" wire:model="dispatchData.vessel_id" option-label="name" label="Nave"
                     option-value="id" />
             </div>

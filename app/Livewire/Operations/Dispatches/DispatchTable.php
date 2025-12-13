@@ -224,6 +224,7 @@ class DispatchTable extends DataTableComponent
                 $traceService->updateStatus(
                     (int) $this->dispatchData['trace_id'],
                     'OP', // puedes ajustar si lo deseas
+                    NULL,
                     ContainerStatusService::TRACE_DESPACHADO,
                     auth()->id()
                 );

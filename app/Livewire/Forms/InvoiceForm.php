@@ -492,7 +492,7 @@ class InvoiceForm extends Form
             if (!($response['success'] ?? false)) {
                 throw new \Exception($response['message'] ?? 'No se encontró información');
             }
-            $this->tipoCambio = $response['data']['venta'];
+            $this->tipoCambio = $response['data']['sell_price'];
         } catch (\Exception $e) {
             Log::info("Error al intentar asignar el tipo de Cambio: {$e->getMessage()}");
             $this->tipoCambio = 0;

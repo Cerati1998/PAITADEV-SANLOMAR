@@ -25,7 +25,7 @@ class SunatService
     }
     public function consultarTC(string $fecha)
     {
-        $url = env('API_TC') . "?fecha={$fecha}" ?? "https://api.apis.net.pe/v1/tipo-cambio-sunat?fecha={$fecha}";
+        $url = env('API_TC') . "?date={$fecha}" ?? "https://api.apis.net.pe/v1/tipo-cambio-sunat?fecha={$fecha}";
         return $this->request($url);
     }
 

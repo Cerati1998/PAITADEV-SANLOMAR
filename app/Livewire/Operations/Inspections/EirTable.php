@@ -132,11 +132,23 @@ class EirTable extends DataTableComponent
                                     })
                                         // Para Devolución (Devolution)
                                         ->orWhereHasMorph('originable', ['App\Models\Devolution'], function ($devolutionQuery) use ($shippingLineId) {
-                                            $devolutionQuery->where('shipping_line_id', $shippingLineId);
-                                        });
+                                        $devolutionQuery->where('shipping_line_id', $shippingLineId);
+                                    });
                                 });
                             });
                         });
+                    }
+                }),
+            SelectFilter::make('Tipo')
+                ->options([
+                    '' => 'Todas los métodos',
+                    'fast_repair' => 'Rápida',
+                    'normal_repair' => 'Normal',
+                    'quoted_repair' => 'Monto Alto',
+                ])
+                ->filter(function (Builder $builder, $value) {
+                    if ($value !== '') {
+                        $builder->where($value, true);
                     }
                 }),
             SelectFilter::make('Estado')

@@ -16,13 +16,14 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Rappasoft\LaravelLivewireTables\Views\Filters\DateRangeFilter;
 
 class DispatchTable extends DataTableComponent
 {
     public function configure(): void
     {
         $this->setPrimaryKey('id');
-        $this->setDefaultSort('id', 'desc');
+        $this->setDefaultSort('dispatches.dispatch_date', 'desc');
         $this->setConfigurableAreas([
             'after-wrapper' => ['dispatches.edit']
         ]);
@@ -58,8 +59,8 @@ class DispatchTable extends DataTableComponent
                 ->sortable(),
             Column::make("Shipper", "shipper.rznSocial")
                 ->sortable(),
-            Column::make("Lavador", "washer.name")
-                ->sortable(),
+            /* Column::make("Lavador", "washer.name")
+                ->sortable(), */
             Column::make("Despachador", "dispatcher.name")
                 ->sortable(),
         ];
@@ -81,6 +82,25 @@ class DispatchTable extends DataTableComponent
                 $traceQuery->whereBetween('status', [2, 5]);
             })
             ->where('dispatches.branch_id', session('branch')->id);
+    }
+
+    public function filters(): array
+    {
+        return [
+            DateRangeFilter::make('Fecha Creado')
+                ->config([
+                    'altFormat' => 'F j, Y', // Date format that will be displayed once selected
+                    'ariaDateFormat' => 'F j, Y', // An aria-friendly date format
+                    'dateFormat' => 'Y-m-d', // Date format that will be received by the filter
+                    'placeholder' => 'Introduzca el rango de fechas', // A placeholder value
+                    'locale' => 'en',
+                ])
+                ->filter(function (Builder $builder, array $dateRange) {
+                    $builder
+                        ->whereDate('dispatches.dispatch_date', '>=', $dateRange['minDate'])
+                        ->whereDate('dispatches.dispatch_date', '<=', $dateRange['maxDate']);
+                }),
+        ];
     }
 
     #[Computed]

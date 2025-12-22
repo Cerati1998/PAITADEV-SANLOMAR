@@ -178,7 +178,7 @@ class WorkOrderTable extends DataTableComponent
         $branchId = session('branch')->id;
 
         return [
-             DateRangeFilter::make('Fecha Termino')
+            DateRangeFilter::make('Fecha Termino')
                 ->config([
                     'altFormat' => 'F j, Y', // Date format that will be displayed once selected
                     'ariaDateFormat' => 'F j, Y', // An aria-friendly date format
@@ -212,7 +212,7 @@ class WorkOrderTable extends DataTableComponent
             ", [$shippingLineId, $shippingLineId]);
                     }
                 }),
-            SelectFilter::make('Tipo')
+            /* SelectFilter::make('Tipo')
                 ->options(
                     [
                         '' => 'Todos',
@@ -225,6 +225,20 @@ class WorkOrderTable extends DataTableComponent
                 ->filter(function (Builder $builder, $status) {
                     if (!empty($status)) {
                         $builder->where('work_orders.type', $status);
+                    }
+                }), */
+            SelectFilter::make('Tipo')
+                ->options([
+                    '' => 'Todas los métodos',
+                    'fast_repair' => 'Rápida',
+                    'normal_repair' => 'Normal',
+                    'quoted_repair' => 'Monto Alto',
+                ])
+                ->filter(function (Builder $builder, $value) {
+                    if ($value !== '') {
+                        $builder->whereHas('eirInspection', function ($eirQuery) use ($value) {
+                            $eirQuery->where($value, true);
+                        });
                     }
                 }),
             SelectFilter::make('Estado')
@@ -913,7 +927,8 @@ class WorkOrderTable extends DataTableComponent
      */
     public function updatedNewPhotoLabor()
     {
-        if (!$this->ensureDraft()) return;
+        if (!$this->ensureDraft())
+            return;
 
         $this->attachLaborPhoto();
     }
@@ -1019,7 +1034,8 @@ class WorkOrderTable extends DataTableComponent
             return;
         }
 
-        if (!$this->ensureDraft()) return;
+        if (!$this->ensureDraft())
+            return;
 
         try {
             $this->getPhotoService()->deleteLaborPhoto($photoId);

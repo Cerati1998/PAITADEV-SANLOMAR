@@ -18,6 +18,7 @@ class EirForm extends Form
     public $correlativo = '';
     public $normal_wash = false;
     public $quimic_wash = false;
+    public $oxalic_wash = false;
     public $reason_quimic_wash = '';
     public $special_wash = false;
     public $reason_special_wash = '';

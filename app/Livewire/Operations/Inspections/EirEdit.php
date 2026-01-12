@@ -320,6 +320,7 @@ class EirEdit extends Component
             'correlativo',
             'normal_wash',
             'quimic_wash',
+            'oxalic_wash',
             'reason_quimic_wash',
             'special_wash',
             'reason_special_wash',

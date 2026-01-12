@@ -197,12 +197,13 @@
                     {{-- TIPOS DE LAVADO (estos sí van al EIR -> form) --}}
                     <div class="col-span-2 mt-4 xl:mt-0 self-end">
                         <x-label class="block mb-4 font-bold text-blue-700">TIPOS DE LAVADO</x-label>
-                        <div class="flex justify-start gap-4">
+                        <div class="flex justify-start gap-2 lg:gap-4">
                             <x-wire-toggle left-label="Normal" wire:model="eir.normal_wash" sm />
                             <x-wire-toggle left-label="Quimico" x-on:click="lavado_quimico = !lavado_quimico;"
                                 wire:model="eir.quimic_wash" sm />
                             <x-wire-toggle left-label="Especial" x-on:click="lavado_especial = !lavado_especial;"
                                 wire:model="eir.special_wash" sm />
+                            <x-wire-toggle left-label="Oxalico" wire:model="eir.oxalic_wash" sm />
                         </div>
                     </div>
 

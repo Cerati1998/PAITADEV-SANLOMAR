@@ -74,6 +74,23 @@
                     }
                 });
             });
+
+             Livewire.on('BoxOpConsult', data => {
+                //console.log(data[0].msg);
+                Swal.fire({
+                    title: data[0].title ?? "¿Estas seguro de Actualizar?",
+                    text: data[0].msg ?? "¡Todas las unidades tendrán estructura OP!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: '¡Sí, actualizalo!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Livewire.dispatch('bulkBoxOp');
+                    }
+                });
+            });
         </script>
     @endpush
 </x-dashboard-layout>

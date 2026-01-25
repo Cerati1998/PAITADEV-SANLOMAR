@@ -82,7 +82,7 @@ class ReportController extends Controller
                 'despacho' => Carbon::parse($inspection->inspection_date)->format('d/m/Y H:i'),
                 'booking' => $inspection->reserva_booking,
                 'nave' => $inspection->trace?->nave,
-                'despachador' => $inspection->washer?->name,
+                'despachador' => $inspection->dispatcher?->name,
                 'repair_box' => $inspection->trace->date_rep_box ? 'SI' : '',
                 'wash_oxalic' => $inspection->oxalic_wash ? 'SI' : '',
                 'leak_test' => $inspection->trace?->LeakTest?->status === 'ok' ? 'SI' : '',
@@ -180,9 +180,15 @@ class ReportController extends Controller
                 $tipo_lavado = 'NORMAL';
             } else if ($inspection->quimic_wash) {
                 $tipo_lavado = 'QUIMICO';
-            } else {
+            } else if ($inspection->oxalic_wash) {
+                $tipo_lavado = 'OXALICO';
+            } else if ($inspection->special_wash) {
                 $tipo_lavado = 'ESPECIAL';
+            } else {
+                $tipo_lavado = '-';
             }
+
+            $nota = ($inspection->quimic_wash) ? $inspection->reason_quimic_wash : $inspection->reason_special_wash;
 
             return [
                 'id' => $inspection->id,
@@ -192,11 +198,11 @@ class ReportController extends Controller
                 'year' => $inspection->trace?->container?->build_year,
                 'tare' => $inspection->trace?->container?->tare,
                 'payload' => $inspection->trace?->container?->payload,
-                'condition' => ($inspection?->workOrder) ? 'DAÑADO' : 'OPERATIVO',
+                'condition' => ($inspection->fast_repair || $inspection->normal_repair || $inspection->quoted_repair) ? 'DAÑADO' : 'OPERATIVO',
                 'height' => 'Altura Max: ' . $inspection?->trace?->container?->max_height,
                 'provider' => 'SANLOMAR GROUP',
                 'wash' => $tipo_lavado,
-                'note' => $inspection?->observations,
+                'note' => $nota,
             ];
         })->toArray();
 

@@ -23,7 +23,8 @@ class DContainerTable extends DataTableComponent
     public $ownLine;
     public array $bulkActions = [
         'bulkAnulateConsult' => 'Anular Seleccionados',
-        'MachineOpConsult' => 'Actualizar Maquina'
+        'MachineOpConsult' => 'Actualizar Maquina',
+        'BoxOpConsult' => 'Actualizar Estructura'
     ];
 
     public function configure(): void
@@ -88,7 +89,8 @@ class DContainerTable extends DataTableComponent
                     $q->where('id', $this->originId);
                 }
             )
-                ->where('status', '>=', 0);;
+                ->where('status', '>=', 0);
+            ;
         }
 
         return $query;
@@ -233,7 +235,14 @@ class DContainerTable extends DataTableComponent
     {
         $this->dispatch('MachineOpConsult', [
             'title' => '¿Estas seguro de actualizar?',
-            'msg' => 'Todos los componentes maquina de contenedores REEFER pasaran a Operativos'
+            'msg' => 'Todos los componentes maquina de contenedores REEFER pasarán a Operativos'
+        ]);
+    }
+    public function BoxOpConsult()
+    {
+        $this->dispatch('BoxOpConsult', [
+            'title' => '¿Estas seguro de actualizar?',
+            'msg' => 'Toda la estructura de contenedores pasarán a Operativos'
         ]);
     }
 
@@ -339,6 +348,64 @@ class DContainerTable extends DataTableComponent
         }
 
         $message = "Máquina actualizada en {$updated} reefer";
+        if ($skipped > 0) {
+            $message .= " — omitidos {$skipped}";
+        }
+
+        $this->clearSelected();
+        $this->dispatch('swal', [
+            'title' => 'Exito!',
+            'text' => $message,
+            'icon' => 'success'
+        ]);
+    }
+    #[On('bulkBoxOp')]
+    public function bulkBoxOp()
+    {
+        if (!auth()->user()->can('discharges.containers.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
+        $traceService = new ContainerOperationalTraceService();
+
+        $selectedTraces = $this->getSelected();
+        if (empty($selectedTraces)) {
+            $this->dispatch('swal', [
+                'title' => 'Error!',
+                'text' => 'Debe seleccionar mínimo un contenedor para actualizar.',
+                'icon' => 'error'
+            ]);
+            return;
+        }
+
+        $traces = ContainerOperationalTrace::with('container')
+            ->whereIn('id', $selectedTraces)
+            ->get();
+
+        $updated = 0;
+        $skipped = 0;
+
+        foreach ($traces as $trace) {
+            $iso = strtoupper($trace->container->iso_code ?? '');
+
+            // Solo reefer: 45R1 o 22R1
+            if ($trace->status_box === 'pending') {
+                $traceService->updateWithCalculatedStatus(
+                    traceId: $trace->id,
+                    statusBox: 'OP'
+                );
+                $updated++;
+            } else {
+                $skipped++;
+            }
+        }
+
+        $message = "Estructura actualizada en {$updated} reefer";
         if ($skipped > 0) {
             $message .= " — omitidos {$skipped}";
         }

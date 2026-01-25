@@ -322,26 +322,33 @@
     <!-- LAVADO -->
     <table class="washing-table">
         <tr>
-            <td style="width: 30%;">
+            <td style="width: 25%;">
                 <span class="checkbox">{{ $lavadoNormal ? 'X' : '' }}</span>
                 <span class="text-bold">LAVADO NORMAL</span>
             </td>
-            <td style="width: 40%;">
+            <td style="width: 25%;">
                 <span class="checkbox">{{ $lavadoQuimico ? 'X' : '' }}</span>
                 <span class="text-bold">LAVADO QUIMICO</span>
             </td>
-            <td style="width: 30%;">
+            <td style="width: 25%;">
                 <span class="checkbox">{{ $lavadoEspecial ? 'X' : '' }}</span>
                 <span class="text-bold">WX (LAVADO ESPECIAL)</span>
             </td>
+            <td style="width: 25%;">
+                <span class="checkbox">{{ $lavadoOxalico ? 'X' : '' }}</span>
+                <span class="text-bold">LAVADO OXALICO</span>
+            </td>
         </tr>
         <tr>
-            <td class="text-center">{{ $lavadoNormal ? 'Si' : 'No' }}</td>
-            <td style="width: 50%;">
+            <td class="text-center" style="width: 10%;">{{ $lavadoNormal ? 'Si' : 'No' }}</td>
+            <td style="width: 25%;">
                 <span>{{ $motivoLavadoQuimico }}</span>
             </td>
-            <td style="width: 50%;">
+            <td style="width: 40%;">
                 <span>{{ $motivoLavadoEspecial }}</span>
+            </td>
+            <td style="width: 25%;">
+                <span>-</span>
             </td>
         </tr>
     </table>

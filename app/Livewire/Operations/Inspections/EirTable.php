@@ -158,6 +158,7 @@ class EirTable extends DataTableComponent
                     'with_order' => 'Aprobadas',
                 ])
                 ->filter(function (Builder $builder, $value) {
+                    $builder->where('quoted_repair',true);
                     if ($value === 'with_order') {
                         $builder->has('workOrder');
                     } elseif ($value === 'no_order') {

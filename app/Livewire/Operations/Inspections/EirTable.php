@@ -64,7 +64,7 @@ class EirTable extends DataTableComponent
 
     public function builder(): Builder
     {
-        return EirInspection::with(['trace', 'inspector'])
+        return EirInspection::with(['trace', 'inspector', 'workOrder'])
             ->select('eir_inspections.*')
             ->whereDate('eir_inspections.created_at', '>=', now()->subMonths(6))
             ->whereHas('trace', function ($query) {
@@ -149,6 +149,19 @@ class EirTable extends DataTableComponent
                 ->filter(function (Builder $builder, $value) {
                     if ($value !== '') {
                         $builder->where($value, true);
+                    }
+                }),
+            SelectFilter::make('Aprobados')
+                ->options([
+                    '' => 'Todas',
+                    'no_order' => 'Sin Aprobación',
+                    'with_order' => 'Aprobadas',
+                ])
+                ->filter(function (Builder $builder, $value) {
+                    if ($value === 'with_order') {
+                        $builder->has('workOrder');
+                    } elseif ($value === 'no_order') {
+                        $builder->doesntHave('workOrder');
                     }
                 }),
             SelectFilter::make('Estado')

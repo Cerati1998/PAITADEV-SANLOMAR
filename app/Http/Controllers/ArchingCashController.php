@@ -27,7 +27,7 @@ class ArchingCashController extends Controller
 
   public function reportePDF($id)
 {
-    $cash = ArchingCash::with(['bills.provider', 'deposits', 'branch','openedBy'])
+    $cash = ArchingCash::with(['bills.provider', 'deposits', 'branch','closedBy'])
         ->findOrFail($id);
 
     $business = Company::first();
@@ -61,7 +61,7 @@ class ArchingCashController extends Controller
     $data = [
         'business'       => $business,
         'logoBase64'     => $logoBase64,
-        'manager'        => strtoupper($cash?->openedBy->name),
+        'manager'        => $cash?->closedBy?->name ? strtoupper(string: $cash?->closedBy?->name) : '-',
         'cash'           => $cash,
         'gastos'         => $gastos,
         'ingresos'       => $ingresos,

@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\ArchingCash;
 use App\Models\Product;
 use App\Models\Provider;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
@@ -12,6 +13,7 @@ use Livewire\Attributes\Validate;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Column;
 use App\Models\Bill;
+use Rappasoft\LaravelLivewireTables\Views\Filters\DateRangeFilter;
 
 class BillTable extends DataTableComponent
 {
@@ -75,11 +77,16 @@ class BillTable extends DataTableComponent
                 }),
             Column::make("Correlativo", "correlativo")
                 ->sortable(),
-            Column::make("Fecha registro", "fecha_registro")
+            Column::make("Emisión", "fecha_emision")
+                ->format(function ($value) {
+                    return Carbon::parse($value)->format('d/m/Y');
+                })
                 ->sortable(),
             Column::make("Comprobante", "numero_comprobante")
+                ->searchable()
                 ->sortable(),
             Column::make("Proveedor", "provider.rznSocial")
+                ->searchable()
                 ->sortable(),
             Column::make("Monto", "monto")
                 ->sortable(),
@@ -109,7 +116,7 @@ class BillTable extends DataTableComponent
             ->first();
     }
 
-      #[Computed]
+    #[Computed]
     public function saldoDisponible()
     {
         if (!$this->cajaActual) {
@@ -132,13 +139,13 @@ class BillTable extends DataTableComponent
             ->get();
     }
 
-   /*  #[Computed]
-    public function providers()
-    {
-        return Provider::where('branch_id', session('branch')->id)
-            ->orderBy('rznSocial')
-            ->get();
-    } */
+    /*  #[Computed]
+     public function providers()
+     {
+         return Provider::where('branch_id', session('branch')->id)
+             ->orderBy('rznSocial')
+             ->get();
+     } */
 
     public function edit($id)
     {
@@ -192,8 +199,8 @@ class BillTable extends DataTableComponent
         }
 
         // Calcular monto en soles
-        $montoEnSoles = $this->moneda === 'PEN' 
-            ? $this->monto 
+        $montoEnSoles = $this->moneda === 'PEN'
+            ? $this->monto
             : $this->monto * ($this->tipo_cambio ?? 1);
 
         // Validar saldo disponible
@@ -209,12 +216,12 @@ class BillTable extends DataTableComponent
         } else {
             // En edición, considerar el monto anterior
             $billAnterior = Bill::find($this->billId);
-            $montoAnteriorEnSoles = $billAnterior->moneda === 'PEN' 
-                ? $billAnterior->monto 
+            $montoAnteriorEnSoles = $billAnterior->moneda === 'PEN'
+                ? $billAnterior->monto
                 : $billAnterior->monto * ($billAnterior->tipo_cambio ?? 1);
-            
+
             $diferencia = $montoEnSoles - $montoAnteriorEnSoles;
-            
+
             if ($diferencia > $this->saldoDisponible) {
                 $this->dispatch('swal', [
                     'title' => 'Saldo insuficiente',
@@ -248,8 +255,8 @@ class BillTable extends DataTableComponent
             if ($this->editMode) {
                 // EDITAR
                 $bill = Bill::find($this->billId);
-                $montoAnteriorEnSoles = $bill->moneda === 'PEN' 
-                    ? $bill->monto 
+                $montoAnteriorEnSoles = $bill->moneda === 'PEN'
+                    ? $bill->monto
                     : $bill->monto * ($bill->tipo_cambio ?? 1);
 
                 // Actualizar el bill
@@ -338,8 +345,8 @@ class BillTable extends DataTableComponent
             DB::beginTransaction();
 
             // Calcular monto en soles
-            $montoEnSoles = $bill->moneda === 'PEN' 
-                ? $bill->monto 
+            $montoEnSoles = $bill->moneda === 'PEN'
+                ? $bill->monto
                 : $bill->monto * ($bill->tipo_cambio ?? 1);
 
             // Actualizar total_salidas de la caja
@@ -371,11 +378,40 @@ class BillTable extends DataTableComponent
 
     public function closeModal()
     {
-          $this->reset([
-            'openModal','editMode', 'billId', 'fecha_emision', 'tipo_comprobante',
-            'numero_comprobante', 'product_id', 'provider_id', 'monto',
-             'tipo_cambio', 'detalle', 'observaciones'
+        $this->reset([
+            'openModal',
+            'editMode',
+            'billId',
+            'fecha_emision',
+            'tipo_comprobante',
+            'numero_comprobante',
+            'product_id',
+            'provider_id',
+            'monto',
+            'tipo_cambio',
+            'detalle',
+            'observaciones'
         ]);
+    }
+
+    public function filters(): array
+    {
+        return [
+            //Filtro por fecha
+            DateRangeFilter::make('Fecha Emisión')
+                ->config([
+                    'altFormat' => 'F j, Y', // Date format that will be displayed once selected
+                    'ariaDateFormat' => 'F j, Y', // An aria-friendly date format
+                    'dateFormat' => 'Y-m-d', // Date format that will be received by the filter
+                    'placeholder' => 'Introduzca el rango de fechas', // A placeholder value
+                    'locale' => 'en',
+                ])
+                ->filter(function (Builder $builder, array $dateRange) { // Expects an array.
+                    $builder
+                        ->whereDate('fecha_emision', '>=', $dateRange['minDate']) // minDate is the start date selected
+                        ->whereDate('fecha_emision', '<=', $dateRange['maxDate']); // maxDate is the end date selected
+                }),
+        ];
     }
 
 }

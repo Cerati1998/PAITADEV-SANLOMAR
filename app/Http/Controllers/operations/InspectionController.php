@@ -233,6 +233,7 @@ class InspectionController extends Controller
             'lavadoNormal' => $eirData->normal_wash,
             'lavadoQuimico' => $eirData->quimic_wash,
             'lavadoEspecial' => $eirData->special_wash,
+            'lavadoOxalico' => $eirData->oxalic_wash,
             'motivoLavadoQuimico' => $eirData->quimic_wash ? $eirData->reason_quimic_wash : '',
             'motivoLavadoEspecial' => $eirData->special_wash ? $eirData->reason_special_wash : '',
             'damages' => $eirData->details->map(function ($detail) {

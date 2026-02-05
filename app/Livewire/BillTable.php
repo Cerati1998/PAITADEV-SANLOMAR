@@ -112,7 +112,7 @@ class BillTable extends DataTableComponent
 
         return ArchingCash::where('branch_id', session('branch')->id)
             ->where('estado', 'abierta')
-            ->whereNull('fecha_fin')
+            //->whereNull('fecha_fin')
             ->first();
     }
 

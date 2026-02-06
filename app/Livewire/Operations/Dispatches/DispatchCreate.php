@@ -78,7 +78,7 @@ class DispatchCreate extends Component
             ->whereHas('container.container_type', function ($typeQuery) {
                 $typeQuery->whereIn('iso_code', ['45R1', '22R1']);
             })
-            ->whereBetween('container_operational_traces.status', [3, 4])
+            ->whereBetween('container_operational_traces.status', [1, 4])
             ->orderBy('id', 'desc')
             ->get();
 

@@ -43,6 +43,7 @@ class DispatchTable extends DataTableComponent
             Column::make("Fecha Out", "dispatch_date")
                 ->sortable(),
             Column::make("Reserva BK", "reserva_booking")
+                ->searchable()
                 ->sortable(),
             Column::make("Oxalic", "oxalic_wash")
                 ->format(function ($value) {
@@ -52,10 +53,11 @@ class DispatchTable extends DataTableComponent
                 ->sortable(),
             Column::make("Nave", "vessel.name")
                 ->sortable(),
-            Column::make("Contenedor")
-                ->label(function ($row) {
+            Column::make("Contenedor", "trace.container.code")
+                /* ->label(function ($row) {
                     return $row->trace?->container?->code ?? '-';
-                })
+                }) */
+                ->searchable()
                 ->sortable(),
             Column::make("Shipper", "shipper.rznSocial")
                 ->sortable(),

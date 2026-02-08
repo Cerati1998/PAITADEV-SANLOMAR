@@ -48,26 +48,18 @@ class ContainerTraceTable extends DataTableComponent
                 ->searchable(),
             Column::make("EIR", 'EirInspection')
                 ->label(function ($row) {
-                    if ($row->EirInspection->isEmpty()) {
+                    if (!$row->EirInspection) { // Cambio: ya no es isNotEmpty()
                         return '<span class="text-gray-400 text-sm">-</span>';
                     }
 
-                    $eir = $row->EirInspection->sortByDesc('created_at')->first();
+                    $eir = $row->EirInspection; // Ya no necesitas sortByDesc ni first()
                     $correlativo = str_pad($eir->correlativo, 6, '0', STR_PAD_LEFT);
-                    $count = $row->EirInspection->count();
-                    $badge = $count > 1
-                        ? sprintf(
-                            " <span class='inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800'>+%d</span>",
-                            $count
-                        )
-                        : '';
 
                     return sprintf(
-                        '<a class="text-blue-600 hover:underline font-medium" href="%s" target="_blank">%s-%s</a>%s',
+                        '<a class="text-blue-600 hover:underline font-medium" href="%s" target="_blank">%s-%s</a>',
                         route('inspections.eir.edit', $eir->id),
                         $eir->serie,
-                        $correlativo,
-                        $badge
+                        $correlativo
                     );
                 })
                 ->html(),
@@ -208,20 +200,20 @@ class ContainerTraceTable extends DataTableComponent
                         ->pluck('name', 'id')
                         ->toArray()
                 )
-                 ->filter(function (Builder $builder, $shippingLineId) {
+                ->filter(function (Builder $builder, $shippingLineId) {
                     if (!empty($shippingLineId)) {
-                            $builder->whereHas('gateInDetail', function ($gateQuery) use ($shippingLineId) {
-                                $gateQuery->where(function ($originQuery) use ($shippingLineId) {
-                                    // Para Descarga (Dischargue)
-                                    $originQuery->whereHasMorph('originable', ['App\Models\Dischargue'], function ($dischargueQuery) use ($shippingLineId) {
-                                        $dischargueQuery->where('shipping_line_id', $shippingLineId);
-                                    })
-                                        // Para Devolución (Devolution)
-                                        ->orWhereHasMorph('originable', ['App\Models\Devolution'], function ($devolutionQuery) use ($shippingLineId) {
-                                            $devolutionQuery->where('shipping_line_id', $shippingLineId);
-                                        });
+                        $builder->whereHas('gateInDetail', function ($gateQuery) use ($shippingLineId) {
+                            $gateQuery->where(function ($originQuery) use ($shippingLineId) {
+                                // Para Descarga (Dischargue)
+                                $originQuery->whereHasMorph('originable', ['App\Models\Dischargue'], function ($dischargueQuery) use ($shippingLineId) {
+                                    $dischargueQuery->where('shipping_line_id', $shippingLineId);
+                                })
+                                    // Para Devolución (Devolution)
+                                    ->orWhereHasMorph('originable', ['App\Models\Devolution'], function ($devolutionQuery) use ($shippingLineId) {
+                                    $devolutionQuery->where('shipping_line_id', $shippingLineId);
                                 });
                             });
+                        });
                     }
                 }),
 

@@ -47,7 +47,7 @@ class ContainerOperationalTrace extends Model
 
     public function EirInspection()
     {
-        return $this->hasMany(EirInspection::class, 'trace_id');
+        return $this->hasOne(EirInspection::class, 'trace_id');
     }
 
     public function LeakTest()

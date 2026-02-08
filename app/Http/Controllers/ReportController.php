@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Exports\DispatchExport;
 use App\Exports\InspectionExport;
+use App\Models\ContainerOperationalTrace;
 use App\Models\Dispatches\Dispatch;
 use App\Models\inspections\EirInspection;
 use App\Models\ShippingLine;
+use App\Models\works\WorkOrder;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
@@ -28,44 +31,41 @@ class ReportController extends Controller
             'client' => 'nullable|exists:clients,id',
         ]);
 
-        $inspectionData = Dispatch::with([
-            'trace',
-            'trace.container:id,code',
-            'trace.LeakTest',
-            'shipper', // Necesario para filtro de cliente
-            'washer'
+        // Obtener todos los traces que llegaron a status 5 (Despachado) en el rango de fechas
+        $dispatchedTraces = ContainerOperationalTrace::with([
+            'container:id,code,own_line_id',
+            'container.line:id,name',
+            'EirInspection.workOrder',
+            'LeakTest',
+            'gateInDetail.originable.shippingLine:id,name',
+            'gateInDetail.originable.vessel:id,name'
         ])
-            // Filtro por fecha
+            ->where('status', 5)
+            // Filtro por fecha de cambio a status final
             ->when($request->filled('since'), function ($query) use ($request) {
-                $query->whereDate('dispatch_date', '>=', $request->since);
+                $query->whereDate('date_final_status', '>=', $request->since);
             })
             ->when($request->filled('until'), function ($query) use ($request) {
-                $query->whereDate('dispatch_date', '<=', $request->until);
+                $query->whereDate('date_final_status', '<=', $request->until);
             })
-            // Filtro por cliente
-            ->when($request->filled('client'), function ($query) use ($request) {
-                $query->where('shipper_id', $request->client);
+            // Filtro por línea naviera
+            ->when($request->filled('line'), function ($query) use ($request) {
+                $query->whereHas('container', function ($q) use ($request) {
+                    $q->where('own_line_id', $request->line);
+                });
             })
-            ->whereHas('trace', function ($queryTrace) use ($request) {
-                $queryTrace->where('status', 5)
-                    // Filtro por línea
-                    ->when($request->filled('line'), function ($q) use ($request) {
-                        $q->whereHas('container', function ($containerQuery) use ($request) {
-                            $containerQuery->where('own_line_id', $request->line);
-                        });
-                    })
-                    ->whereHas('gateInDetail', function ($query) {
-                        $query->whereHasMorph('originable', [
-                            'App\Models\Dischargue',
-                            'App\Models\Devolution'
-                        ], function ($morphQuery) {
-                            $morphQuery->where('branch_id', session('branch')->id);
-                        });
-                    });
+            // Filtro por branch
+            ->whereHas('gateInDetail', function ($query) {
+                $query->whereHasMorph('originable', [
+                    'App\Models\Dischargue',
+                    'App\Models\Devolution'
+                ], function ($morphQuery) {
+                    $morphQuery->where('branch_id', session('branch')->id);
+                });
             })
             ->get();
 
-        if ($inspectionData->isEmpty()) {
+        if ($dispatchedTraces->isEmpty()) {
             session()->flash('swal', [
                 'icon' => 'error',
                 'title' => 'Error!',
@@ -74,22 +74,53 @@ class ReportController extends Controller
             return back();
         }
 
-        // Transformación limpia con map()
-        $datos = $inspectionData->map(function ($inspection) {
+        // Obtener IDs de traces para buscar relaciones
+        $traceIds = $dispatchedTraces->pluck('id');
+
+        // Obtener Dispatches relacionados (solo los que tienen registro en tabla dispatch)
+        $dispatches = Dispatch::with(['washer:id,name', 'dispatcher:id,name', 'vessel:id,name'])
+            ->whereIn('trace_id', $traceIds)
+            ->get()
+            ->keyBy('trace_id');
+
+        // Obtener Work Orders relacionados a través de EirInspection
+        $eirInspectionIds = EirInspection::whereIn('trace_id', $traceIds)
+            ->pluck('id');
+
+        $workOrders = WorkOrder::whereIn('eir_inspection_id', $eirInspectionIds)
+            ->get()
+            ->groupBy('eir_inspection_id');
+
+        // Transformar datos
+        $datos = $dispatchedTraces->map(function (ContainerOperationalTrace $trace) use ($dispatches, $workOrders, $request) {
+            $dispatch = $dispatches->get($trace->id);
+            //dd($trace->EirInspection?->oxalic_wash);
+            // Obtener semana del dispatch o del trace
+            $weekDispatch = null;
+            if ($dispatch && $dispatch->getRawOriginal('dispatch_date')) {
+                $weekDispatch = Carbon::parse($dispatch->getRawOriginal('dispatch_date'))->weekOfYear;
+            } elseif ($trace->updated_at) {
+                $weekDispatch = Carbon::parse($trace->updated_at)->weekOfYear;
+            }
+
             return [
-                'id' => $inspection->id,
-                'container' => $inspection->trace?->container?->code,
-                'despacho' => Carbon::parse($inspection->inspection_date)->format('d/m/Y H:i'),
-                'booking' => $inspection->reserva_booking,
-                'nave' => $inspection->trace?->nave,
-                'despachador' => $inspection->dispatcher?->name,
-                'repair_box' => $inspection->trace->date_rep_box ? 'SI' : '',
-                'wash_oxalic' => $inspection->oxalic_wash ? 'SI' : '',
-                'leak_test' => $inspection->trace?->LeakTest?->status === 'ok' ? 'SI' : '',
+                'container' => $trace->container?->code ?? '-',
+                'fecha_dispatch' => $dispatch?->dispatch_date
+                    ? Carbon::parse($dispatch->getRawOriginal('dispatch_date'))->format('d/m/Y H:i')
+                    : Carbon::parse($trace->updated_at)->format('d/m/Y H:i'),
+                'week_dispatch' => $weekDispatch ?? '-',
+                'booking_dispatch' => $dispatch?->reserva_booking ?? '-',
+                'nave_dispatch' => $dispatch?->vessel?->name ?? '-',
+                'name_dispatcher' => $dispatch?->dispatcher?->name ?? '-',
+                'has_washed' => $dispatch ? 'SI' : '',
+                'has_eir' => $trace->EirInspection ? 'SI' : '',
+                'has_leak_test' => $trace->LeakTest ? 'SI' : '',
+                'has_work_order' => $trace->EirInspection?->workOrder ? 'SI' : '',
+                'has_oxalic_wash' => $trace->EirInspection?->oxalic_wash ? 'SI' : '',
             ];
         })->toArray();
 
-        // Generar nombre de archivo dinámico con filtros
+        // Generar nombre de archivo
         $fileName = 'Despachos';
         if ($request->filled('since') && $request->filled('until')) {
             $fileName .= '_' . Carbon::parse($request->since)->format('dmY') .
@@ -97,7 +128,24 @@ class ReportController extends Controller
         }
         $fileName .= '.xlsx';
 
-        return Excel::download(new DispatchExport($datos), $fileName);
+        // Obtener nombre de línea para el título
+        $lineaNombre = 'TODAS LAS LÍNEAS';
+        if ($request->filled('line')) {
+            $linea = ShippingLine::find($request->line);
+            $lineaNombre = $linea?->name ?? 'LÍNEA DESCONOCIDA';
+        }
+
+        // Calcular semana basada en la fecha 'since' del filtro
+        $week = $request->filled('since')
+            ? str_pad(Carbon::parse($request->since)->weekOfYear, 2, '0', STR_PAD_LEFT)
+            : str_pad(Carbon::now()->weekOfYear, 2, '0', STR_PAD_LEFT);
+
+        $data = [
+            'title' => strtoupper("SEMANA {$week} - {$lineaNombre}"),
+            'datos' => $datos
+        ];
+
+        return Excel::download(new DispatchExport($data), $fileName);
     }
 
     public function exportInspections(Request $request)
@@ -159,11 +207,11 @@ class ReportController extends Controller
         $untilDate = Carbon::parse($request->until);
 
         // Usamos la semana de la fecha "since" o el promedio si prefieres
-        $weekNumber = $sinceDate->week();
+        $weekNumber = $sinceDate->weekOfYear();
 
         // Si el rango abarca múltiples semanas, puedes mostrar el rango
-        $weekSince = $sinceDate->week();
-        $weekUntil = $untilDate->week();
+        $weekSince = $sinceDate->weekOfYear();
+        $weekUntil = $untilDate->weekOfYear();
 
         $weekDisplay = ($weekSince === $weekUntil)
             ? "WK{$weekNumber}"

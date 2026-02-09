@@ -107,7 +107,7 @@ class ReportController extends Controller
                 'container' => $trace->container?->code ?? '-',
                 'fecha_dispatch' => $dispatch?->dispatch_date
                     ? Carbon::parse($dispatch->getRawOriginal('dispatch_date'))->format('d/m/Y H:i')
-                    : Carbon::parse($trace->date_final_status)->format('d/m/Y H:i'),
+                    : Carbon::parse($trace->getRawOriginal('date_final_status'))->format('d/m/Y H:i'),
                 'week_dispatch' => $weekDispatch ?? '-',
                 'booking_dispatch' => $dispatch?->reserva_booking ?? '-',
                 'nave_dispatch' => $dispatch?->vessel?->name ?? '-',

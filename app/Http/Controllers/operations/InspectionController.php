@@ -10,11 +10,13 @@ use App\Models\Document;
 use App\Models\Identity;
 use App\Models\inspections\EirInspection;
 use App\Models\inspections\EirInspectionDetail;
+use App\Models\inspections\RoofEvidence;
 use App\Models\Location;
 use App\Models\Method;
 use App\Models\ReeferMachine;
 use App\Models\ReeferTechnology;
 use App\Services\inspections\EirPhotoService;
+use App\Services\inspections\RoofEvidencePhotoService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Dompdf\Dompdf;
@@ -116,6 +118,44 @@ class InspectionController extends Controller
         }
     }
 
+    public function uploadRoofEvidencePhoto(Request $request, RoofEvidencePhotoService $roofEvidencePhotoService)
+    {
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg,webp|max:10240',
+            'eir_id' => 'required|integer|exists:eir_inspections,id',
+        ]);
+
+        // Obtener o crear el registro de evidencia de techo
+        $roof = RoofEvidence::firstOrCreate(
+            ['eir_inspection_id' => $request->eir_id],
+            [
+                'qty_welded_patch' => 0,
+                'qty_riveted_patch' => 0,
+                'qty_rail_patch' => 0,
+                'qty_welded_cut' => 0,
+                'qty_sealed_cut' => 0,
+                'has_additional_damages' => 0,
+            ]
+        );
+
+        try {
+            $roofEvidencePhotoService->validateImage($request->file('photo'));
+            $result = $roofEvidencePhotoService->savePhoto($roof, $request->file('photo'));
+
+            return response()->json([
+                'success' => true,
+                'photo' => [
+                    'slot' => $result['slot'],
+                    'url' => $result['url'],
+                ],
+            ]);
+        } catch (\RuntimeException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+        }
+    }
+
     /**
      * Subir foto de detalle
      */
@@ -195,7 +235,7 @@ class InspectionController extends Controller
             ->where('eir_inspections.id', $eirId)
             ->first();
 
-        if (! $eirData) {
+        if (!$eirData) {
             return session()->flash('swal', [
                 'icon' => 'error',
                 'title' => 'Error!',

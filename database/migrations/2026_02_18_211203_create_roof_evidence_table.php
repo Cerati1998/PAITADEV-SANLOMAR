@@ -17,7 +17,8 @@ return new class extends Migration {
                 ->onUpdate('cascade');
             $table->tinyInteger('qty_welded_patch')->default(0)->comment('parche soldado');
             $table->tinyInteger('qty_riveted_patch')->default(0)->comment('parche remachado');
-            $table->tinyInteger('qty_rail_patch')->default(0)->comment('parche en el riel');
+            $table->tinyInteger('qty_door_rail_patch')->default(0)->comment('parches en riel superior de la puerta');
+            $table->tinyInteger('qty_front_rail_patch')->default(0)->comment('parches en el riel frontal superior');
             $table->tinyInteger('qty_welded_cut')->default(0)->comment('corte soldado');
             $table->tinyInteger('qty_sealed_cut')->default(0)->comment('corte sellado');
             $table->boolean('has_additional_damages')->default(false)->comment('Delaminaciones, Abolladuras Y  Reseñas leves');

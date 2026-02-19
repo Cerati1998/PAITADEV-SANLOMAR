@@ -168,6 +168,8 @@ Route::middleware([
 
         Route::post('/eir/upload-header-photo', [InspectionController::class, 'uploadHeaderPhoto'])
             ->name('eir.upload-header-photo');
+        Route::post('/inspections/roof-evidence/upload-photo', [InspectionController::class, 'uploadRoofEvidencePhoto'])
+            ->name('eir.upload-roof-evidence-photo');
 
         Route::post('/eir/upload-detail-photo', [InspectionController::class, 'uploadDetailPhoto'])
             ->name('eir.upload-detail-photo');

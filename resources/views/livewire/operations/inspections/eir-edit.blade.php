@@ -240,8 +240,16 @@
                 </div>
 
                 <div class="mb-8">
-                    <x-label>Observaciones</x-label>
-                    <x-wire-input wire:model="eir.observations" />
+                    <div class="flex items-end gap-4">
+                        <div class="flex-1">
+                            <x-label>Observaciones</x-label>
+                            <x-wire-input wire:model="eir.observations" />
+                        </div>
+                        <div>
+                            <x-wire-button icon="document-magnifying-glass" class="rounded-xl"
+                                x-on:click="openRoofEvidenceModal" sm />
+                        </div>
+                    </div>
                 </div>
             </x-wire-card>
 
@@ -1071,6 +1079,10 @@
                 });
                 // Si hay parámetro, llamamos con él
 
+            }
+
+            function openRoofEvidenceModal() {
+                Livewire.dispatch('openRoofEvidenceModal');
             }
         </script>
     @endpush

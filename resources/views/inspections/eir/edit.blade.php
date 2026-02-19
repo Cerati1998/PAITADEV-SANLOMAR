@@ -12,4 +12,5 @@
     ],
 ]">
     @livewire('operations.inspections.eir-edit', ['eir_id'=>$eir_id,'catalogs' => $catalogs], 'operations.inspections.eir-edit')
+    @livewire('operations.inspections.roof-evidence-modal',['eirId' => $eir_id],'operations.inspections.roof-evidence-modal')    
 </x-dashboard-layout>

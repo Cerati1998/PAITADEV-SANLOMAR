@@ -26,7 +26,7 @@ class RoofEvidence extends Model
         'qty_rail_patch' => 'integer',
         'qty_welded_cut' => 'integer',
         'qty_sealed_cut' => 'integer',
-        'has_additional_damages' => 'integer',
+        'has_additional_damages' => 'boolean',
     ];
 
     public function eirInspection()

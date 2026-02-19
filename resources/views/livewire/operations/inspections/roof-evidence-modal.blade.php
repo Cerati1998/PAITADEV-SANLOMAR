@@ -15,9 +15,11 @@
                     wire:model="form.qty_door_rail_patch" />
 
             </div>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-2 mb-4">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-2 mb-4">
                 <x-wire-number :min="0" :max="100" label="Parches en el riel frontal superior"
                     wire:model="form.qty_front_rail_patch" />
+                <x-wire-number :min="0" :max="100" label="Parches cubiertos con silicona"
+                    wire:model="form.qty_silicon_patch" />
                 <x-wire-number :min="0" :max="100" label="Corte sellado"
                     wire:model="form.qty_sealed_cut" />
                 <x-wire-number :min="0" :max="100" label="Corte soldado"

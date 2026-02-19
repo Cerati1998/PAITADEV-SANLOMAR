@@ -13,12 +13,14 @@ class RoofEvidenceModal extends Component
 {
     public int $eirId;
     public bool $openModal = false;
+    public $eirStatus;
 
     public array $form = [
         'qty_welded_patch' => 0,
         'qty_riveted_patch' => 0,
         'qty_door_rail_patch' => 0,
         'qty_front_rail_patch' => 0,
+        'qty_silicon_patch' => 0,
         'qty_welded_cut' => 0,
         'qty_sealed_cut' => 0,
         'has_additional_damages' => 0,
@@ -30,6 +32,7 @@ class RoofEvidenceModal extends Component
         'form.qty_riveted_patch' => 'required|integer|min:0',
         'form.qty_door_rail_patch' => 'required|integer|min:0',
         'form.qty_front_rail_patch' => 'required|integer|min:0',
+        'form.qty_silicon_patch' => 'required|integer|min:0',
         'form.qty_welded_cut' => 'required|integer|min:0',
         'form.qty_sealed_cut' => 'required|integer|min:0',
         'form.has_additional_damages' => 'required|boolean',
@@ -47,16 +50,7 @@ class RoofEvidenceModal extends Component
         }
 
         $eir = EirInspection::with('roofEvidence')->find($this->eirId);
-
-        if (!$eir || $eir->status === 'completado') {
-            $this->dispatch('swal', [
-                'icon' => 'warning',
-                'title' => 'Acción no permitida',
-                'text' => 'No se pueden modificar evidencias de techo de una inspección completada.',
-            ]);
-            return;
-        }
-
+        $this->eirStatus = $eir->status;
         $roof = $eir->roofEvidence;
 
         if ($roof) {
@@ -73,6 +67,15 @@ class RoofEvidenceModal extends Component
     public function save(): void
     {
         $this->validate();
+
+        if ($this->eirStatus === 'completado') {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acción no permitida',
+                'text' => 'No se pueden modificar evidencias de techo de una inspección completada.',
+            ]);
+            return;
+        }
 
         if (!auth()->user()->can('roofEvidence.update')) {
             $this->dispatch('swal', [
@@ -103,6 +106,10 @@ class RoofEvidenceModal extends Component
     {
         if (!auth()->user()->can('roofEvidence.photo.delete')) {
             throw new Exception("No tienes el permiso para ejecutar esta acción");
+        }
+
+        if ($this->eirStatus === 'completado') {
+            throw new Exception("No se pueden modificar evidencias de techo de una inspección completada.");
         }
 
         $roof = RoofEvidence::where('eir_inspection_id', $this->eirId)->first();

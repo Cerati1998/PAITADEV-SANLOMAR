@@ -10,7 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('roof_evidence', function (Blueprint $table) {
+        Schema::create('roof_evidences', function (Blueprint $table) {
             $table->id();
             $table->foreignId('eir_inspection_id')->nullable()
                 ->constrained('eir_inspections')->onDelete('no action')
@@ -19,6 +19,7 @@ return new class extends Migration {
             $table->tinyInteger('qty_riveted_patch')->default(0)->comment('parche remachado');
             $table->tinyInteger('qty_door_rail_patch')->default(0)->comment('parches en riel superior de la puerta');
             $table->tinyInteger('qty_front_rail_patch')->default(0)->comment('parches en el riel frontal superior');
+            $table->tinyInteger('qty_silicon_patch')->default(0)->comment('parches cubiertos con silicona');
             $table->tinyInteger('qty_welded_cut')->default(0)->comment('corte soldado');
             $table->tinyInteger('qty_sealed_cut')->default(0)->comment('corte sellado');
             $table->boolean('has_additional_damages')->default(false)->comment('Delaminaciones, Abolladuras Y  Reseñas leves');
@@ -35,6 +36,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('roof_evidence');
+        Schema::dropIfExists('roof_evidences');
     }
 };

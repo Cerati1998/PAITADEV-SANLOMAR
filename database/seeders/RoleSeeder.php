@@ -105,7 +105,7 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'dispatches.update'])->assignRole([$role1, $role2, $role3, $role4, $role7]);
         Permission::create(['name' => 'dispatches.delete'])->assignRole([$role1, $role2, $role3]);
         Permission::create(['name' => 'dispatches.photos.delete'])->assignRole([$role1, $role2]);
-        Permission::create(['name' => 'containers.traces'])->assignRole([$role1, $role2, $role3, $role4, $role5]);
+        Permission::create(['name' => 'containers.traces'])->assignRole([$role1, $role2, $role3, $role4, $role5, $role7]);
         Permission::create(['name' => 'inspections.eir.list'])->assignRole([$role1, $role2, $role3, $role4, $role5, $role10]);
         Permission::create(['name' => 'inspections.eir.create'])->assignRole([$role1, $role2, $role3, $role4, $role5]);
         Permission::create(['name' => 'inspections.eir.edit'])->assignRole([$role1, $role2, $role3, $role4, $role5, $role10]);

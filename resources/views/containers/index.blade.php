@@ -10,9 +10,10 @@
     @push('css')
         <style>
             /* body{
-                        background-color: #f3f4f6 !important;
-                    } */
+                            background-color: #f3f4f6 !important;
+                        } */
             @media screen and (min-width: 575.98px) {
+
                 table tbody td,
                 table thead th span {
                     font-size: 0.75rem !important;
@@ -29,6 +30,7 @@
         </div>
     </div>
     @livewire('container-trace-table', [], 'container-trace-table')
+    @livewire('operations.inspections.roof-evidence-modal', ['eirId' => 0])
 
     @push('js')
         <script>

@@ -5,6 +5,7 @@ namespace App\Livewire\Operations\Inspections;
 use App\Models\inspections\EirInspection;
 use App\Models\inspections\RoofEvidence;
 use App\Services\inspections\RoofEvidencePhotoService;
+use Exception;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -38,8 +39,13 @@ class RoofEvidenceModal extends Component
     protected $listeners = ['openRoofEvidenceModal' => 'openModalRoof'];
 
     #[On('openRoofEvidenceModal')]
-    public function openModalRoof(): void
+    public function openModalRoof(?int $eirId = null): void
     {
+        // Si no viene (desde EirEdit donde ya está montado con el prop), usa el que tiene
+        if ($eirId !== null) {
+            $this->eirId = $eirId;
+        }
+
         $eir = EirInspection::with('roofEvidence')->find($this->eirId);
 
         if (!$eir || $eir->status === 'completado') {
@@ -68,6 +74,15 @@ class RoofEvidenceModal extends Component
     {
         $this->validate();
 
+        if (!auth()->user()->can('roofEvidence.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
         RoofEvidence::updateOrCreate(
             ['eir_inspection_id' => $this->eirId],
             $this->form
@@ -86,6 +101,10 @@ class RoofEvidenceModal extends Component
      */
     public function deletePhoto(string $slot): bool
     {
+        if (!auth()->user()->can('roofEvidence.photo.delete')) {
+            throw new Exception("No tienes el permiso para ejecutar esta acción");
+        }
+
         $roof = RoofEvidence::where('eir_inspection_id', $this->eirId)->first();
         if (!$roof)
             return false;

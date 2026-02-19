@@ -63,6 +63,31 @@ class ContainerTraceTable extends DataTableComponent
                     );
                 })
                 ->html(),
+            Column::make("Techo", 'EirInspection')
+                ->label(function ($row) {
+                    if (!$row->EirInspection) {
+                        return '<span class="text-gray-400 text-xs">Sin EIR</span>';
+                    }
+
+                    $eir = $row->EirInspection;
+                    $hasRoof = $eir->roofEvidence !== null;
+
+                    $icon = $hasRoof ? 'fas fa-check-circle' : 'fas fa-plus-circle';
+                    $color = $hasRoof ? 'text-green-600 hover:text-green-800' : 'text-blue-500 hover:text-blue-700';
+                    $title = $hasRoof ? 'Ver evidencia de techo' : 'Agregar evidencia de techo';
+
+                    return sprintf(
+                        '<button onclick="Livewire.dispatch(\'openRoofEvidenceModal\', { eirId: %d })"
+                class="%s transition text-sm" title="%s">
+                <i class="%s"></i>
+            </button>',
+                        $eir->id,
+                        $color,
+                        $title,
+                        $icon
+                    );
+                })
+                ->html(),
 
             Column::make("Leak Test", 'LeakTest')
                 ->label(function ($row) {
@@ -147,8 +172,9 @@ class ContainerTraceTable extends DataTableComponent
             ->with([
                 'gateInDetail.originable.branch',
                 'gateInDetail.originable.shippingLine',
-                'EirInspection:id,trace_id,correlativo,serie,created_at',
-                'LeakTest:id,serie,correlativo,trace_id,status,started_at,finished_at', // ← Agregar trace_id y status
+                'EirInspection:id,trace_id,correlativo,serie,created_at,status',  // ← añade status
+                'EirInspection.roofEvidence:id,eir_inspection_id',
+                'LeakTest:id,serie,correlativo,trace_id,status,started_at,finished_at',
                 'container:id,code,iso_code'
             ])
             ->where('container_operational_traces.status', '>', 0)

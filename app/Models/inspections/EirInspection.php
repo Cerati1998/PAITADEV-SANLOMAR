@@ -91,6 +91,10 @@ class EirInspection extends Model
     {
         return $this->hasOne(WorkOrder::class);
     }
+    public function roofEvidence()
+    {
+        return $this->hasOne(RoofEvidence::class);
+    }
 
     //Accesor para las fotos
     public function getPhoto1Url()

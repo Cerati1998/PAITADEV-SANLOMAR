@@ -97,7 +97,7 @@ class EirForm extends Form
         try {
             //valido que si es DM especifiquen el tipo de reparacion
             if ($statusBox === 'DM' && (!$this->normal_repair && !$this->fast_repair && !$this->quoted_repair)) {
-                throw new Exception("Debes escoger un tipo de reparación si el Status de la estructura es INOPERATIVO");
+                throw new Exception("Debes escoger un tipo de reparacion si el Status de la estructura es INOPERATIVO");
             }
             $this->status = 'completado';
             $this->closed_by = auth()->id();

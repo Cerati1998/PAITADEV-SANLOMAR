@@ -104,19 +104,19 @@ class RoofEvidenceModal extends Component
      */
     public function deletePhoto(string $slot): bool
     {
-        if (!auth()->user()->can('roofEvidence.photo.delete')) {
-            throw new Exception("No tienes el permiso para ejecutar esta acción");
-        }
-
-        if ($this->eirStatus === 'completado') {
-            throw new Exception("No se pueden modificar evidencias de techo de una inspección completada.");
-        }
-
-        $roof = RoofEvidence::where('eir_inspection_id', $this->eirId)->first();
-        if (!$roof)
-            return false;
-
         try {
+            if (!auth()->user()->can('roofEvidence.photo.delete')) {
+                throw new Exception("No tienes el permiso para ejecutar esta acción");
+            }
+
+            if ($this->eirStatus === 'completado') {
+                throw new Exception("No se pueden modificar evidencias de techo de una inspección completada.");
+            }
+
+            $roof = RoofEvidence::where('eir_inspection_id', $this->eirId)->first();
+            if (!$roof)
+                return false;
+
             $service = app(RoofEvidencePhotoService::class);
             $service->deletePhoto($roof, $slot);
             $roof->refresh();

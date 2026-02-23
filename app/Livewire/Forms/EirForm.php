@@ -30,6 +30,7 @@ class EirForm extends Form
     public $status = 'borrador';
     public $trace_id;
     public $inspector_id;
+    public $closed_by = null;
     public $voided_by = null;
     public $branch_id;
 
@@ -99,9 +100,10 @@ class EirForm extends Form
                 throw new Exception("Debes escoger un tipo de reparación si el Status de la estructura es INOPERATIVO");
             }
             $this->status = 'completado';
+            $this->closed_by = auth()->id();
             $this->closed_at = Carbon::now();
             EirInspection::findOrFail($eirInspection)
-                ->update($this->only('status', 'fast_repair', 'normal_repair', 'quoted_repair', 'closed_at'));
+                ->update($this->only('status', 'fast_repair', 'normal_repair', 'quoted_repair', 'closed_by','closed_at'));
         } catch (\Exception $e) {
             throw new \Exception('Error al guardar EIR: ' . $e->getMessage());
         }

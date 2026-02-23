@@ -35,6 +35,7 @@ class EirInspection extends Model
         'trace_id', // FK al flujo principal
         'stimated_by',
         'voided_at',
+        'closed_by',
         'voided_by',
         'fast_repair',
         'normal_repair',
@@ -76,6 +77,10 @@ class EirInspection extends Model
     public function estimator()
     {
         return $this->belongsTo(User::class, 'stimated_by');
+    }
+    public function closer()
+    {
+        return $this->belongsTo(User::class, 'closed_by');
     }
     public function voider()
     {

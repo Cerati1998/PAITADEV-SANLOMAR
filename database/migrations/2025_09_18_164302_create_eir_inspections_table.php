@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -29,6 +28,7 @@ return new class extends Migration
             $table->foreignId('inspector_id')->constrained('users')->onDelete('no action');
             $table->foreignId('trace_id')->constrained('container_operational_traces')->onUpdate('cascade')
                 ->onDelete('no action');
+            $table->foreignId('closed_by')->nullable()->constrained('users')->onDelete('no action');
             $table->foreignId('stimated_by')->nullable()->constrained('users')->onDelete('no action');
             $table->dateTime('voided_at')->nullable();
             $table->foreignId('voided_by')->nullable()->constrained('users')->onDelete('no action');
@@ -47,9 +47,12 @@ return new class extends Migration
         Schema::create('eir_inspection_details', function (Blueprint $table) {
             $table->id();
             $table->foreignId('eir_inspection_id')->constrained('eir_inspections')->onDelete('cascade');
-            $table->foreignId('location_id')->constrained('locations')->onDelete('no action');;
-            $table->foreignId('damage_id')->constrained('damages')->onDelete('no action');;
-            $table->foreignId('component_id')->constrained('components')->onDelete('no action');;
+            $table->foreignId('location_id')->constrained('locations')->onDelete('no action');
+            ;
+            $table->foreignId('damage_id')->constrained('damages')->onDelete('no action');
+            ;
+            $table->foreignId('component_id')->constrained('components')->onDelete('no action');
+            ;
             $table->foreignId('method_id')->constrained('methods')->onDelete('no action');
             $table->integer('qty')->nullable();
             $table->integer('length')->nullable();

@@ -389,6 +389,46 @@ class WorkOrderForm extends Form
                 'hours' => 0,
             ];
         })->toArray();
+
+        $this->labors = $this->sanitizeArray($this->labors);
+
+    }
+
+    /**
+     * Sanitiza recursivamente un array
+     */
+    private function sanitizeArray($array)
+    {
+        $result = [];
+        foreach ($array as $key => $value) {
+            if (is_string($value)) {
+                $result[$key] = $this->forceUtf8($value);
+            } elseif (is_array($value)) {
+                $result[$key] = $this->sanitizeArray($value);
+            } else {
+                $result[$key] = $value;
+            }
+        }
+        return $result;
+    }
+
+    private function forceUtf8($text): string
+    {
+        if (!is_string($text))
+            return '';
+
+        // Si no es UTF-8 válido, convertir desde ISO-8859-1
+        if (!mb_check_encoding($text, 'UTF-8')) {
+            $text = mb_convert_encoding($text, 'UTF-8', 'ISO-8859-1');
+        }
+
+        // Eliminar caracteres de control inválidos (0x00-0x1F excepto tab, newline, return)
+        $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $text);
+
+        // Eliminar caracteres de reemplazo
+        $text = str_replace("\xEF\xBF\xBD", '', $text);
+
+        return $text;
     }
 
     public function loadContainer($eirId)
@@ -407,9 +447,9 @@ class WorkOrderForm extends Form
         }
 
         return match (true) {
-            $eir->fast_repair  => 'Rápida',
-            $eir->normal_repair  => 'Normal',
-            $eir->quoted_repair  => 'Mto Alto',
+            $eir->fast_repair => 'Rápida',
+            $eir->normal_repair => 'Normal',
+            $eir->quoted_repair => 'Mto Alto',
             default => 'Sin Reparación'
         };
     }
@@ -587,9 +627,12 @@ class WorkOrderForm extends Form
         } */
 
         $dimensions = [];
-        if ($detail->length) $dimensions[] = "L:{$detail->length}";
-        if ($detail->width) $dimensions[] = "W:{$detail->width}";
-        if ($detail->height) $dimensions[] = "H:{$detail->height}";
+        if ($detail->length)
+            $dimensions[] = "L:{$detail->length}";
+        if ($detail->width)
+            $dimensions[] = "W:{$detail->width}";
+        if ($detail->height)
+            $dimensions[] = "H:{$detail->height}";
         if (!empty($dimensions)) {
             $parts[] = implode('x', $dimensions);
         }
@@ -609,8 +652,8 @@ class WorkOrderForm extends Form
     }
 
     /*
-    * Recarga los labores desde la base de datos
-    */
+     * Recarga los labores desde la base de datos
+     */
     public function refreshLabors()
     {
         if (!$this->workOrder) {

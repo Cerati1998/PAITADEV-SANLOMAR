@@ -25,6 +25,7 @@ class Despatch extends Model
         'pdf_path',
         'xml_path',
         'cdr_path',
+        'sunat_ticket',
         'hash',
 
         'sunatResponse',

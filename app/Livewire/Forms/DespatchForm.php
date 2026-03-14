@@ -83,7 +83,7 @@ class DespatchForm extends Form
             "serie" => ["required", "string", "size:4"],
             "correlativo" => ["required", "numeric"],
             "fechaEmision" => [
-                "required", 
+                "required",
                 "date",
                 "after_or_equal:" . now()->subDay()->format('Y-m-d'),
                 "before_or_equal:" . now()->addDays(3)->format('Y-m-d')
@@ -94,7 +94,7 @@ class DespatchForm extends Form
             "envio.modTraslado" => ["required", "in:01,02"],
             "envio.indicadores" => ["nullable", "array"],
             "envio.fecTraslado" => [
-                "required", 
+                "required",
                 "date",
                 "after_or_equal:fecEmision",
             ],
@@ -110,11 +110,11 @@ class DespatchForm extends Form
             "envio.partida.direccion" => ["required", "string"],
 
             //Transportista
-            "envio.transportista" => ["required_if:envio.modTraslado,01","array"],
-            "envio.transportista.tipoDoc" => ["required_if:envio.modTraslado,01","exists:identities,id"],
-            "envio.transportista.numDoc" => ["required_if:envio.modTraslado,01","alpha_num"],
-            "envio.transportista.rznSocial" => ["required_if:envio.modTraslado,01","string"],
-            "envio.transportista.nroMtc" => ["required_if:envio.modTraslado,01","string",],
+            "envio.transportista" => ["required_if:envio.modTraslado,01", "array"],
+            "envio.transportista.tipoDoc" => ["required_if:envio.modTraslado,01", "exists:identities,id"],
+            "envio.transportista.numDoc" => ["required_if:envio.modTraslado,01", "alpha_num"],
+            "envio.transportista.rznSocial" => ["required_if:envio.modTraslado,01", "string"],
+            "envio.transportista.nroMtc" => ["required_if:envio.modTraslado,01", "string",],
 
             //Vehiculo
             "envio.vehiculo" => [
@@ -125,7 +125,7 @@ class DespatchForm extends Form
                 Rule::requiredIf(fn() => $this->envio['modTraslado'] === '02' && empty(in_array('SUNAT_Envio_IndicadorTrasladoVehiculoM1L', $this->envio['indicadores']))),
                 'regex:/^[a-zA-Z0-9]{6}$/'
             ],
-            "envio.vehiculo.secundarios" => ['nullable','array'],
+            "envio.vehiculo.secundarios" => ['nullable', 'array'],
             "envio.vehiculo.secundarios.*.placa" => [
                 Rule::requiredIf(fn() => $this->envio['modTraslado'] === '02' && empty(in_array('SUNAT_Envio_IndicadorTrasladoVehiculoM1L', $this->envio['indicadores']))),
             ],
@@ -152,7 +152,7 @@ class DespatchForm extends Form
             "envio.choferes.*.licencia" => [
                 /* Rule::requiredIf(fn() => $this->envio['modTraslado'] === '02' && empty(in_array('SUNAT_Envio_IndicadorTrasladoVehiculoM1L', $this->envio['indicadores']))), */
                 "string",
-                Rule::when($this->envio['modTraslado'] === '02' && empty(in_array('SUNAT_Envio_IndicadorTrasladoVehiculoM1L', $this->envio['indicadores'])),[
+                Rule::when($this->envio['modTraslado'] === '02' && empty(in_array('SUNAT_Envio_IndicadorTrasladoVehiculoM1L', $this->envio['indicadores'])), [
                     'required',
                     'min:9',
                     'max:10',
@@ -169,7 +169,7 @@ class DespatchForm extends Form
 
             "details" => ["required", "array"],
             "details.*.cantidad" => [
-                "required", 
+                "required",
                 "numeric",
                 "min:1"
             ],
@@ -179,7 +179,7 @@ class DespatchForm extends Form
         ];
     }
 
-    public function validationAttributes() 
+    public function validationAttributes()
     {
         return [
             'serie' => 'serie',
@@ -221,79 +221,90 @@ class DespatchForm extends Form
 
         $util = new UtilService(session('company'));
         $document = new DocumentService();
-
         $despatchGreenter = $document->getDespatch($despatch);
 
-        //Directorio
         $directory = $this->production ? 'sunat/' : 'sunat/beta/';
 
-        //Generar XML
+        // Generar y guardar XML
         $xml = $util->getXmlSigned($despatchGreenter);
         $despatch->hash = $util->getHashSign($xml);
-
-        //Guardar XML
         $despatch->xml_path = $directory . 'xml/' . $despatchGreenter->getName() . '.xml';
         Storage::put($despatch->xml_path, $xml);
 
-        //Guardar PDF
+        // Guardar PDF
         $pdf = $util->getReportPdf($despatchGreenter, $despatch->hash);
         $despatch->pdf_path = $directory . 'cpe/' . $despatchGreenter->getName() . '.pdf';
         Storage::put($despatch->pdf_path, $pdf);
         $despatch->save();
 
-        //Enviar a SUNAT
+        // Enviar a SUNAT
         try {
-
             $api = $util->getSeeApi();
             $result = $api->sendXml($despatchGreenter->getName(), $xml);
 
             if (!$result->isSuccess()) {
-
                 $despatch->sunatResponse = $util->getErrorResponse($result);
                 $despatch->save();
-
                 $this->showResponse($despatch);
-
                 return redirect()->route('despatchs.index');
             }
 
+            // Cast seguro: sendXml para guías devuelve SummaryResult en runtime
+            if (!($result instanceof \Greenter\Model\Response\SummaryResult)) {
+                session()->flash('swal', [
+                    'icon' => 'error',
+                    'title' => 'Error inesperado',
+                    'text' => 'SUNAT no devolvió un ticket para esta guía.',
+                ]);
+                return redirect()->route('despatchs.index');
+            }
+
+            // Guardar ticket en BD por si la consulta falla y hay que reintentar
             $ticket = $result->getTicket();
-            $result = $api->getStatus($ticket);
+            $despatch->sunat_ticket = $ticket;
+            $despatch->save();
 
-            if (!$result->isSuccess()) {
+            // Consultar CDR con el ticket
+            $statusResult = $api->getStatus($ticket);
 
-                $despatch->sunatResponse = $util->getErrorResponse($result);
+            if (!$statusResult->isSuccess()) {
+                $code = $statusResult->getError()?->getCode();
+
+                // Código 98: SUNAT aún procesando → ticket queda guardado para reintentar
+                if ($code === '98') {
+                    session()->flash('swal', [
+                        'icon' => 'info',
+                        'title' => 'En proceso',
+                        'text' => 'SUNAT recibió la guía pero aún la procesa. Usa "Consultar estado" en unos segundos.',
+                    ]);
+                    return redirect()->route('despatchs.index');
+                }
+
+                $despatch->sunatResponse = $util->getErrorResponse($statusResult);
                 $despatch->save();
-
                 $this->showResponse($despatch);
-
                 return redirect()->route('despatchs.index');
             }
 
-            // Guardamos el CDR
+            // CDR obtenido: guardar y limpiar ticket
             $despatch->cdr_path = $directory . 'cdr/R-' . $despatchGreenter->getName() . '.zip';
-            Storage::put($despatch->cdr_path, $result->getCdrZip());
+            Storage::put($despatch->cdr_path, $statusResult->getCdrZip());
 
-            $cdr = $result->getCdrResponse();
-            $despatch->sunatResponse = $util->readCdr($cdr);
+            $despatch->sunatResponse = $util->readCdr($statusResult->getCdrResponse());
+            $despatch->sunat_ticket = null; // Ya procesado, no se necesita más
             $despatch->save();
-            
-            $this->showResponse($despatch);
 
+            $this->showResponse($despatch);
             return redirect()->route('despatchs.index');
 
         } catch (\Exception $e) {
-            
             session()->flash('swal', [
                 'icon' => 'error',
                 'title' => 'Error al enviar el comprobante',
-                'text' => $e->getMessage()
+                'text' => $e->getMessage(),
             ]);
-
             return redirect()->route('despatchs.index');
-
         }
-
     }
 
     public function showResponse(Despatch $despatch)

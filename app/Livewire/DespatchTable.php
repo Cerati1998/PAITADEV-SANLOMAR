@@ -81,7 +81,7 @@ class DespatchTable extends DataTableComponent
                 ->searchable(function ($query, $search) {
                     $query->orWhere('destinatario->numDoc', 'like', '%' . $search . '%')
                         ->orWhereRaw("LOWER(json_unquote(json_extract(destinatario, '$.rznSocial'))) LIKE ?", ['%' . strtolower($search) . '%']);
-                        
+
                 })
                 ->html(),
 
@@ -97,7 +97,7 @@ class DespatchTable extends DataTableComponent
 
             Column::make('CDR', 'cdr_path')
                 ->format(
-                    fn ($value, $row) => view('vouchers.partials.cdr', compact('value', 'row'))
+                    fn($value, $row) => view('vouchers.partials.cdr', compact('value', 'row'))
                 )->collapseOnTablet(),
 
             Column::make('Sunat', 'sunatResponse')
@@ -107,9 +107,9 @@ class DespatchTable extends DataTableComponent
 
             Column::make('Opciones')
                 ->label(
-                    fn ($row) => view('despatchs.partials.action', compact('row'))
+                    fn($row) => view('despatchs.partials.action', compact('row'))
                 )->collapseOnTablet()
-           
+
         ];
     }
 
@@ -144,8 +144,8 @@ class DespatchTable extends DataTableComponent
 
     //Métodos
     public function downloadPDF(Despatch $despatch)
-    {   
-        return Storage::download($despatch->pdf_path);   
+    {
+        return Storage::download($despatch->pdf_path);
     }
 
     public function downloadXML(Despatch $despatch)
@@ -156,56 +156,79 @@ class DespatchTable extends DataTableComponent
     public function sendXml(Despatch $despatch)
     {
         $directory = $despatch->production ? 'sunat/' : 'sunat/beta/';
-        $name = session('company')->ruc."-{$despatch->tipoDoc}-". $despatch->serie.'-'. $despatch->correlativo;
+        $name = session('company')->ruc . "-{$despatch->tipoDoc}-{$despatch->serie}-{$despatch->correlativo}";
 
         try {
             $util = new UtilService(session('company'));
             $api = $util->getSeeApi();
-            $result = $api->sendXml($name, $despatch->xml);
 
+            // Si ya tiene ticket guardado, solo consultar el estado
+            if ($despatch->sunat_ticket) {
+                $result = $api->getStatus($despatch->sunat_ticket);
+            } else {
+                // No tiene ticket: reenviar el XML firmado guardado
+                $xml = Storage::get($despatch->xml_path);
+                $result = $api->sendXml($name, $xml);
+
+                if (!$result->isSuccess()) {
+                    $despatch->sunatResponse = $util->getErrorResponse($result);
+                    $despatch->save();
+                    $this->showResponse($despatch);
+                    return;
+                }
+
+                if (!($result instanceof \Greenter\Model\Response\SummaryResult)) {
+                    $this->dispatch('swal', [
+                        'icon' => 'error',
+                        'title' => 'Error inesperado',
+                        'text' => 'SUNAT no devolvió un ticket para esta guía.',
+                    ]);
+                    return;
+                }
+
+                // Guardar ticket y consultar CDR
+                $despatch->sunat_ticket = $result->getTicket();
+                $despatch->save();
+
+                $result = $api->getStatus($despatch->sunat_ticket);
+            }
+
+            // Procesar respuesta del getStatus
             if (!$result->isSuccess()) {
+                $code = $result->getError()?->getCode();
+
+                if ($code === '98') {
+                    $this->dispatch('swal', [
+                        'icon' => 'info',
+                        'title' => 'Aún en proceso',
+                        'text' => 'SUNAT todavía no termina. Reintenta en unos segundos.',
+                    ]);
+                    return;
+                }
 
                 $despatch->sunatResponse = $util->getErrorResponse($result);
                 $despatch->save();
-
                 $this->showResponse($despatch);
-
                 return;
             }
 
-            $ticket = $result->getTicket();
-            $result = $api->getStatus($ticket);
-
-            if (!$result->isSuccess()) {
-
-                $despatch->sunatResponse = $util->getErrorResponse($result);
-                $despatch->save();
-
-                $this->showResponse($despatch);
-
-                return;
-            }
-
-            // Guardamos el CDR
+            // CDR obtenido
             $despatch->cdr_path = $directory . 'cdr/R-' . $name . '.zip';
             Storage::put($despatch->cdr_path, $result->getCdrZip());
 
-            $cdr = $result->getCdrResponse();
-            $despatch->sunatResponse = $util->readCdr($cdr);
+            $despatch->sunatResponse = $util->readCdr($result->getCdrResponse());
+            $despatch->sunat_ticket = null;
             $despatch->save();
 
             $this->showResponse($despatch);
 
         } catch (\Exception $e) {
-
             $this->dispatch('swal', [
                 'icon' => 'error',
                 'title' => 'Error al enviar el comprobante',
-                'text' => $e->getMessage()
+                'text' => $e->getMessage(),
             ]);
-
         }
-        
     }
 
     public function downloadCDR(Despatch $despatch)
@@ -244,7 +267,7 @@ class DespatchTable extends DataTableComponent
 
         if ($type == 'web') {
             $url = "https://web.whatsapp.com/send?phone={$phone}&text={$mensaje}";
-        }else{
+        } else {
             $url = "https://api.whatsapp.com/send?phone={$phone}&text={$mensaje}";
         }
 
@@ -275,5 +298,5 @@ class DespatchTable extends DataTableComponent
             'text' => 'El correo ha sido enviado correctamente.'
         ]);
     }
-    
+
 }

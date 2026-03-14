@@ -33,6 +33,7 @@ return new class extends Migration
             $table->string('pdf_path')->nullable();
             $table->string('xml_path')->nullable();
             $table->string('cdr_path')->nullable();
+            $table->string('sunat_ticket')->nullable()/* ->after('cdr_path') */;
             $table->string('hash')->nullable();
 
             //Sunat response

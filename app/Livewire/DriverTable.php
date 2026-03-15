@@ -167,8 +167,8 @@ class DriverTable extends DataTableComponent
             }
 
             if ($docType === '1') {
-                $this->driver['nombres'] = $response['data']['nombres'] ?? null;
-                $this->driver['apellidos'] = $response['data']['apellidoPaterno'] . ' ' . $response['data']['apellidoMaterno'] ?? null;
+                $this->driver['nombres'] = $response['data']['first_name'] ?? null;
+                $this->driver['apellidos'] = $response['data']['first_last_name'] . ' ' . $response['data']['second_last_name'] ?? null;
                 $this->driver['direccion'] = '-';
                 $this->driver['brevete'] = $response['data']['numeroDocumento'] ?? '-';
             }

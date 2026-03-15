@@ -111,7 +111,7 @@ class ProviderTable extends DataTableComponent
                 $this->provider['rznSocial'] = $response['data']['razon_social'] ?? null;
                 $this->provider['direccion'] = $response['data']['direccion'] ?? null;
             } elseif ($docType === '1') {
-                $this->provider['rznSocial'] = $response['data']['nombre'] ?? null;
+                $this->provider['rznSocial'] = $response['data']['full_name'] ?? null;
                 $this->provider['direccion'] = '-';
             }
         } catch (\Throwable $e) {

@@ -112,7 +112,7 @@ class TransportCreate extends Component
                 $this->transport['razonSocial'] = $response['data']['razon_social'] ?? null;
                 $this->transport['direccion'] = $response['data']['direccion'] ?? null;
             } elseif ($docType === '1') {
-                $this->transport['razonSocial'] = $response['data']['nombre'] ?? null;
+                $this->transport['razonSocial'] = $response['data']['full_name'] ?? null;
                 $this->transport['direccion'] = '-';
             }
         } catch (\Throwable $e) {

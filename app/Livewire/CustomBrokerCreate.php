@@ -76,7 +76,7 @@ class CustomBrokerCreate extends Component
                 $this->broker['rznSocial'] = $response['data']['razon_social'] ?? null;
                 $this->broker['direccion'] = $response['data']['direccion'] ?? null;
             } elseif ($docType === '1') {
-                $this->broker['rznSocial'] = $response['data']['nombre'] ?? null;
+                $this->broker['rznSocial'] = $response['data']['full_name'] ?? null;
                 $this->broker['direccion'] = '-';
             }
         } catch (\Throwable $e) {

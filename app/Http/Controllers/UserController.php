@@ -146,7 +146,7 @@ class UserController extends Controller
             }
 
             return response()->json([
-                'nombres' => $response['data']['nombres'] . ' ' . $response['data']['apellidoPaterno'] . ' ' . $response['data']['apellidoMaterno'],
+                'nombres' => $response['data']['full_name'],
                 'message' => 'Usuario encontrado'
             ], 200);
         } catch (Exception $e) {

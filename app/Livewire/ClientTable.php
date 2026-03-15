@@ -103,7 +103,7 @@ class ClientTable extends DataTableComponent
                 $this->client['rznSocial'] = $response['data']['razon_social'] ?? null;
                 $this->client['direccion'] = $response['data']['direccion'] ?? null;
             } elseif ($docType === '1') {
-                $this->client['rznSocial'] = $response['data']['nombre'] ?? null;
+                $this->client['rznSocial'] = $response['data']['full_name'] ?? null;
                 $this->client['direccion'] = '-';
             }
         } catch (\Throwable $e) {

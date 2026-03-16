@@ -29,13 +29,19 @@
                     <x-label class="mb-1">
                         Nº de Documento
                     </x-label>
-                    <x-input wire:model="userEdit.numDoc" placeholder="Ingrese el número de documento" class="w-full"/>
+                    <x-input wire:model="userEdit.numDoc" placeholder="Ingrese el número de documento" class="w-full" />
                 </div>
 
                 <div class="mt-4">
                     <x-label value="{{ __('Email') }}" />
                     <x-input class="block mt-1 w-full disabled:opacity-50 disabled:bg-gray-100" type="email"
                         placeholder="Correo electrónico" wire:model="userEdit.email" disabled autocomplete="username" />
+                </div>
+                <div class="mt-4">
+                    {{--                     <x-label value="{{ __('Contraseña') }}" />
+ --}} <x-wire-password :label="__('Password')" id="password" class="block mt-1 w-full"
+                        type="password" name="password" wire:model="password" />
+
                 </div>
 
                 <div class="mt-4">

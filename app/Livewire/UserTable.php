@@ -26,6 +26,7 @@ class UserTable extends DataTableComponent
         'role' => '',
         'branch_id' => '',
     ];
+    public $password = NULL;
 
     public function configure(): void
     {
@@ -57,10 +58,10 @@ class UserTable extends DataTableComponent
                 ->html(),
             Column::make("Foto")
                 ->label(function ($row) {
-                    return '<img src="' . $row->profile_photo_url   . '" alt="Foto" class="h-12 w-12 rounded-full object-cover">';
+                    return '<img src="' . $row->profile_photo_url . '" alt="Foto" class="h-12 w-12 rounded-full object-cover">';
                 })
                 ->html(),
-                     Column::make("Rol")
+            Column::make("Rol")
                 ->label(function ($row) {
                     return $row->roles->pluck('name')->implode(', ') ?: 'Sin rol';
                 }),
@@ -77,7 +78,7 @@ class UserTable extends DataTableComponent
         ];
     }
 
-      #[On('UserAdded')]
+    #[On('UserAdded')]
     public function builder(): Builder
     {
         return User::query()
@@ -114,12 +115,20 @@ class UserTable extends DataTableComponent
                 Rule::unique('users', 'numDoc')->ignore($this->userEdit['id'])
             ],
             'userEdit.branch_id' => 'required|exists:branches,id',
+            'password' => 'nullable|min:5'
         ], [], [
             'userEdit.tipoDoc' => 'Tipo de Documento',
             'userEdit.numDoc' => 'Número de Documento',
             'userEdit.branch_id' => 'sucursal',
+            'password' => 'Contraseña de Usuario'
         ]);
-
+        //si la clave no es nula se agrega al payload
+        if ($this->password) {
+            $this->userEdit['password'] = bcrypt($this->password);
+        }
+        //actualizo info de usuario
+        User::find($this->userEdit['id'])->update($this->userEdit);
+        //actualizo sucursal
         DB::table('branch_company_user')
             ->where('user_id', $this->userEdit['id'])
             ->where('company_id', session('company')->id)

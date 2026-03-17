@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\DispatchExport;
 use App\Exports\InspectionExport;
+use App\Exports\WorkOrderExport;
 use App\Models\ContainerOperationalTrace;
 use App\Models\Dispatches\Dispatch;
 use App\Models\inspections\EirInspection;
@@ -259,5 +260,86 @@ class ReportController extends Controller
             $sinceDate->format('dmY') . '-' . $untilDate->format('dmY') . '.xlsx';
 
         return Excel::download(new InspectionExport($datos, $titulo), $fileName);
+    }
+
+    public function exportWorkOrders(Request $request)
+    {
+        // Validar los filtros
+        $request->validate([
+            'since' => 'nullable|date',
+            'until' => 'nullable|date|after_or_equal:since',
+            'line' => 'nullable|exists:shipping_lines,id',
+        ]);
+
+        // Obtener todos los traces que llegaron a status 5 (Despachado) en el rango de fechas
+        $workOrders = WorkOrder::with([
+            'container:id,code,own_line_id,container_type_id', //container_type_id
+            'container.container_type:id,code'
+        ])
+            ->where('status', "completado")
+            // Filtro por fecha de cambio a status final
+            ->when($request->filled('since'), function ($query) use ($request) {
+                $query->whereDate('closed_at', '>=', $request->since);
+            })
+            ->when($request->filled('until'), function ($query) use ($request) {
+                $query->whereDate('closed_at', '<=', $request->until);
+            })
+            // Filtro por línea naviera
+            ->when($request->filled('line'), function ($query) use ($request) {
+                $query->whereHas('container', function ($q) use ($request) {
+                    $q->where('own_line_id', $request->line);
+                });
+            })
+            // Filtro por branch
+            ->where('branch_id', session('branch')->id)
+            ->get();
+
+        if ($workOrders->isEmpty()) {
+            session()->flash('swal', [
+                'icon' => 'error',
+                'title' => 'Error!',
+                'text' => 'No se ha encontrado data de Reparaciones con los filtros aplicados'
+            ]);
+            return back();
+        }
+
+        $datos = $workOrders->map(function ($workOrder) {
+
+            return [
+                'year' => $workOrder->closed_at->format('Y'),
+                'month' => $workOrder->closed_at->format('m'),
+                'week' => str_pad(Carbon::parse($workOrder->closed_at)->weekOfYear, 2, '0', STR_PAD_LEFT),
+                'container' => $workOrder->container?->code,
+                'type' => $workOrder->container?->container_type?->code,
+                'date_repair' => Carbon::parse($workOrder->closed_at)->format('d/m/Y'),
+            ];
+        })->toArray();
+
+        // Generar nombre de archivo
+        $fileName = 'Reparaciones';
+        if ($request->filled('since') && $request->filled('until')) {
+            $fileName .= '_' . Carbon::parse($request->since)->format('dmY') .
+                '-' . Carbon::parse($request->until)->format('dmY');
+        }
+        $fileName .= '.xlsx';
+
+        // Obtener nombre de línea para el título
+        $lineaNombre = 'TODAS LAS LÍNEAS';
+        if ($request->filled('line')) {
+            $linea = ShippingLine::find($request->line);
+            $lineaNombre = $linea?->name ?? 'LÍNEA DESCONOCIDA';
+        }
+
+        // Calcular semana basada en la fecha 'since' del filtro
+        $week = $request->filled('since')
+            ? str_pad(Carbon::parse($request->since)->weekOfYear, 2, '0', STR_PAD_LEFT)
+            : str_pad(Carbon::now()->weekOfYear, 2, '0', STR_PAD_LEFT);
+
+        $data = [
+            'title' => strtoupper("REPORTE DE REPARACION SEMANA {$week} - {$lineaNombre}"),
+            'datos' => $datos
+        ];
+
+        return Excel::download(new WorkOrderExport($data), $fileName);
     }
 }

@@ -68,6 +68,11 @@
                                     <x-wire-button label="Exportar" yellow sm icon="arrow-down-on-square"
                                         x-on:click.prevent="submitForm('{{ route('reports.inspections') }}')" />
                                 </div>
+                                <div class="flex items-center justify-between gap-4">
+                                    <dt class="text-base font-normal text-gray-500 dark:text-gray-400">Reparaciones</dt>
+                                    <x-wire-button label="Exportar" stone sm icon="arrow-down-on-square"
+                                        x-on:click.prevent="submitForm('{{ route('reports.work-orders') }}')" />
+                                </div>
                             </div>
                         </div>
 

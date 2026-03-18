@@ -353,6 +353,7 @@ class DocumentService
 
         $shipment = (new Shipment())
             ->setCodTraslado($envio['codTraslado']) // Cat.20 - Venta
+            ->setDesTraslado($envio['desTraslado'] ?? null)  // Not Null para codTraslado 13
             ->setModTraslado($envio['modTraslado']) // Cat.18 - Transp. Publico
             ->setFecTraslado(new DateTime($envio['fecTraslado']))
             ->setPesoTotal($envio['pesoTotal'])

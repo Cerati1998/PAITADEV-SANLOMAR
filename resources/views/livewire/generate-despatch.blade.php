@@ -49,8 +49,9 @@
                         Fecha
                     </x-label>
 
-                    <x-wire-input wire:model.live="despatch.fechaEmision" type="date" 
-                        min="{{ date('Y-m-d', strtotime('-1 days')) }}" max="{{ date('Y-m-d', strtotime('+3 days')) }}" />
+                    <x-wire-input wire:model.live="despatch.fechaEmision" type="date"
+                        min="{{ date('Y-m-d', strtotime('-1 days')) }}"
+                        max="{{ date('Y-m-d', strtotime('+3 days')) }}" />
                 </div>
 
                 {{-- Cliente --}}
@@ -60,9 +61,7 @@
                         Cliente
                     </x-label>
 
-                    <x-wire-select
-                        class="!text-sm" 
-                        placeholder="Buscar cliente por numero de documento o razón social"
+                    <x-wire-select class="!text-sm" placeholder="Buscar cliente por numero de documento o razón social"
                         :async-data="[
                             'api' => route('api.clients.index'),
                             'method' => 'POST',
@@ -105,6 +104,14 @@
 
                     </x-select>
                 </div>
+                <template x-if="despatch.envio.codTraslado == '13'">
+                    <div class="col-span-1">
+                        <x-label>
+                            Especifique
+                        </x-label>
+                        <x-wire-input wire:model="despatch.envio.desTraslado" />
+                    </div>
+                </template>
 
                 {{-- Modalida de traslado --}}
                 <div class="col-span-1">
@@ -126,7 +133,7 @@
                         Fecha de traslado
                     </x-label>
 
-                    <x-wire-input wire:model.live="despatch.envio.fecTraslado" type="date" 
+                    <x-wire-input wire:model.live="despatch.envio.fecTraslado" type="date"
                         min="{{ $despatch->fechaEmision }}" />
                 </div>
 
@@ -136,9 +143,7 @@
                         Peso total
                     </x-label>
 
-                    <x-wire-input wire:model="despatch.envio.pesoTotal" 
-                        type="number"
-                        step="0.01"
+                    <x-wire-input wire:model="despatch.envio.pesoTotal" type="number" step="0.01"
                         placeholder="Peso total" />
                 </div>
 
@@ -259,8 +264,8 @@
                                                 Vehiculo 1
                                             </x-label>
 
-                                            <x-wire-input wire:model="despatch.envio.vehiculo.placa" placeholder="Placa. Ejm: ABC123"
-                                                class="w-full" />
+                                            <x-wire-input wire:model="despatch.envio.vehiculo.placa"
+                                                placeholder="Placa. Ejm: ABC123" class="w-full" />
                                         </li>
 
                                         @foreach ($despatch->envio['vehiculo']['secundarios'] as $index => $secundario)
@@ -375,10 +380,10 @@
                                 </div>
                             </div>
                         </template>
-                        
+
                     </div>
                 </template>
-                
+
             </div>
 
             {{-- Punto de partida y llegada --}}
@@ -421,13 +426,11 @@
                                     'api' => route('api.ubigeos.index'),
                                     'method' => 'POST',
                                 ]" option-label="name"
-                                    option-value="id" 
-                                    wire:model.live="despatch.envio.partida.ubigueo" />
+                                    option-value="id" wire:model.live="despatch.envio.partida.ubigueo" />
 
                             </div>
 
                             @if ($despatch->envio['codTraslado'] == '04')
-                                
                                 <div>
                                     <x-label>
                                         RUC
@@ -443,9 +446,8 @@
                                     </x-label>
 
                                     <x-wire-input wire:model="despatch.envio.partida.codLocal"
-                                        placeholder="Código de establecimiento"/>
+                                        placeholder="Código de establecimiento" />
                                 </div>
-
                             @endif
                         </div>
                     </div>
@@ -491,7 +493,6 @@
                             </div>
 
                             @if ($despatch->envio['codTraslado'] == '04')
-                                
                                 <div>
                                     <x-label>
                                         Ruc
@@ -507,9 +508,8 @@
                                     </x-label>
 
                                     <x-wire-input wire:model="despatch.envio.llegada.codLocal"
-                                        placeholder="Código de establecimiento"/>
+                                        placeholder="Código de establecimiento" />
                                 </div>
-
                             @endif
                         </div>
                     </div>
@@ -568,9 +568,8 @@
                         @foreach ($despatch->details as $key => $item)
                             <tr wire:key="detail-{{ $key }}">
                                 <td>
-                                    <x-input
-                                        wire:model="despatch.details.{{ $key }}.cantidad" class="w-20"
-                                        type="number" min="1" />
+                                    <x-input wire:model="despatch.details.{{ $key }}.cantidad"
+                                        class="w-20" type="number" min="1" />
                                 </td>
                                 <td>
                                     <x-input disabled value="{{ $item['codigo'] }}" class="w-28" />
@@ -581,15 +580,11 @@
                                 <td>
                                     <div class="flex space-x-2">
 
-                                        <x-wire-mini-button green 
-                                            wire:click="editDetail({{ $key }})"
-                                            spinner="editDetail({{ $key }})"
-                                            icon="pencil" />
+                                        <x-wire-mini-button green wire:click="editDetail({{ $key }})"
+                                            spinner="editDetail({{ $key }})" icon="pencil" />
 
-                                        <x-wire-mini-button red 
-                                            wire:click="removeDetail({{ $key }})"
-                                            spinner="removeDetail({{ $key }})"
-                                            icon="trash" />
+                                        <x-wire-mini-button red wire:click="removeDetail({{ $key }})"
+                                            spinner="removeDetail({{ $key }})" icon="trash" />
                                     </div>
                                 </td>
                             </tr>
@@ -632,20 +627,11 @@
     <div x-data="dataProduct">
 
         <form wire:submit="addDetail">
-    
-            <x-wire-modal-card 
-                title="PRODUCTO"
-                name="simpleModal"
-                wire:model.live="openModal"
-                width="2xl">
-    
-                <x-wire-errors :only="[
-                    'product.cantidad',
-                    'product.unidad',
-                    'product.descripcion',
-                    'product.codProducto',
-                ]" class="mb-4" />
-    
+
+            <x-wire-modal-card title="PRODUCTO" name="simpleModal" wire:model.live="openModal" width="2xl">
+
+                <x-wire-errors :only="['product.cantidad', 'product.unidad', 'product.descripcion', 'product.codProducto']" class="mb-4" />
+
                 <div class="grid grid-cols-3 gap-4 mb-4">
                     <div>
                         <x-label>
@@ -653,12 +639,12 @@
                         </x-label>
                         <x-input x-model="product.cantidad" class="w-full text-xs" />
                     </div>
-                    
+
                     <div>
                         <x-label>
                             UNIDAD
                         </x-label>
-    
+
                         <x-select x-model="product.unidad" class="w-full text-xs">
                             @foreach ($units as $unit)
                                 <option value="{{ $unit['id'] }}">
@@ -667,37 +653,51 @@
                             @endforeach
                         </x-select>
                     </div>
-    
+
                     <div>
                         <x-label>
                             CÓDIGO
                         </x-label>
-    
+
                         <x-input x-model="product.codProducto" class="w-full text-xs" />
                     </div>
                 </div>
-    
+
                 <div class="mb-4">
                     <x-label>
                         DESCRIPCIÓN
                     </x-label>
-    
+
                     <x-input x-model="product.descripcion" class="w-full text-xs" />
                 </div>
-    
+
                 <x-slot name="footer" class="flex justify-end gap-x-4">
                     <x-wire-button flat label="Cancelar" x-on:click="close" />
-    
+
                     <x-wire-button type="submit" primary label="Guardar" spinner icon="arrow-down-tray" />
                 </x-slot>
-    
+
             </x-wire-modal-card>
         </form>
-    
+
     </div>
-    
+
     @push('js')
         <script>
+            /* function dataTransport() {
+                return {
+                    motivoTraslado: @entangle('despatch.envio.codTraslado'),
+                    desTraslado: false,
+                    init() {
+                        this.$watch('motivoTraslado', (value) => {
+                            if (value == 13) {
+                                this.desTraslado = true;
+                            }
+                        })
+                    }
+                }
+            } */
+
             function dataProduct() {
                 return {
                     product: @entangle('product'),

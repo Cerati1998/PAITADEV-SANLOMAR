@@ -29,6 +29,7 @@ class DespatchForm extends Form
     ];
     public $envio = [
         'codTraslado' => '01',
+        'desTraslado' => null,
         'modTraslado' => '02',
         'indicadores' => [],
         'fecTraslado' => null,
@@ -91,6 +92,7 @@ class DespatchForm extends Form
 
             "envio" => ["required", "array"],
             "envio.codTraslado" => ["required", "exists:reason_transfers,id"],
+            "envio.desTraslado" => ["required_if:envio.codTraslado,13", "string"],
             "envio.modTraslado" => ["required", "in:01,02"],
             "envio.indicadores" => ["nullable", "array"],
             "envio.fecTraslado" => [
@@ -186,6 +188,7 @@ class DespatchForm extends Form
             'correlativo' => 'correlativo',
             'fechaEmision' => 'fecha de emisión',
             'envio.codTraslado' => 'código de traslado',
+            'envio.desTraslado' => 'Especificación de traslado OTROS',
             'envio.modTraslado' => 'modo de traslado',
             'envio.fecTraslado' => 'fecha de traslado',
             'envio.pesoTotal' => 'peso total',

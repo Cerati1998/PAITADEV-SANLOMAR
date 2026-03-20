@@ -92,7 +92,7 @@ class DespatchForm extends Form
 
             "envio" => ["required", "array"],
             "envio.codTraslado" => ["required", "exists:reason_transfers,id"],
-            "envio.desTraslado" => ["required_if:envio.codTraslado,13", "string"],
+            "envio.desTraslado" => ["nullable", "required_if:envio.codTraslado,13", "string"],
             "envio.modTraslado" => ["required", "in:01,02"],
             "envio.indicadores" => ["nullable", "array"],
             "envio.fecTraslado" => [

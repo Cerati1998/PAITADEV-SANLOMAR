@@ -195,7 +195,7 @@ class EirEdit extends Component
             $this->containerInfo['code'] = $container->code;
             $this->containerInfo['iso_code'] = $container->iso_code;
             $this->containerInfo['container_type'] = (int) $container->container_type->id ?? '';
-            $this->containerInfo['container_technology'] = (int) $container?->reefer_technology->id ?? '';
+            $this->containerInfo['container_technology'] = (int) $container?->reefer_technology?->id ?? '';
             $this->containerInfo['container_machine'] = (int) $container?->reefer_machine_id ?? '';
             $this->containerData['tare'] = $container->tare ?? '';
             $this->containerData['payload'] = $container->payload ?? '';

@@ -23,6 +23,7 @@ class GenerateDespatch extends Component
     public $identities;
     public $reason_transfers;
     public $units;
+    public $branches;
 
     public $openModal = false;
     public $product = [
@@ -46,14 +47,16 @@ class GenerateDespatch extends Component
                         if (empty($this->despatch->destinatario['tipoDoc'] == '6' && $this->despatch->destinatario['numDoc'] == session('company')->ruc)) {
                             $validator->errors()->add('client_id', 'El cliente debe ser la misma empresa.');
                         }
-
+                        if ($this->despatch->envio['partida']['codLocal'] == $this->despatch->envio['llegada']['codLocal']) {
+                            $validator->errors()->add('client_id', 'El código de establecimiento de partida y llegada no pueden ser el mismo.');
+                        }
                     }
-                }else{
+                } else {
                     $validator->errors()->add('client_id', 'El campo cliente es obligatorio.');
                 }
 
             });
-            
+
             if ($validator->fails()) {
                 $errors = $validator->errors()->toArray();
 
@@ -69,7 +72,7 @@ class GenerateDespatch extends Component
                     'icon' => 'error',
                 ]);
             }
-        });   
+        });
     }
 
     public function mount()
@@ -96,7 +99,7 @@ class GenerateDespatch extends Component
         }
 
         if ($property === 'product_id') {
-            
+
             $product = Product::find($value);
 
             $this->addDetail($product);
@@ -106,22 +109,22 @@ class GenerateDespatch extends Component
         }
 
         if ($property === 'ml1') {
-            
+
             if ($value) {
                 $this->despatch->envio['indicadores'][] = 'SUNAT_Envio_IndicadorTrasladoVehiculoM1L';
-            }else{
+            } else {
                 $this->despatch->envio['indicadores'] = array_diff($this->despatch->envio['indicadores'], ['SUNAT_Envio_IndicadorTrasladoVehiculoM1L']);
             }
 
         }
 
-        /* if ($property === 'despatch.envio.codTraslado') {
+        if ($property === 'despatch.envio.codTraslado') {
             if ($value == '04') {
-       
+
                 $this->despatch->envio['partida']['ruc'] = session('company')->ruc;
                 $this->despatch->envio['llegada']['ruc'] = session('company')->ruc;
 
-            }else{
+            } else {
 
                 $this->despatch->envio['partida']['ruc'] = null;
                 $this->despatch->envio['partida']['codLocal'] = null;
@@ -129,7 +132,7 @@ class GenerateDespatch extends Component
                 $this->despatch->envio['llegada']['ruc'] = null;
                 $this->despatch->envio['llegada']['codLocal'] = null;
             }
-        } */
+        }
     }
 
     #[On('clientAdded')]
@@ -149,7 +152,7 @@ class GenerateDespatch extends Component
                 ]
             ];
 
-        }else{
+        } else {
 
             $this->despatch->destinatario = [
                 'tipoDoc' => '6',
@@ -187,7 +190,7 @@ class GenerateDespatch extends Component
         if ($correlativo) {
             $this->despatch->correlativo = $correlativo + 1;
         }
-        
+
     }
 
     public function addVehicle()
@@ -239,7 +242,7 @@ class GenerateDespatch extends Component
         if ($product) {
             $product['cantidad'] = 1;
         } else {
-        
+
             $this->validate([
                 'product.cantidad' => 'required|numeric|min:1',
                 'product.unidad' => 'required|exists:units,id',
@@ -259,7 +262,7 @@ class GenerateDespatch extends Component
 
         if (isset($product['key'])) {
             $this->despatch->details[$product['key']] = $detail;
-        }else{
+        } else {
             $this->despatch->details[] = $detail;
         }
 

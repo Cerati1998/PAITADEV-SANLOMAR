@@ -11,6 +11,7 @@
     @livewire('generate-despatch', [
         'identities' => $identities,
         'units' => $units,
+        'branches' => $branches
     ], key('generate-despatch'))
     
     {{-- @include('clients.create') --}}

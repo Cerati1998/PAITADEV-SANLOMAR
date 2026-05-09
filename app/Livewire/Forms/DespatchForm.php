@@ -106,10 +106,12 @@ class DespatchForm extends Form
             "envio.llegada" => ["required", "array"],
             "envio.llegada.ubigueo" => ["required", "string"],
             "envio.llegada.direccion" => ["required", "string"],
+            "envio.llegada.codLocal" => ["required_if:envio.codTraslado,04,min:3"],
 
             "envio.partida" => ["required", "array"],
             "envio.partida.ubigueo" => ["required", "string"],
             "envio.partida.direccion" => ["required", "string"],
+            "envio.partida.codLocal" => ["required_if:envio.codTraslado,04,min:3"],
 
             //Transportista
             "envio.transportista" => ["required_if:envio.modTraslado,01", "array"],
@@ -181,6 +183,14 @@ class DespatchForm extends Form
         ];
     }
 
+    public function messages()
+    {
+        return [
+            'envio.partida.codLocal.required_if' => 'El  Código de Establecimiento de Partida es obligatorio cuando el motivo es Traslado entre establecimientos de la misma empresa.',
+            'envio.llegada.codLocal.required_if' => 'El  Código de Establecimiento de Llegada es obligatorio cuando el motivo es Traslado entre establecimientos de la misma empresa.',
+        ];
+    }
+
     public function validationAttributes()
     {
         return [
@@ -195,8 +205,10 @@ class DespatchForm extends Form
             'envio.undPesoTotal' => 'unidad de peso total',
             'envio.llegada.ubigueo' => 'ubigeo de llegada',
             'envio.llegada.direccion' => 'dirección de llegada',
+            'envio.llegada.codLocal' => 'código de establecimiento de llegada',
             'envio.partida.ubigueo' => 'ubigeo de partida',
             'envio.partida.direccion' => 'dirección de partida',
+            'envio.partida.codLocal' => 'código de establecimiento de partida',
             'envio.transportista.tipoDoc' => 'tipo de documento del transportista',
             'envio.transportista.numDoc' => 'número de documento del transportista',
             'envio.transportista.rznSocial' => 'razón social del transportista',
@@ -212,7 +224,7 @@ class DespatchForm extends Form
             'details.*.cantidad' => 'cantidad',
             'details.*.unidad' => 'unidad',
             'details.*.descripcion' => 'descripción',
-            'details.*.codigo' => 'código',
+            'details.*.codigo' => 'código de producto',
         ];
     }
 

@@ -445,8 +445,14 @@
                                         Código de establecimiento
                                     </x-label>
 
-                                    <x-wire-input wire:model="despatch.envio.partida.codLocal"
-                                        placeholder="Código de establecimiento" />
+                                    <x-select x-model="despatch.envio.partida.codLocal" class="w-full">
+                                        <option value="" hidden>Seleccione...</option>
+                                        @foreach ($branches as $branch)
+                                            <option value="{{ $branch['code'] }}">
+                                                {{ $branch['name'] }}
+                                            </option>
+                                        @endforeach
+                                    </x-select>
                                 </div>
                             @endif
                         </div>
@@ -507,8 +513,14 @@
                                         Código de establecimiento
                                     </x-label>
 
-                                    <x-wire-input wire:model="despatch.envio.llegada.codLocal"
-                                        placeholder="Código de establecimiento" />
+                                    <x-select x-model="despatch.envio.llegada.codLocal" class="w-full">
+                                        <option value="" hidden>Seleccione...</option>
+                                        @foreach ($branches as $branch)
+                                            <option value="{{ $branch['code'] }}">
+                                                {{ $branch['name'] }}
+                                            </option>
+                                        @endforeach
+                                    </x-select>
                                 </div>
                             @endif
                         </div>
@@ -685,18 +697,18 @@
     @push('js')
         <script>
             /* function dataTransport() {
-                return {
-                    motivoTraslado: @entangle('despatch.envio.codTraslado'),
-                    desTraslado: false,
-                    init() {
-                        this.$watch('motivoTraslado', (value) => {
-                            if (value == 13) {
-                                this.desTraslado = true;
-                            }
-                        })
-                    }
-                }
-            } */
+                                return {
+                                    motivoTraslado: @entangle('despatch.envio.codTraslado'),
+                                    desTraslado: false,
+                                    init() {
+                                        this.$watch('motivoTraslado', (value) => {
+                                            if (value == 13) {
+                                                this.desTraslado = true;
+                                            }
+                                        })
+                                    }
+                                }
+                            } */
 
             function dataProduct() {
                 return {

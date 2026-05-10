@@ -13,6 +13,7 @@ class Vehicle extends Model
         'category',
         'type',
         'color',
+        'autorization_number',
         'transport_id',
     ];
 

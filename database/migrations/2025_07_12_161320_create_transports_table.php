@@ -65,6 +65,7 @@ return new class extends Migration
             $table->string('category', 45);
             $table->string('type', 200);
             $table->string('color', 100)->nullable();
+            $table->string('autorization_number', 45);
             $table->foreignId('transport_id')
                 ->constrained()
                 ->onUpdate('cascade')

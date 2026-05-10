@@ -21,21 +21,28 @@
             </div>
 
 
-            <div class="grid grid-cols-3 gap-4 mb-4">
+            <div class="grid grid-cols-4 gap-4 mb-4">
 
-                <div class="col-span-1">
+                <div class="col-span-2 lg:col-span-1">
                     <x-label class="mb-1">
                         Marca
                     </x-label>
                     <x-input required x-model="vehicle.brand" placeholder="Ingrese la marca" class="w-full" />
                 </div>
-                <div class="col-span-1">
+                <div class="col-span-2 lg:col-span-1">
                     <x-label class="mb-1">
                         Modelo
                     </x-label>
                     <x-input required x-model="vehicle.model" placeholder="Ingrese el modelo" class="w-full" />
                 </div>
-                <div class="col-span-1">
+                <div class="col-span-2 lg:col-span-1">
+                    <x-label class="mb-1">
+                        N° Autorización MTC
+                    </x-label>
+                    <x-input required x-model="vehicle.autorization_number"
+                        placeholder="Ingrese el número de autorización" class="w-full" />
+                </div>
+                <div class="col-span-2 lg:col-span-1">
                     <x-label class="mb-1">
                         Categoria
                     </x-label>
@@ -80,8 +87,8 @@
     </form>
 
     @push('js')
-         <script>
-             function dataEdit() {
+        <script>
+            function dataEdit() {
                 return {
                     //vehicle: @entangle('vehicle').live,
                     vehicle: @entangle('vehicle'),
@@ -95,7 +102,8 @@
                     }
                 }
             }
-              function confirmDelete(vehicleId) {
+
+            function confirmDelete(vehicleId) {
                 Swal.fire({
                     title: '¿Estás seguro?',
                     text: "¡No podrás revertir esto!",

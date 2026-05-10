@@ -41,6 +41,7 @@ class VehicleCreate extends Component
         'category' => '',
         'type' => '',
         'color' => '',
+        'autorization_number' => '',
         'transport_id' => '',
     ];
 
@@ -69,6 +70,7 @@ class VehicleCreate extends Component
             'vehicle.category' => 'required|string',
             'vehicle.type' => 'required|string',
             'vehicle.color' => 'required|string|min:4',
+            'vehicle.autorization_number' => 'required|string|min:12|max:15',
         ], [], [
             'vehicle.code' => 'Placa de Vehiculo',
             'vehicle.brand' => 'Marca de Vehiculo',
@@ -76,6 +78,7 @@ class VehicleCreate extends Component
             'vehicle.category' => 'Categoria de Vehiculo',
             'vehicle.type' => 'Tipo de Vehiculo',
             'vehicle.color' => 'Color de Carroceria',
+            'vehicle.autorization_number' => 'Número de Autorización vehicular MTC',
         ]);
 
         $this->vehicle['transport_id'] = $this->transport->id;

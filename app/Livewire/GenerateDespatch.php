@@ -47,7 +47,7 @@ class GenerateDespatch extends Component
                         if (empty($this->despatch->destinatario['tipoDoc'] == '6' && $this->despatch->destinatario['numDoc'] == session('company')->ruc)) {
                             $validator->errors()->add('client_id', 'El cliente debe ser la misma empresa.');
                         }
-                        if ($this->despatch->envio['partida']['codLocal'] == $this->despatch->envio['llegada']['codLocal']) {
+                        if ($this->despatch->envio['codTraslado'] === '04' && $this->despatch->envio['partida']['codLocal'] == $this->despatch->envio['llegada']['codLocal']) {
                             $validator->errors()->add('client_id', 'El código de establecimiento de partida y llegada no pueden ser el mismo.');
                         }
                     }

@@ -20,6 +20,11 @@ class DetractionSeeder extends Seeder
                 'percent' => 10,
             ],
             [
+                'id' => '002',
+                'description' => 'Arroz',
+                'percent' => 4,
+            ],
+            [
                 'id' => '003',
                 'description' => 'Alcohol etílico',
                 'percent' => 10,
@@ -65,8 +70,18 @@ class DetractionSeeder extends Seeder
                 'percent' => 12,
             ],
             [
+                'id' => '013',
+                'description' => 'Animales vivos',
+                'percent' => 4,
+            ],
+            [
                 'id' => '014',
                 'description' => 'Carnes y despojos comestibles',
+                'percent' => 4,
+            ],
+            [
+                'id' => '015',
+                'description' => 'Abonos, cueros y pieles de origen animal',
                 'percent' => 4,
             ],
             [
@@ -120,6 +135,16 @@ class DetractionSeeder extends Seeder
                 'percent' => 10,
             ],
             [
+                'id' => '027',
+                'description' => 'Servicio de transporte de carga',
+                'percent' => 4,
+            ],
+            [
+                'id' => '028',
+                'description' => 'Transporte de pasajeros',
+                'percent' => 10,
+            ],
+            [
                 'id' => '030',
                 'description' => 'Contratos de construcción',
                 'percent' => 4,
@@ -160,9 +185,19 @@ class DetractionSeeder extends Seeder
                 'percent' => 10,
             ],
             [
+                'id' => '040',
+                'description' => 'Bien inmueble gravado con IGV',
+                'percent' => 4,
+            ],
+            [
                 'id' => '041',
                 'description' => 'Plomo',
                 'percent' => 15,
+            ],
+            [
+                'id' => '099',
+                'description' => 'Ley 30737',
+                'percent' => 12,
             ]
         ];
 

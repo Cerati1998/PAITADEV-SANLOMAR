@@ -75,7 +75,11 @@ class GenerateInvoice extends Component
                 }
 
                 if ($this->invoice->tipoOperacion == '1001') {
-                    $montoMinimo = 700; // Monto mínimo en soles
+                    // Monto mínimo en soles
+                    $montoMinimo = match ($this->invoice->detraccion['codBienDetraccion']) {
+                        '027' => 400,
+                        default => 700,
+                    };
                     $montoComprobante = $this->invoice->mtoImpVenta;
                     $mensaje = '';
                     // Si la moneda es USD, convertir a PEN usando el tipo de cambio
@@ -487,8 +491,8 @@ class GenerateInvoice extends Component
         if (empty($this->invoice->cuotas) && $this->invoice->tipoOperacion == '1001' && $this->invoice->mtoImpVenta > 0) {
 
             $montoDet = $this->invoice->detraccion['percent'] ? round($this->invoice->mtoImpVenta * $this->invoice->detraccion['percent'] / 100, 2) : 0;
-            
-            $this->invoice->cuotas[] = [    
+
+            $this->invoice->cuotas[] = [
                 'monto' => $this->invoice->mtoImpVenta - $montoDet,
                 'fechaPago' => Carbon::now()->addDays(15)->format('Y-m-d'),
             ];

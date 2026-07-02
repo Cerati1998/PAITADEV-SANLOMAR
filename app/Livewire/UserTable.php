@@ -10,12 +10,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
+use Spatie\Permission\Models\Role;
 
 class UserTable extends DataTableComponent
 {
 
     public $branches;
     public $identities;
+    public $roles;
     public $userEdit = [
         'open' => false,
         'id' => '',
@@ -28,12 +30,19 @@ class UserTable extends DataTableComponent
     ];
     public $password = NULL;
 
+    public $roleChange = [
+        'open' => false,
+        'id' => '',
+        'name' => '',
+        'role_id' => '',
+    ];
+
     public function configure(): void
     {
         $this->setPrimaryKey('id');
 
-        $this->setConfigurableAreas([
-            'after-wrapper' => ['users.edit'],
+         $this->setConfigurableAreas([
+            'after-wrapper' => ['users.modal']
         ]);
     }
 
@@ -139,6 +148,64 @@ class UserTable extends DataTableComponent
             'title' => 'Exito!',
             'text' => 'Usuario actualizado Correctamente',
             'icon' => 'success'
+        ]);
+    }
+
+    public function editRole(User $user)
+    {
+        $this->roleChange = [
+            'open' => true,
+            'id' => $user->id,
+            'name' => $user->name,
+            'role_id' => $user->roles->first()?->id ?? '',
+        ];
+    }
+
+    public function updateRole()
+    {
+        if (!auth()->user()->can('users.role.update')) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Acceso no autorizado',
+                'text' => 'No tienes el permiso para ejecutar esta acción',
+            ]);
+            return;
+        }
+
+        $this->validate([
+            'roleChange.role_id' => 'required|exists:roles,id',
+        ], [], [
+            'roleChange.role_id' => 'Rol',
+        ]);
+
+        if ($this->roleChange['id'] == auth()->id()) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'No puedes cambiar tu propio rol',
+            ]);
+            return;
+        }
+
+        $role = Role::findOrFail($this->roleChange['role_id']);
+
+        if ($role->name === 'Super' && !auth()->user()->hasRole('Super')) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'No tienes permiso para asignar el rol Super',
+            ]);
+            return;
+        }
+
+        User::findOrFail($this->roleChange['id'])->syncRoles([$role->name]);
+
+        $this->reset('roleChange');
+
+        $this->dispatch('swal', [
+            'title' => 'Exito!',
+            'text' => 'Rol actualizado correctamente',
+            'icon' => 'success',
         ]);
     }
 

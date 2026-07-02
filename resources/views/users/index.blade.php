@@ -14,7 +14,7 @@
 
     </x-slot>
 
-    @livewire('user-table', ['branches' => $branches, 'identities' => $identities])
+    @livewire('user-table', ['branches' => $branches, 'identities' => $identities, 'roles' => $roles])
 
     @include('users.create')
 

@@ -331,6 +331,13 @@
             'can' => 'users',
         ],
         [
+            'name' => 'Roles y Permisos',
+            'icon' => 'fa-solid fa-user-shield',
+            'route' => route('roles.index'),
+            'active' => request()->routeIs('roles.*'),
+            'can' => 'roles',
+        ],
+        [
             'name' => 'Reportes',
             'icon' => 'fa-solid fa-file-export',
             'route' => route('reports.index'),

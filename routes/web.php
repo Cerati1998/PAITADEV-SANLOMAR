@@ -25,6 +25,7 @@ use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\ReeferConditionController;
 use App\Http\Controllers\ReeferTechnologyController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ShippingLineController;
 use App\Http\Controllers\TransportController;
 use App\Http\Controllers\UserController;
@@ -32,6 +33,7 @@ use App\Http\Controllers\VoidedController;
 use App\Http\Controllers\VoucherController;
 use App\Http\Controllers\WorkerController;
 use App\Http\Middleware\CheckCompanySelected;
+use App\Http\Middleware\EnsureUserIsSuperOrAdmin;
 use App\Models\ContainerOperationalTrace;
 use App\Models\Invoice;
 use App\Models\ReeferCondition;
@@ -94,6 +96,11 @@ Route::middleware([
         Route::get('branches/{branch}/integrations', [BranchController::class, 'integrations'])->name('branches.integrations')->middleware('can:branches.integrations');
 
         Route::resource('users', UserController::class)->middleware('can:users');
+
+        //modulo de roles y permisos, solo accesible para Super y Admin
+        Route::middleware([EnsureUserIsSuperOrAdmin::class])->group(function () {
+            Route::get('roles', [RoleController::class, 'index'])->name('roles.index')->middleware('can:roles');
+        });
 
         //maestras para inspecciones
         Route::resource('damages', DamageController::class)->names('damages')->except('show')->middleware('can:damages');

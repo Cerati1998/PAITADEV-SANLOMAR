@@ -35,6 +35,11 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'branches.series'])->assignRole([$role1, $role2, $role3, $role9]);
         Permission::create(['name' => 'branches.integrations'])->assignRole([$role1, $role2, $role3]);
         Permission::create(['name' => 'users'])->assignRole([$role1, $role2, $role3]);
+        Permission::create(['name' => 'users.role.update'])->assignRole([$role1, $role2, $role3]);
+        Permission::create(['name' => 'roles'])->assignRole([$role1, $role2, $role3]);
+        Permission::create(['name' => 'roles.create'])->assignRole([$role1, $role2, $role3]);
+        Permission::create(['name' => 'roles.update'])->assignRole([$role1, $role2, $role3]);
+        Permission::create(['name' => 'roles.delete'])->assignRole([$role1, $role2, $role3]);
         Permission::create(['name' => 'damages'])->assignRole([$role1, $role2, $role3, $role4, $role5]);
         Permission::create(['name' => 'damages.update'])->assignRole([$role1, $role2, $role3, $role4, $role5]);
         Permission::create(['name' => 'damages.delete'])->assignRole([$role1, $role2, $role3]);

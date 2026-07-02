@@ -329,13 +329,16 @@ class WorkOrderTable extends DataTableComponent
     #[Computed]
     public function providers()
     {
-        return Provider::all()->map(function ($provider) {
-            return [
-                'id' => $provider->id,
-                'name' => $provider->numDoc,
-                'description' => $provider->rznSocial,
-            ];
-        });
+        return Provider::query()
+            ->select(['id', 'numDoc', 'rznSocial'])
+            ->get()
+            ->map(function ($provider) {
+                return [
+                    'id' => $provider->id,
+                    'name' => $provider->numDoc,
+                    'description' => $provider->rznSocial,
+                ];
+            });
     }
 
     #[Computed]
@@ -351,7 +354,7 @@ class WorkOrderTable extends DataTableComponent
     #[Computed()]
     public function eirs()
     {
-        return EirInspection::with(['trace'])
+        return EirInspection::with(['trace.container'])
             ->where('eir_inspections.status', 'completado')
             ->orderBy('id', 'desc')
             ->get()
@@ -379,8 +382,9 @@ class WorkOrderTable extends DataTableComponent
 
         // Cargar todos los datos de la orden
         $this->workOrderForm->setWorkOrder($workOrder);
-        $this->repair = $this->workOrderForm->loadRepair($workOrder->eir_inspection_id);
-        $this->container = $this->workOrderForm->loadContainer($workOrder->eir_inspection_id);
+        $eirData = $this->workOrderForm->loadContainerAndRepair($workOrder->eir_inspection_id);
+        $this->repair = $eirData['repair'];
+        $this->container = $eirData['container'];
         $this->workOrderId = $workOrder->id;
         $this->openEditModal = true;
     }

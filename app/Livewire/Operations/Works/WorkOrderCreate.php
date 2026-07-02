@@ -21,13 +21,16 @@ class WorkOrderCreate extends Component
     #[Computed]
     public function providers()
     {
-        return Provider::all()->map(function ($provider) {
-            return [
-                'id' => $provider->id,
-                'name' => $provider->numDoc,
-                'description' => $provider->rznSocial,
-            ];
-        });
+        return Provider::query()
+            ->select(['id', 'numDoc', 'rznSocial'])
+            ->get()
+            ->map(function ($provider) {
+                return [
+                    'id' => $provider->id,
+                    'name' => $provider->numDoc,
+                    'description' => $provider->rznSocial,
+                ];
+            });
     }
 
     #[Computed]
@@ -43,7 +46,7 @@ class WorkOrderCreate extends Component
     #[Computed]
     public function eirs()
     {
-        return EirInspection::with(['trace'])
+        return EirInspection::with(['trace.container'])
             ->where('eir_inspections.status', 'completado')
             ->orderBy('id', 'desc')
             ->get()
@@ -73,8 +76,9 @@ class WorkOrderCreate extends Component
                 ]);
                 return;
             }
-            $this->container = $this->workOrderForm->loadContainer($value);
-            $this->repair =  $this->workOrderForm->loadRepair($value);
+            $eirData = $this->workOrderForm->loadContainerAndRepair($value);
+            $this->container = $eirData['container'];
+            $this->repair = $eirData['repair'];
             $this->workOrderForm->type = 'box';
         }
     }

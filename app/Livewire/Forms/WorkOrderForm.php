@@ -440,8 +440,26 @@ class WorkOrderForm extends Form
 
     public function loadRepair($eirId)
     {
-        $eir = EirInspection::find($eirId);
+        return $this->resolveRepairLabel(EirInspection::find($eirId));
+    }
 
+    /**
+     * Carga contenedor y motivo de reparación desde un mismo EIR en una sola consulta,
+     * en vez de dos (evita el N+1 al abrir el modal de crear/editar orden).
+     */
+    public function loadContainerAndRepair($eirId)
+    {
+        $eir = EirInspection::with(['trace.container'])->find($eirId);
+        $this->container_id = $eir?->trace?->container?->id;
+
+        return [
+            'container' => $eir?->trace?->container?->code ?? null,
+            'repair' => $this->resolveRepairLabel($eir),
+        ];
+    }
+
+    private function resolveRepairLabel(?EirInspection $eir): string
+    {
         if (!$eir) {
             return 'Sin Reparación';
         }

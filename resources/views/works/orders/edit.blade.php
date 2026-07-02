@@ -4,113 +4,100 @@
         <x-wire-modal-card title="Asignar Trabajos" width="7xl" wire:model="openEditModal" :hide-close="true">
 
             <x-validation-errors class="mb-4" />
-            <header class="flex items-center justify-between border-b border-gray-200 pb-2 mb-4">
-                <div class="flex items-center">
-                    <span
-                        class="outline-none inline-flex justify-center items-center group rounded-full text-white bg-red-600 dark:bg-red-700 w-6 h-6"
-                        xl="xl">
-                        1
-                    </span>
-                    <h1 class="ml-3 font-semibold text-sm uppercase">
-                        Encabezado de Orden
-                    </h1>
-                </div>
 
-                <!-- Botón mostrar/ocultar -->
-                <button type="button"
-                    class="text-blue-500 hover:text-gray-700 text-sm focus:outline-none transition flex items-center"
-                    x-on:click="showHeader = !showHeader">
-                    <span x-show="!showHeader">
-                        <i class="fas fa-arrow-down"></i>
-                        <span class="ml-1">Mostrar</span>
-                    </span>
-                    <span x-show="showHeader">
-                        <i class="fas fa-arrow-up"></i>
-                        <span class="ml-1">Ocultar</span>
-                    </span>
-                </button>
-            </header>
-            <div class="mb-1" x-show="showHeader" x-transition>
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                    <div class="col-span-1">
-                        <x-label>Correlativo</x-label>
-                        <x-input class="w-full" disabled
-                            value="{{ $workOrderForm->serie . '-' . str_pad($workOrderForm->correlativo ?? '', 6, '0', STR_PAD_LEFT) }}" />
+            {{-- Encabezado --}}
+            <x-wire-card class="mb-4">
+                <header class="flex items-center justify-between border-b border-gray-200 pb-2 mb-4">
+                    <div class="flex items-center">
+                        <span
+                            class="outline-none inline-flex justify-center items-center group rounded-full text-white bg-red-600 dark:bg-red-700 w-6 h-6"
+                            xl="xl">
+                            1
+                        </span>
+                        <h1 class="ml-3 font-semibold text-sm uppercase">
+                            Encabezado de Orden
+                        </h1>
                     </div>
 
-                    <div class="col-span-1">
-                        <x-label>F. Apertura</x-label>
-                        <x-wire-datetime-picker wire:model="workOrderForm.started_at" display-format="DD-MM-YYYY HH:mm"
-                            parse-format="YYYY-MM-DD HH:mm" readonly />
-                    </div>
+                    <!-- Botón mostrar/ocultar -->
+                    <button type="button"
+                        class="text-blue-500 hover:text-gray-700 text-sm focus:outline-none transition flex items-center"
+                        x-on:click="showHeader = !showHeader">
+                        <span x-show="!showHeader">
+                            <i class="fas fa-arrow-down"></i>
+                            <span class="ml-1">Mostrar</span>
+                        </span>
+                        <span x-show="showHeader">
+                            <i class="fas fa-arrow-up"></i>
+                            <span class="ml-1">Ocultar</span>
+                        </span>
+                    </button>
+                </header>
+                <div x-show="showHeader" x-transition>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                        <div class="col-span-1">
+                            <x-label>Correlativo</x-label>
+                            <x-input class="w-full" disabled
+                                value="{{ $workOrderForm->serie . '-' . str_pad($workOrderForm->correlativo ?? '', 6, '0', STR_PAD_LEFT) }}" />
+                        </div>
 
-                    <div class="col-span-1">
-                        <x-label>Nº Estimado</x-label>
-                        <x-input class="w-full" wire:model="workOrderForm.estimate_number" />
-                    </div>
-                    <div class="col-span-1">
-                        <x-label>Fecha Estimado</x-label>
-                        <x-wire-datetime-picker wire:model="workOrderForm.estimate_date" display-format="DD-MM-YYYY"
-                            parse-format="YYYY-MM-DD" :max="now()" />
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                    <div class="col-span-1">
-                        <x-label>Nº EIR</x-label>
-                        <x-wire-select :options="$this->eirs" wire:model.live="workOrderForm.eir_inspection_id"
-                            option-label="name" option-value="id" readonly />
-                    </div>
-                    <div class="col-span-1">
-                        <x-label>Tipo</x-label>
-                        <x-wire-select :options="$this->types" wire:model="workOrderForm.type" option-label="label"
-                            option-value="value" readonly />
-                    </div>
-                    <div class="col-span-1">
-                        <x-label>M.Repara</x-label>
-                        <x-wire-input value="{{ $this->repair }}" readonly />
-                    </div>
-                    <div class="col-span-1">
-                        <x-label>Contenedor</x-label>
-                        <x-wire-input class="w-full" wire:model="container" readonly />
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                    <div class="col-span-2 lg:col-span-1">
-                        <x-wire-select label="Proveedor" :options="$this->providers" wire:model="workOrderForm.provider_id"
-                            option-label="name" option-value="id" />
-                    </div>
-                    <div class="col-span-2">
-                        <x-wire-input label="Observaciones" class="w-full" wire:model="workOrderForm.comments" />
-                    </div>
-                </div>
-                <div class="flex justify-end">
-                    <x-wire-button type="submit" class="w-[1/8] xl:mt-2.5" green spinner wire:loading.attr="disabled"
-                        wire:target="update" icon="arrow-down-tray">
-                        <span>Actualizar</span>
-                    </x-wire-button>
-                </div>
+                        <div class="col-span-1">
+                            <x-label>F. Apertura</x-label>
+                            <x-wire-datetime-picker wire:model="workOrderForm.started_at"
+                                display-format="DD-MM-YYYY HH:mm" parse-format="YYYY-MM-DD HH:mm" readonly />
+                        </div>
 
-            </div>
+                        <div class="col-span-1">
+                            <x-label>Nº Estimado</x-label>
+                            <x-input class="w-full" wire:model="workOrderForm.estimate_number" />
+                        </div>
+                        <div class="col-span-1">
+                            <x-label>Fecha Estimado</x-label>
+                            <x-wire-datetime-picker wire:model="workOrderForm.estimate_date"
+                                display-format="DD-MM-YYYY" parse-format="YYYY-MM-DD" :max="now()" />
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                        <div class="col-span-1">
+                            <x-label>Nº EIR</x-label>
+                            <x-wire-select :options="$this->eirs" wire:model.live="workOrderForm.eir_inspection_id"
+                                option-label="name" option-value="id" readonly />
+                        </div>
+                        <div class="col-span-1">
+                            <x-label>Tipo</x-label>
+                            <x-wire-select :options="$this->types" wire:model="workOrderForm.type"
+                                option-label="label" option-value="value" readonly />
+                        </div>
+                        <div class="col-span-1">
+                            <x-label>M.Repara</x-label>
+                            <x-wire-input value="{{ $this->repair }}" readonly />
+                        </div>
+                        <div class="col-span-1">
+                            <x-label>Contenedor</x-label>
+                            <x-wire-input class="w-full" wire:model="container" readonly />
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                        <div class="col-span-1 sm:col-span-2 lg:col-span-1">
+                            <x-wire-select label="Proveedor" :options="$this->providers"
+                                wire:model="workOrderForm.provider_id" option-label="name" option-value="id" />
+                        </div>
+                        <div class="col-span-2">
+                            <x-wire-input label="Observaciones" class="w-full" wire:model="workOrderForm.comments" />
+                        </div>
+                    </div>
+                    <div class="flex justify-end">
+                        <x-wire-button type="submit" class="w-[1/8] xl:mt-2.5" green spinner
+                            wire:loading.attr="disabled" wire:target="update" icon="arrow-down-tray">
+                            <span>Actualizar</span>
+                        </x-wire-button>
+                    </div>
+                </div>
+            </x-wire-card>
 
             {{-- Detail --}}
             <x-wire-card>
                 <div class="mb-2 lg:mb-3">
-                    <div class="flex justify-center mb-2 lg:mb-3">
-                        <!-- Botón mostrar/ocultar -->
-                        <button type="button"
-                            class="text-blue-500 hover:text-gray-700 text-sm focus:outline-none transition flex items-center"
-                            x-on:click="showLabors = !showLabors">
-                            <span x-show="!showLabors">
-                                <i class="fas fa-arrow-down"></i>
-                                <span class="ml-1">Mostrar</span>
-                            </span>
-                            <span x-show="showLabors">
-                                <i class="fas fa-arrow-up"></i>
-                                <span class="ml-1">Ocultar</span>
-                            </span>
-                        </button>
-                    </div>
-
                     <header class="flex items-center justify-between border-b border-gray-200 pb-2 mb-4">
                         <div class="flex items-center">
                             <span
@@ -122,16 +109,33 @@
                                 Detalle de Trabajos
                             </h1>
                         </div>
-                        <x-wire-button x-on:click="$openModal('detailWorkOrderModal')" class="w-[1/8] xl:mt-2.5"
-                            icon="plus-circle" blue>
-                            <span>Agregar</span>
-                        </x-wire-button>
 
+                        <div class="flex items-center gap-4">
+                            <x-wire-button x-on:click="$openModal('detailWorkOrderModal')" icon="plus-circle" blue
+                                sm>
+                                <span>Agregar</span>
+                            </x-wire-button>
+
+                            <!-- Botón mostrar/ocultar -->
+                            <button type="button"
+                                class="text-blue-500 hover:text-gray-700 text-sm focus:outline-none transition flex items-center"
+                                x-on:click="showLabors = !showLabors">
+                                <span x-show="!showLabors">
+                                    <i class="fas fa-arrow-down"></i>
+                                    <span class="ml-1">Mostrar</span>
+                                </span>
+                                <span x-show="showLabors">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <span class="ml-1">Ocultar</span>
+                                </span>
+                            </button>
+                        </div>
                     </header>
                 </div>
-                <div class="overflow-x-auto mt-4 min-h-48" x-show="showLabors" x-transition>
+                <div class="mt-4 min-h-48" x-show="showLabors" x-transition>
                     @if (count($this->workOrderForm->labors))
-                        <div class="overflow-y-auto  max-h-[300px] min-h-0">
+                        {{-- Vista de escritorio: tabla (a partir de md) --}}
+                        <div class="hidden md:block overflow-x-auto overflow-y-auto max-h-[300px] min-h-0">
                             <table class="w-full text-left text-sm border-separate border-spacing-2">
                                 <thead>
                                     <tr class="uppercase p-2 bg-primary-600">
@@ -147,8 +151,9 @@
                                 </thead>
                                 <tbody>
                                     @foreach ($this->workOrderForm->labors as $key => $item)
-                                        <tr wire:key="labor-{{ $item->id }}">
-                                            <td>
+                                        <tr wire:key="labor-row-{{ $item->id }}"
+                                            class="hover:bg-gray-50 transition-colors">
+                                            <td class="p-2">
                                                 <div class="flex space-x-1 items-center">
                                                     <x-wire-mini-button green icon="pencil" sm
                                                         wire:click="editLabor({{ $item->id }})" />
@@ -166,42 +171,44 @@
                                                         icon="trash" sm />
                                                 </div>
                                             </td>
-                                            <td class="text-center">
+                                            <td class="p-2 text-center">
                                                 <span class="text-gray-700 font-medium text-base lg:text-xs">
                                                     {{ $item->qty }}
                                                 </span>
                                             </td>
 
-                                            <td class="relative overflow-visible text-center">
+                                            <td class="p-2 relative overflow-visible text-center">
                                                 <x-tooltip :text="$item?->inspectionDetail?->location->description">
                                                     <span class="text-gray-700 font-medium text-base lg:text-xs">
                                                         {{ $item?->inspectionDetail?->location->code }}
                                                     </span>
                                                 </x-tooltip>
                                             </td>
-                                            <td class="relative overflow-visible text-center">
+                                            <td class="p-2 relative overflow-visible text-center">
                                                 <x-tooltip :text="$item?->inspectionDetail?->damage->description">
                                                     <span class="text-gray-700 font-medium text-base lg:text-xs">
                                                         {{ $item?->inspectionDetail?->damage->code }}
                                                     </span>
                                                 </x-tooltip>
                                             </td>
-                                            <td class="relative overflow-visible text-center">
+                                            <td class="p-2 relative overflow-visible text-center">
                                                 <x-tooltip :text="$item?->inspectionDetail?->component->description">
                                                     <span class="text-gray-700 font-medium text-base lg:text-xs">
                                                         {{ $item?->inspectionDetail?->component->code }}
                                                     </span>
                                                 </x-tooltip>
                                             </td>
-                                            <td class="relative overflow-visible text-center">
+                                            <td class="p-2 relative overflow-visible text-center">
                                                 <x-tooltip :text="$item?->inspectionDetail?->method->description">
                                                     <span class="text-gray-700 font-medium text-base lg:text-xs">
                                                         {{ $item?->inspectionDetail?->method->code }}
                                                     </span>
                                                 </x-tooltip>
                                             </td>
-                                            <td class="text-center">
-                                                <span class="text-gray-700 font-medium text-base lg:text-xs">
+                                            <td class="p-2 text-center max-w-[220px]">
+                                                <span
+                                                    class="text-gray-700 font-medium text-base lg:text-xs line-clamp-2"
+                                                    title="{{ $item?->description }}">
                                                     {{ $item?->description }}
                                                 </span>
                                             </td>
@@ -210,9 +217,85 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        {{-- Vista móvil: tarjetas (hasta md) --}}
+                        <div class="md:hidden space-y-3 overflow-y-auto max-h-[420px] min-h-0 pr-1">
+                            @foreach ($this->workOrderForm->labors as $key => $item)
+                                <div wire:key="labor-card-{{ $item->id }}"
+                                    class="bg-white border border-gray-200 rounded-lg p-3 shadow-sm">
+                                    <div class="flex items-start justify-between gap-2 mb-3 pb-3 border-b border-gray-100">
+                                        <div class="flex items-center gap-2">
+                                            <span
+                                                class="inline-flex items-center justify-center w-7 h-7 shrink-0 rounded-full bg-primary-600 text-white text-xs font-semibold">
+                                                {{ $item->qty }}
+                                            </span>
+                                            <span class="text-xs font-semibold uppercase text-gray-400">
+                                                Cantidad
+                                            </span>
+                                        </div>
+
+                                        <div class="flex space-x-1 items-center shrink-0">
+                                            <x-wire-mini-button green icon="pencil" sm
+                                                wire:click="editLabor({{ $item->id }})" />
+                                            <x-wire-mini-button blue icon="user-plus"
+                                                wire:click="editWorkerLabor({{ $item->id }})" sm />
+                                            @if ($item->photos_count > 0)
+                                                <x-wire-mini-button yellow icon="camera"
+                                                    wire:click="loadPhotoLabor({{ $item->id }})" sm />
+                                            @else
+                                                <x-wire-mini-button primary icon="camera"
+                                                    wire:click="loadPhotoLabor({{ $item->id }})" sm />
+                                            @endif
+                                            <x-wire-mini-button red
+                                                onclick="confirmAction('¡No podrás revertir esto!','destroyLabor',{{ $item->id }} )"
+                                                icon="trash" sm />
+                                        </div>
+                                    </div>
+
+                                    <dl class="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                                        <div>
+                                            <dt class="text-xs font-semibold uppercase text-gray-400">Ubicación</dt>
+                                            <dd class="text-gray-700 font-medium">
+                                                {{ $item?->inspectionDetail?->location->code ?? '-' }}
+                                            </dd>
+                                        </div>
+                                        <div>
+                                            <dt class="text-xs font-semibold uppercase text-gray-400">Daño</dt>
+                                            <dd class="text-gray-700 font-medium">
+                                                {{ $item?->inspectionDetail?->damage->code ?? '-' }}
+                                            </dd>
+                                        </div>
+                                        <div>
+                                            <dt class="text-xs font-semibold uppercase text-gray-400">Componente</dt>
+                                            <dd class="text-gray-700 font-medium">
+                                                {{ $item?->inspectionDetail?->component->code ?? '-' }}
+                                            </dd>
+                                        </div>
+                                        <div>
+                                            <dt class="text-xs font-semibold uppercase text-gray-400">Método</dt>
+                                            <dd class="text-gray-700 font-medium">
+                                                {{ $item?->inspectionDetail?->method->code ?? '-' }}
+                                            </dd>
+                                        </div>
+                                    </dl>
+
+                                    @if ($item?->description)
+                                        <div class="mt-3 pt-3 border-t border-gray-100">
+                                            <dt class="text-xs font-semibold uppercase text-gray-400 mb-1">
+                                                Descripción
+                                            </dt>
+                                            <dd class="text-gray-700 text-sm">
+                                                {{ $item->description }}
+                                            </dd>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
                     @else
-                        <div class="flex justify-center mt-8">
-                            <button class="w-80" x-on:click="$openModal('workOrderForm.detailWorkOrderModal')">
+                        <div class="flex justify-center mt-8 px-2">
+                            <button class="w-full max-w-80"
+                                x-on:click="$openModal('workOrderForm.detailWorkOrderModal')">
                                 <i class="fa-solid fa-inbox text-6xl text-gray-400"></i>
                                 <div
                                     class="border border-dashed border-gray-400 p-2 mt-4 flex justify-center items-center">
@@ -230,7 +313,7 @@
                 </p>
             </div>
 
-            <x-slot name="footer" class="flex justify-end gap-x-4">
+            <x-slot name="footer" class="flex flex-wrap justify-end gap-x-4 gap-y-2">
                 <x-wire-button flat label="Cancelar" x-on:click="close" {{-- wire:click="resetea" --}} />
                 <template x-if="statusOrder === 'borrador'">
                     <x-wire-button red label="Cerrar" icon="lock-closed"
@@ -268,7 +351,7 @@
 
                 <div class="grid md:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
 
-                    <col-span-1>
+                    <div class="col-span-1">
                         <x-label class="mb-1">
                             Daño
                         </x-label>
@@ -281,7 +364,7 @@
                                 </option>
                             @endforeach
                         </x-select>
-                    </col-span-1>
+                    </div>
 
                     {{-- CAMPOS AUTOCOMPLETADOS (READONLY) --}}
                     <x-wire-input label="Ubicación" placeholder="Auto"
@@ -307,7 +390,7 @@
                     <hr class="flex-1">
                 </header>
 
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
                     <x-wire-number type="number" step="1" wire:model="workOrderForm.detailWorkOrderModal.qty"
                         label="Cantidad" min="0" readonly class="bg-gray-50" />
 

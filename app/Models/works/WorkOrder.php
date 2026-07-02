@@ -114,7 +114,7 @@ class WorkOrder extends Model
         return Attribute::make(
             get: fn() => match ($this->type) {
                 'box' => asset('img/icons/container.png') ?? asset('img/icons/soldador.png'),
-                'mach' => asset('img/icons/machine.png') ?? asset('img/icons/soldador.png'),
+                'machine' => asset('img/icons/machine.png') ?? asset('img/icons/soldador.png'),
                 'others' => asset('img/icons/soldador.png') ?? asset('img/icons/soldador.png'),
                 default => asset('img/icons/soldador.png') ?? asset('img/icons/soldador.png')
             }

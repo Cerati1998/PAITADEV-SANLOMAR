@@ -5,7 +5,7 @@
 
             <x-validation-errors class="mb-4" />
 
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <div class="col-span-1">
                     <x-label>Correlativo</x-label>
                     <x-input class="w-full" disabled
@@ -29,7 +29,7 @@
                         parse-format="YYYY-MM-DD" :max="now()" />
                 </div>
             </div>
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <div class="col-span-1">
                     <x-label>Nº EIR</x-label>
                     <x-wire-select :options="$this->eirs" wire:model.live="workOrderForm.eir_inspection_id"
@@ -49,8 +49,8 @@
                     <x-wire-input class="w-full" wire:model="container" readonly />
                 </div>
             </div>
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                <div class="col-span-2 lg:col-span-1">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                <div class="col-span-1 sm:col-span-2 lg:col-span-1">
                     <x-wire-select label="Proveedor" :options="$this->providers" wire:model="workOrderForm.provider_id"
                         option-label="name" option-value="id" />
                 </div>

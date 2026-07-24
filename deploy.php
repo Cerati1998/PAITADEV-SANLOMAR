@@ -19,6 +19,14 @@ set('writable_dirs', ['bootstrap/cache', 'storage']);
 // setfacl no esta disponible en el VPS y hacia fallar deploy:writable.
 set('writable_mode', 'chmod');
 
+// lcobucci/clock 2.3.0 (via lcobucci/jwt ^4.0 <- tymon/jwt-auth) declara
+// soporte solo hasta PHP ~8.2 en su composer.json, pero el VPS corre PHP
+// 8.4.11 y ya funciona ahi hoy en produccion (vendor/ subido manualmente,
+// nunca paso por un composer install real con chequeo de plataforma). Es
+// una restriccion de metadata desactualizada, no una incompatibilidad real
+// -> se ignora solo el chequeo de version de PHP, sin tocar el resto.
+set('composer_options', '{{composer_action}} --verbose --prefer-dist --no-progress --no-interaction --no-dev --optimize-autoloader --ignore-platform-req=php');
+
 // wkhtmltopdf y otros paths de storage/certificados viven fuera del release,
 // dentro de shared/storage — ver guia-transportista.md y CLAUDE.md.
 

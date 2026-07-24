@@ -1,0 +1,20 @@
+name: Deploy a produccion
+
+on:
+  # Por ahora solo manual, mientras validamos el primer deploy.
+  # Una vez confirmado que todo funciona, se agrega:
+  #   push:
+  #     branches: [featured/sanlomar]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy con Deployer
+        uses: deployphp/action@v1
+        with:
+          private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          dep: deploy

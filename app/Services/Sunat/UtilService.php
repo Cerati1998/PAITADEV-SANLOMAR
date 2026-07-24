@@ -2,7 +2,6 @@
 
 namespace App\Services\Sunat;
 
-use Barryvdh\DomPDF\Facade\Pdf;
 use Greenter\Model\Despatch\Despatch;
 use Greenter\Model\DocumentInterface;
 use Greenter\Model\Sale\Invoice;
@@ -221,78 +220,10 @@ class UtilService
 
     public function getReportPdf(DocumentInterface $document, $hash)
     {
-        // Resolver plantilla Twig
-        $resolver = new DefaultTemplateResolver();
-        $templatePath = $resolver->getTemplate($document);
-
-        // Datos adicionales
-        $extras = [];
-
-        $className = get_class($document);
-        if ($className == Invoice::class) {
-            $formaPago = $document->getFormaPago();
-            $extras[] = [
-                'name' => 'CONDICION',
-                'value' => $formaPago ? $formaPago->getTipo() : 'Efectivo',
-            ];
-        }
-
-        $extras[] = [
-            'name' => 'VENDEDOR',
-            'value' => $this->company->razonSocial,
-        ];
-
-        $user['extras'] = $extras;
-
-        if ($this->company->invoice_header) {
-            $user['header'] = $this->company->invoice_header;
-        }
-
-        if ($this->company->invoice_footer) {
-            $user['footer'] = '<p>' . $this->company->invoice_footer . '</p>';
-        }
-
-        $params = [
-            'system' => [
-                'logo' => $this->company->logo_path
-                    ? Storage::get($this->company->logo_path)
-                    : file_get_contents(public_path('img/no-image.jpg')),
-                'hash' => $hash, // Valor resumen
-            ],
-            'user' => $user,
-        ];
-
-        /**
-         *  Renderizamos el template Twig a HTML usando HtmlReport
-         */
-        $htmlReport = new HtmlReport();
-        $htmlReport->setTemplate($templatePath);
-
-        // Renderizar el HTML usando Twig (greenter usa Twig internamente)
-        $html = $htmlReport->render($document, $params);
-
-        /**
-         *  Generamos el PDF usando DomPDF
-         */
-        $pdf = Pdf::loadHTML($html)
-            ->setPaper('A4', 'portrait')
-            ->setOptions([
-                'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled' => true,
-                'dpi' => 120
-            ]);
-
-        $safeHash = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '_', $hash);
-
-        /**
-         *  Retornamos el PDF generado
-         */
-        return $pdf->stream("Reporte_{$safeHash}.pdf");
-    }
-
-    public function getReportPdfOld(DocumentInterface $document, $hash)
-    {
-        //$htmlReport = new HtmlReport(public_path('custom')); 
+        // wkhtmltopdf via Greenter\Report\PdfReport: unica implementacion soportada.
+        // Un intento previo de migrar a DomPDF (Pdf::loadHTML()->stream()) quedo
+        // descartado porque stream() devuelve un Illuminate\Http\Response, no el
+        // binario del PDF, lo que rompe cada Storage::put($path, $pdf) del proyecto.
         $htmlReport = new HtmlReport();
         $resolver = new DefaultTemplateResolver();
         $htmlReport->setTemplate($resolver->getTemplate($document));

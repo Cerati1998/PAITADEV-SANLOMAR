@@ -17,5 +17,5 @@ jobs:
         uses: deployphp/action@v1
         with:
           private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-          deployer-version: '7.x'
+          deployer-version: '7.5.12'
           dep: deploy

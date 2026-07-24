@@ -6,6 +6,7 @@ use App\Livewire\Forms\EmailForm;
 use App\Livewire\Forms\WhatsappForm;
 use App\Mail\DocumentSent;
 use App\Models\DespatchTransportista;
+use App\Services\Sunat\Transportista\DocumentTransportistaService;
 use App\Services\Sunat\Transportista\UtilTransportistaService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Mail;
@@ -147,6 +148,24 @@ class DespatchTransportistaTable extends DataTableComponent
 
         try {
             $util = new UtilTransportistaService(session('company'));
+
+            // Si no tiene ticket ni XML (fallo al generar la primera vez), lo regeneramos.
+            if (!$despatch->sunat_ticket && empty($despatch->xml_path)) {
+                $document = new DocumentTransportistaService();
+                $despatchGreenter = $document->getDespatch($despatch);
+
+                $regeneratedXml = $util->getXmlSigned($despatchGreenter);
+                $despatch->hash = $util->getHashSign($regeneratedXml);
+                $despatch->xml_path = $directory . 'xml/' . $despatchGreenter->getName() . '.xml';
+                Storage::put($despatch->xml_path, $regeneratedXml);
+
+                $pdf = $util->getReportPdf($despatchGreenter, $despatch->hash);
+                $despatch->pdf_path = $directory . 'cpe/' . $despatchGreenter->getName() . '.pdf';
+                Storage::put($despatch->pdf_path, $pdf);
+
+                $despatch->save();
+            }
+
             $api = $util->getSeeApi();
 
             if ($despatch->sunat_ticket) {
@@ -204,7 +223,7 @@ class DespatchTransportistaTable extends DataTableComponent
 
             $this->showResponse($despatch);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->dispatch('swal', [
                 'icon' => 'error',
                 'title' => 'Error al enviar el comprobante',

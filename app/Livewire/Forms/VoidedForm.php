@@ -34,26 +34,27 @@ class VoidedForm extends Form
 
         $voided = Voided::create($this->all());
         $util = new UtilService(session('company'));
-        $voidedGreenter = (new VoidedService())->getVoided($voided);
-
-        //Directorio
-        $directory = $this->production ? 'sunat/' : 'sunat/beta/';
-
-        //Generar XML
-        $xml = $util->getXmlSigned($voidedGreenter);
-        $voided->hash = $util->getHashSign($xml);
-
-        $voided->xml_path = $directory . 'xml/' . $voidedGreenter->getName() . '.xml';
-        Storage::put($voided->xml_path, $xml);
-
-        //PDF
-        $pdf = $util->getReportPdf($voidedGreenter, $voided->hash);
-        $voided->pdf_path = $directory . 'cpe/' . $voidedGreenter->getName() . '.pdf';
-        Storage::put($voided->pdf_path, $pdf);
-        $voided->save();
 
         //Enviar a SUNAT
         try {
+            $voidedGreenter = (new VoidedService())->getVoided($voided);
+
+            //Directorio
+            $directory = $this->production ? 'sunat/' : 'sunat/beta/';
+
+            //Generar XML
+            $xml = $util->getXmlSigned($voidedGreenter);
+            $voided->hash = $util->getHashSign($xml);
+
+            $voided->xml_path = $directory . 'xml/' . $voidedGreenter->getName() . '.xml';
+            Storage::put($voided->xml_path, $xml);
+
+            //PDF
+            $pdf = $util->getReportPdf($voidedGreenter, $voided->hash);
+            $voided->pdf_path = $directory . 'cpe/' . $voidedGreenter->getName() . '.pdf';
+            Storage::put($voided->pdf_path, $pdf);
+            $voided->save();
+
             $see = $util->getSee();
             $result = $see->sendXmlFile($xml);
 
@@ -99,10 +100,19 @@ class VoidedForm extends Form
 
             return redirect()->route('voideds.index', $voided);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            $voided->sunatResponse = [
+                'success' => false,
+                'error' => [
+                    'code' => null,
+                    'message' => $e->getMessage(),
+                ],
+            ];
+            $voided->save();
+
             session()->flash('swal', [
                 'icon' => 'error',
-                'title' => 'Error al enviar el comprobante',
+                'title' => 'Error al generar el comprobante',
                 'text' => $e->getMessage()
             ]);
 

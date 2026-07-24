@@ -9,6 +9,7 @@ use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Column;
 use App\Models\Despatch;
 use App\Services\Sunat\DespatchService;
+use App\Services\Sunat\DocumentService;
 use App\Services\Sunat\UtilService;
 use Greenter\Report\XmlUtils;
 use Greenter\Xml\Builder\DespatchBuilder;
@@ -160,6 +161,24 @@ class DespatchTable extends DataTableComponent
 
         try {
             $util = new UtilService(session('company'));
+
+            // Si no tiene ticket ni XML (fallo al generar la primera vez), lo regeneramos.
+            if (!$despatch->sunat_ticket && empty($despatch->xml_path)) {
+                $document = new DocumentService();
+                $despatchGreenter = $document->getDespatch($despatch);
+
+                $regeneratedXml = $util->getXmlSigned($despatchGreenter);
+                $despatch->hash = $util->getHashSign($regeneratedXml);
+                $despatch->xml_path = $directory . 'xml/' . $despatchGreenter->getName() . '.xml';
+                Storage::put($despatch->xml_path, $regeneratedXml);
+
+                $pdf = $util->getReportPdf($despatchGreenter, $despatch->hash);
+                $despatch->pdf_path = $directory . 'cpe/' . $despatchGreenter->getName() . '.pdf';
+                Storage::put($despatch->pdf_path, $pdf);
+
+                $despatch->save();
+            }
+
             $api = $util->getSeeApi();
 
             // Si ya tiene ticket guardado, solo consultar el estado
@@ -222,7 +241,7 @@ class DespatchTable extends DataTableComponent
 
             $this->showResponse($despatch);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->dispatch('swal', [
                 'icon' => 'error',
                 'title' => 'Error al enviar el comprobante',

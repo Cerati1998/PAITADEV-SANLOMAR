@@ -292,36 +292,31 @@ class InvoiceForm extends Form
         $invoice = Invoice::create($this->all());
         $fileName = $this->client['numDoc'] . '-' . $this->tipoDoc . '-' . $this->serie . '-' . str_pad($this->correlativo, 6, 0, STR_PAD_LEFT);
 
-        $util = new UtilService(session('company'));
-        $document = new DocumentService();
-        $invoiceGreenter = $document->getInvoice($invoice);
-
-        //Directorio
-        $directory = $this->production ? 'sunat/' : 'sunat/beta/';
-
-        //Generar XML
-        $xml = $util->getXmlSigned($invoiceGreenter);
-        $invoice->hash = $util->getHashSign($xml);
-
-        //Guardar XML
-        /* $invoice->xml_path = $directory . 'xml/' . $invoiceGreenter->getName() . '.xml'; */
-        //$invoice->xml_path = $directory . 'xml/' . Str::uuid() . '.xml';
-        $invoice->xml_path = $directory . 'xml/' . $fileName . '.xml';
-        Storage::put($invoice->xml_path, $xml);
-
-        //PDF
-        $pdf = $util->getReportPdf($invoiceGreenter, $invoice->hash);
-        /* $invoice->pdf_path = $directory . 'cpe/' . $invoiceGreenter->getName() . '.pdf'; */
-        //$invoice->pdf_path = $directory . 'cpe/' . Str::uuid() . '.pdf';
-        $invoice->pdf_path = $directory . 'cpe/' . $fileName . '.pdf';
-        Storage::put($invoice->pdf_path, $pdf);
-
-        //Guardamos cambios
-        $invoice->save();
-
-        //Enviar a SUNAT
         try {
+            $util = new UtilService(session('company'));
+            $document = new DocumentService();
+            $invoiceGreenter = $document->getInvoice($invoice);
 
+            //Directorio
+            $directory = $this->production ? 'sunat/' : 'sunat/beta/';
+
+            //Generar XML
+            $xml = $util->getXmlSigned($invoiceGreenter);
+            $invoice->hash = $util->getHashSign($xml);
+
+            //Guardar XML
+            $invoice->xml_path = $directory . 'xml/' . $fileName . '.xml';
+            Storage::put($invoice->xml_path, $xml);
+
+            //PDF
+            $pdf = $util->getReportPdf($invoiceGreenter, $invoice->hash);
+            $invoice->pdf_path = $directory . 'cpe/' . $fileName . '.pdf';
+            Storage::put($invoice->pdf_path, $pdf);
+
+            //Guardamos cambios
+            $invoice->save();
+
+            //Enviar a SUNAT
             $see = $util->getSee();
             $result = $see->sendXmlFile($xml);
 
@@ -329,8 +324,6 @@ class InvoiceForm extends Form
 
             // Guardamos el CDR
             if ($result->getCdrZip()) {
-                /* $invoice->cdr_path = $directory . 'cdr/R-' . $invoiceGreenter->getName() . '.zip'; */
-                //$invoice->cdr_path = $directory . 'cdr/R-' . Str::uuid() . '.zip';
                 $invoice->cdr_path = $directory . 'cdr/R-' . $fileName . '.zip';
                 Storage::put($invoice->cdr_path, $result->getCdrZip());
             }
@@ -340,11 +333,20 @@ class InvoiceForm extends Form
             $this->showResponse($invoice);
 
             return redirect()->route('vouchers.index');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+
+            $invoice->sunatResponse = [
+                'success' => false,
+                'error' => [
+                    'code' => null,
+                    'message' => $e->getMessage(),
+                ],
+            ];
+            $invoice->save();
 
             session()->flash('swal', [
                 'icon' => 'error',
-                'title' => 'Error al enviar el comprobante',
+                'title' => 'Error al generar el comprobante',
                 'text' => $e->getMessage()
             ]);
 

@@ -7,6 +7,7 @@ use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Column;
 use App\Models\Voided;
 use App\Services\Sunat\UtilService;
+use App\Services\Sunat\VoidedService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
 
@@ -83,8 +84,27 @@ class VoidedTable extends DataTableComponent
         try {
 
             $util = new UtilService(session('company'));
+
+            // Si no tiene XML (fallo al generar la primera vez), lo regeneramos.
+            if (empty($voided->xml_path)) {
+                $voidedGreenter = (new VoidedService())->getVoided($voided);
+
+                $xml = $util->getXmlSigned($voidedGreenter);
+                $voided->hash = $util->getHashSign($xml);
+                $voided->xml_path = $directory . 'xml/' . $voidedGreenter->getName() . '.xml';
+                Storage::put($voided->xml_path, $xml);
+
+                $pdf = $util->getReportPdf($voidedGreenter, $voided->hash);
+                $voided->pdf_path = $directory . 'cpe/' . $voidedGreenter->getName() . '.pdf';
+                Storage::put($voided->pdf_path, $pdf);
+
+                $voided->save();
+            } else {
+                $xml = $voided->xml;
+            }
+
             $see = $util->getSee();
-            $result = $see->sendXmlFile($voided->xml);
+            $result = $see->sendXmlFile($xml);
 
             if (!$result->isSuccess()) {
 
@@ -129,7 +149,7 @@ class VoidedTable extends DataTableComponent
             $this->showResponse($voided);
 
             return;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->dispatch('swal', [
                 'icon' => 'error',
                 'title' => 'Error al enviar el comprobante',

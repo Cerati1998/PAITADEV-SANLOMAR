@@ -250,24 +250,25 @@ class DespatchForm extends Form
 
         $util = new UtilService(session('company'));
         $document = new DocumentService();
-        $despatchGreenter = $document->getDespatch($despatch);
-
-        $directory = $this->production ? 'sunat/' : 'sunat/beta/';
-
-        // Generar y guardar XML
-        $xml = $util->getXmlSigned($despatchGreenter);
-        $despatch->hash = $util->getHashSign($xml);
-        $despatch->xml_path = $directory . 'xml/' . $despatchGreenter->getName() . '.xml';
-        Storage::put($despatch->xml_path, $xml);
-
-        // Guardar PDF
-        $pdf = $util->getReportPdf($despatchGreenter, $despatch->hash);
-        $despatch->pdf_path = $directory . 'cpe/' . $despatchGreenter->getName() . '.pdf';
-        Storage::put($despatch->pdf_path, $pdf);
-        $despatch->save();
 
         // Enviar a SUNAT
         try {
+            $despatchGreenter = $document->getDespatch($despatch);
+
+            $directory = $this->production ? 'sunat/' : 'sunat/beta/';
+
+            // Generar y guardar XML
+            $xml = $util->getXmlSigned($despatchGreenter);
+            $despatch->hash = $util->getHashSign($xml);
+            $despatch->xml_path = $directory . 'xml/' . $despatchGreenter->getName() . '.xml';
+            Storage::put($despatch->xml_path, $xml);
+
+            // Guardar PDF
+            $pdf = $util->getReportPdf($despatchGreenter, $despatch->hash);
+            $despatch->pdf_path = $directory . 'cpe/' . $despatchGreenter->getName() . '.pdf';
+            Storage::put($despatch->pdf_path, $pdf);
+            $despatch->save();
+
             $api = $util->getSeeApi();
             $result = $api->sendXml($despatchGreenter->getName(), $xml);
 
@@ -326,10 +327,19 @@ class DespatchForm extends Form
             $this->showResponse($despatch);
             return redirect()->route('despatchs.index');
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            $despatch->sunatResponse = [
+                'success' => false,
+                'error' => [
+                    'code' => null,
+                    'message' => $e->getMessage(),
+                ],
+            ];
+            $despatch->save();
+
             session()->flash('swal', [
                 'icon' => 'error',
-                'title' => 'Error al enviar el comprobante',
+                'title' => 'Error al generar el comprobante',
                 'text' => $e->getMessage(),
             ]);
             return redirect()->route('despatchs.index');

@@ -104,31 +104,31 @@ class NoteForm extends Form
         $this->getData();
 
         $invoice = Invoice::create($this->all());
-        
+
         $util = new UtilService(session('company'));
         $document = new DocumentService();
 
-        $invoiceGreenter = $document->getNote($invoice);
-
-        //Directorio
-        $directory = $this->production ? 'sunat/' : 'sunat/beta/';
-
-        //Generar XML
-        $xml = $util->getXmlSigned($invoiceGreenter);
-        $invoice->hash = $util->getHashSign($xml);
-
-        //Guardar XML
-        $invoice->xml_path = $directory . 'xml/' . $invoiceGreenter->getName() . '.xml';
-        Storage::put($invoice->xml_path, $xml);
-
-        //PDF
-        $pdf = $util->getReportPdf($invoiceGreenter, $invoice->hash);
-        $invoice->pdf_path = $directory . 'cpe/' . $invoiceGreenter->getName() . '.pdf';
-        Storage::put($invoice->pdf_path, $pdf);
-        $invoice->save();
-
         //Enviar a SUNAT
         try {
+
+            $invoiceGreenter = $document->getNote($invoice);
+
+            //Directorio
+            $directory = $this->production ? 'sunat/' : 'sunat/beta/';
+
+            //Generar XML
+            $xml = $util->getXmlSigned($invoiceGreenter);
+            $invoice->hash = $util->getHashSign($xml);
+
+            //Guardar XML
+            $invoice->xml_path = $directory . 'xml/' . $invoiceGreenter->getName() . '.xml';
+            Storage::put($invoice->xml_path, $xml);
+
+            //PDF
+            $pdf = $util->getReportPdf($invoiceGreenter, $invoice->hash);
+            $invoice->pdf_path = $directory . 'cpe/' . $invoiceGreenter->getName() . '.pdf';
+            Storage::put($invoice->pdf_path, $pdf);
+            $invoice->save();
 
             $see = $util->getSee();
             $result = $see->sendXmlFile($xml);
@@ -154,12 +154,21 @@ class NoteForm extends Form
             $this->showResponse($invoice);
 
             return redirect()->route('vouchers.index');
-            
-        } catch (\Exception $e) {
-            
+
+        } catch (\Throwable $e) {
+
+            $invoice->sunatResponse = [
+                'success' => false,
+                'error' => [
+                    'code' => null,
+                    'message' => $e->getMessage(),
+                ],
+            ];
+            $invoice->save();
+
             session()->flash('swal', [
                 'icon' => 'error',
-                'title' => 'Error al enviar el comprobante',
+                'title' => 'Error al generar el comprobante',
                 'text' => $e->getMessage()
             ]);
 

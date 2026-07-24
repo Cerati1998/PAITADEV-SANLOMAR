@@ -9,6 +9,7 @@ use App\Mail\DocumentSent;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Column;
 use App\Models\Invoice;
+use App\Services\Sunat\DocumentService;
 use App\Services\Sunat\UtilService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Mail;
@@ -182,23 +183,35 @@ class VoucherTable extends DataTableComponent
 
     public function sendXml(Invoice $invoice)
     {
-        if (empty($invoice->xml_path)) {
-            $this->dispatch('swal', [
-                'icon' => 'error',
-                'title' => 'Error al enviar el comprobante',
-                'text' => 'Este comprobante no tiene un XML generado, no se puede reenviar.'
-            ]);
-            return;
-        }
-
         $directory = $invoice->production ? 'sunat/' : 'sunat/beta/';
-        /* $name = session('company')->ruc."-{$invoice->tipoDoc}-". $invoice->serie.'-'. $invoice->correlativo; */
 
         try {
 
             $util = new UtilService(session('company'));
+
+            // Si no tiene XML (fallo al generar la primera vez), lo regeneramos.
+            if (empty($invoice->xml_path)) {
+                $document = new DocumentService();
+                $invoiceGreenter = in_array($invoice->tipoDoc, ['07', '08'])
+                    ? $document->getNote($invoice)
+                    : $document->getInvoice($invoice);
+
+                $xml = $util->getXmlSigned($invoiceGreenter);
+                $invoice->hash = $util->getHashSign($xml);
+                $invoice->xml_path = $directory . 'xml/' . $invoiceGreenter->getName() . '.xml';
+                Storage::put($invoice->xml_path, $xml);
+
+                $pdf = $util->getReportPdf($invoiceGreenter, $invoice->hash);
+                $invoice->pdf_path = $directory . 'cpe/' . $invoiceGreenter->getName() . '.pdf';
+                Storage::put($invoice->pdf_path, $pdf);
+
+                $invoice->save();
+            } else {
+                $xml = $invoice->xml;
+            }
+
             $see = $util->getSee();
-            $result = $see->sendXmlFile($invoice->xml);
+            $result = $see->sendXmlFile($xml);
 
             $invoice->sunatResponse = $util->getResponse($result);
 

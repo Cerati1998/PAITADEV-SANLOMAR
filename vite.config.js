@@ -14,6 +14,7 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
+                'resources/css/sweetalert2.css',
                 'resources/js/app.js',
             ],
             refresh: true,

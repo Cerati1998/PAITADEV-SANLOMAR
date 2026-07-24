@@ -69,6 +69,11 @@ class DespatchForm extends Form
             'rznSocial' => '',
             'nroMtc' => '',
         ],
+        'tercero' => [
+            'tipoDoc' => '6',
+            'numDoc' => '',
+            'rznSocial' => '',
+        ],
     ];
 
     public $details = [];
@@ -112,6 +117,12 @@ class DespatchForm extends Form
             "envio.partida.ubigueo" => ["required", "string"],
             "envio.partida.direccion" => ["required", "string"],
             "envio.partida.codLocal" => ["required_if:envio.codTraslado,04,min:3"],
+
+            //Proveedor (obligatorio para motivo de traslado 02 = Compra)
+            "envio.tercero" => ["required_if:envio.codTraslado,02", "array"],
+            "envio.tercero.tipoDoc" => ["required_if:envio.codTraslado,02", "exists:identities,id"],
+            "envio.tercero.numDoc" => ["required_if:envio.codTraslado,02", "alpha_num"],
+            "envio.tercero.rznSocial" => ["required_if:envio.codTraslado,02", "string"],
 
             //Transportista
             "envio.transportista" => ["required_if:envio.modTraslado,01", "array"],
@@ -209,6 +220,9 @@ class DespatchForm extends Form
             'envio.partida.ubigueo' => 'ubigeo de partida',
             'envio.partida.direccion' => 'dirección de partida',
             'envio.partida.codLocal' => 'código de establecimiento de partida',
+            'envio.tercero.tipoDoc' => 'tipo de documento del proveedor',
+            'envio.tercero.numDoc' => 'número de documento del proveedor',
+            'envio.tercero.rznSocial' => 'razón social del proveedor',
             'envio.transportista.tipoDoc' => 'tipo de documento del transportista',
             'envio.transportista.numDoc' => 'número de documento del transportista',
             'envio.transportista.rznSocial' => 'razón social del transportista',

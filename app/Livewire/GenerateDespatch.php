@@ -6,6 +6,7 @@ use App\Livewire\Forms\DespatchForm;
 use App\Models\Client;
 use App\Models\Despatch;
 use App\Models\Product;
+use App\Models\Provider;
 use App\Models\ReasonTransfer;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
@@ -19,6 +20,7 @@ class GenerateDespatch extends Component
 
     public $client_id;
     public $product_id;
+    public $provider_id;
 
     public $identities;
     public $reason_transfers;
@@ -53,6 +55,10 @@ class GenerateDespatch extends Component
                     }
                 } else {
                     $validator->errors()->add('client_id', 'El campo cliente es obligatorio.');
+                }
+
+                if ($this->despatch->envio['codTraslado'] === '02' && !$this->provider_id) {
+                    $validator->errors()->add('provider_id', 'El campo proveedor es obligatorio para el motivo de traslado Compra.');
                 }
 
             });
@@ -98,6 +104,10 @@ class GenerateDespatch extends Component
             $this->clientAdded($value);
         }
 
+        if ($property === 'provider_id') {
+            $this->providerAdded($value);
+        }
+
         if ($property === 'product_id') {
 
             $product = Product::find($value);
@@ -132,6 +142,15 @@ class GenerateDespatch extends Component
                 $this->despatch->envio['llegada']['ruc'] = null;
                 $this->despatch->envio['llegada']['codLocal'] = null;
             }
+
+            if ($value !== '02') {
+                $this->provider_id = null;
+                $this->despatch->envio['tercero'] = [
+                    'tipoDoc' => '6',
+                    'numDoc' => '',
+                    'rznSocial' => '',
+                ];
+            }
         }
     }
 
@@ -161,6 +180,30 @@ class GenerateDespatch extends Component
                 'address' => [
                     'direccion' => '',
                 ]
+            ];
+
+        }
+    }
+
+    public function providerAdded($providerId)
+    {
+        $this->provider_id = $providerId;
+        $provider = Provider::find($providerId);
+
+        if ($provider) {
+
+            $this->despatch->envio['tercero'] = [
+                'tipoDoc' => $provider->tipoDoc,
+                'numDoc' => $provider->numDoc,
+                'rznSocial' => $provider->rznSocial,
+            ];
+
+        } else {
+
+            $this->despatch->envio['tercero'] = [
+                'tipoDoc' => '6',
+                'numDoc' => '',
+                'rznSocial' => '',
             ];
 
         }

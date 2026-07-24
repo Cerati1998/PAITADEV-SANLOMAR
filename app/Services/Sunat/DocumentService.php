@@ -156,6 +156,8 @@ class DocumentService
             ->setFechaEmision(new DateTime($data['fechaEmision'] ?? null))
             ->setCompany($this->getCompany($data['company']))
             ->setDestinatario($this->getClient($data['destinatario']))
+            //Datos del Proveedor - obligatorio cuando el motivo de traslado es 02 (Compra)
+            ->setTercero(!empty($data['envio']['tercero']['numDoc']) ? $this->getClient($data['envio']['tercero']) : null)
             ->setEnvio($this->getEnvio($data['envio']))
             ->setDetails($this->getDespatchDetails($data['details']));
     }

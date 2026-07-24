@@ -113,6 +113,20 @@
                     </div>
                 </template>
 
+                {{-- Proveedor (obligatorio cuando el motivo de traslado es Compra) --}}
+                <template x-if="despatch.envio.codTraslado == '02'">
+                    <div class="col-span-2">
+                        <x-label>
+                            Proveedor
+                        </x-label>
+
+                        <x-wire-select class="!text-sm"
+                            placeholder="Buscar proveedor por numero de documento o razón social"
+                            :async-data="route('provider.search')" option-label="rznSocial" option-value="id"
+                            wire:model.live="provider_id" />
+                    </div>
+                </template>
+
                 {{-- Modalida de traslado --}}
                 <div class="col-span-1">
                     <x-label>

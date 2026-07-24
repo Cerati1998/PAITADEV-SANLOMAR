@@ -100,13 +100,14 @@ class ProviderController extends Controller
             $request->search,
             fn(Builder $query) =>
             $query->where('rznSocial', 'like', "%{$request->search}%")
-            ->orWhere('numDoc','like',"%$request->search}")
+            ->orWhere('numDoc', 'like', "%{$request->search}%")
         )
         ->when(
             $request->exists('selected'),
             fn(Builder $query) => $query->whereIn('id', $request->input('selected', [])),
             fn(Builder $query) => $query->limit(20)
         )
+        ->where('company_id', session('company')->id)
         ->orderBy('id')
         ->get();
     }

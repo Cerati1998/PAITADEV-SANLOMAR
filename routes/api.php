@@ -25,6 +25,7 @@ Route::post('refresh', [AuthController::class, 'refresh']);
 Route::post('me', [AuthController::class, 'me']);
 
 Route::apiResource('companies', CompanyController::class)
+    ->names('api.companies')
     ->middleware('auth:jwt');
 
 Route::post('companies/{company}/token', [CompanyController::class, 'token'])

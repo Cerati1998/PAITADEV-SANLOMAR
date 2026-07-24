@@ -212,11 +212,21 @@ Route::middleware([
 
         //endpoint para reportes
         Route::prefix('/')->group(function () {
-            Route::get('reports', [ReportController::class, 'index'])->name('reports.index')->middleware('can:reports');
-            Route::post('dispatches', [ReportController::class, 'exportDispatches'])->name('reports.dispatches');
-            Route::post('leaktests', [ReportController::class, 'exportDispatches'])->name('reports.leaktests');
-            Route::post('invoices', [ReportController::class, 'exportDispatches'])->name('reports.invoices');
-            Route::post('inspections', [ReportController::class, 'exportInspections'])->name('reports.inspections');
+            Route::get('reports', [ReportController::class, 'index'])
+                ->name('reports.index')
+                ->middleware('can:reports');
+            Route::post('dispatches', [ReportController::class, 'exportDispatches'])
+                ->name('reports.dispatches')
+                ->middleware('can:reports');
+            Route::post('leaktests', [ReportController::class, 'exportDispatches'])
+                ->name('reports.leaktests')
+                ->middleware('can:reports');
+            Route::post('invoices', [ReportController::class, 'exportInvoices'])
+                ->name('reports.invoices')
+                ->middleware('can:cash.report');
+            Route::post('inspections', [ReportController::class, 'exportInspections'])
+                ->name('reports.inspections')
+                ->middleware('can:reports');
             Route::post('work-orders', [ReportController::class, 'exportWorkOrders'])->name('reports.work-orders');
         });
 

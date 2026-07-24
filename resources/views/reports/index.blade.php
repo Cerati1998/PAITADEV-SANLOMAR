@@ -34,6 +34,15 @@
                                 <x-wire-select :async-data="route('client.search')" option-value="id" option-label="rznSocial"
                                     label="Cliente" name="client" x-model="client" />
                             </div>
+
+                            <div class="col-span-2 sm:col-span-1">
+                                <x-wire-select label="Tipo Documento" name="tipoDoc" x-model="tipoDoc"
+                                    placeholder="Selecciona un tipo de documento">
+                                    @foreach ($documents ?? [] as $document)
+                                        <x-wire-select.option :label="$document->description" :value="$document->id" />
+                                    @endforeach
+                                </x-wire-select>
+                            </div>
                         </div>
 
                         <button type="reset" x-on:click="cleanSelects"
@@ -57,11 +66,13 @@
                                         x-on:click.prevent="submitForm('{{ route('reports.leaktests') }}')" />
                                 </div>
 
-                                <div class="flex items-center justify-between gap-4">
-                                    <dt class="text-base font-normal text-gray-500 dark:text-gray-400">Comprobantes</dt>
-                                    <x-wire-button label="Exportar" red sm icon="arrow-down-on-square"
-                                        x-on:click.prevent="submitForm('{{ route('reports.invoices') }}')" />
-                                </div>
+                                @can('cash.report')
+                                    <div class="flex items-center justify-between gap-4">
+                                        <dt class="text-base font-normal text-gray-500 dark:text-gray-400">Comprobantes</dt>
+                                        <x-wire-button label="Exportar" red sm icon="arrow-down-on-square"
+                                            x-on:click.prevent="submitForm('{{ route('reports.invoices') }}')" />
+                                    </div>
+                                @endcan
 
                                 <div class="flex items-center justify-between gap-4">
                                     <dt class="text-base font-normal text-gray-500 dark:text-gray-400">Inspecciones</dt>
@@ -113,6 +124,7 @@
                     until: null,
                     line: null,
                     client: null,
+                    tipoDoc: null,
                     actionUrl: '',
 
                     cleanSelects() {
@@ -120,6 +132,7 @@
                         this.until = null;
                         this.line = null;
                         this.client = null;
+                        this.tipoDoc = null;
                     },
 
                     submitForm(url) {

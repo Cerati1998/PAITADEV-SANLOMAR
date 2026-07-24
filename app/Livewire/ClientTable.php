@@ -27,7 +27,7 @@ class ClientTable extends DataTableComponent
     {
         return [
             Column::make("Id", "id")
-                ->sortable(),
+                ->deselected(),
 
             Column::make("Tipo Doc", "identity.description")
                 ->sortable(),

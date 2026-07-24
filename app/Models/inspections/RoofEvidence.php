@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class RoofEvidence extends Model
 {
+    // La migracion crea la tabla en singular ('roof_evidence'); Eloquent
+    // por convencion buscaria 'roof_evidences' sin este override.
+    protected $table = 'roof_evidence';
+
     protected $fillable = [
         'eir_inspection_id',
         'qty_welded_patch',

@@ -4,10 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Exports\DispatchExport;
 use App\Exports\InspectionExport;
+use App\Exports\InvoiceExport;
 use App\Exports\WorkOrderExport;
+use App\Models\Client;
 use App\Models\ContainerOperationalTrace;
 use App\Models\Dispatches\Dispatch;
+use App\Models\Document;
 use App\Models\inspections\EirInspection;
+use App\Models\Invoice;
+use App\Models\Operation;
 use App\Models\ShippingLine;
 use App\Models\works\WorkOrder;
 use Carbon\Carbon;
@@ -19,7 +24,7 @@ class ReportController extends Controller
 {
     public function index()
     {
-        return view('reports.index');
+        return view('reports.index', ['documents' => Document::orderBy('id')->get()]);
     }
 
     public function exportDispatches(Request $request)
@@ -147,6 +152,78 @@ class ReportController extends Controller
         ];
 
         return Excel::download(new DispatchExport($data), $fileName);
+    }
+
+    public function exportInvoices(Request $request)
+    {
+        // Validar los filtros
+        $request->validate([
+            'since' => 'nullable|date',
+            'until' => 'nullable|date|after_or_equal:since',
+            'client' => 'nullable|exists:clients,id',
+            'tipoDoc' => 'nullable|exists:documents,id',
+        ]);
+
+        // Scoping multi-tenant obligatorio ANTES de cualquier filtro opcional
+        $invoices = Invoice::query()
+            ->where('company_id', session('company')->id)
+            ->where('branch_id', session('branch')->id)
+            ->when($request->filled('since'), function ($query) use ($request) {
+                $query->whereDate('fechaEmision', '>=', $request->since);
+            })
+            ->when($request->filled('until'), function ($query) use ($request) {
+                $query->whereDate('fechaEmision', '<=', $request->until);
+            })
+            ->when($request->filled('tipoDoc'), function ($query) use ($request) {
+                $query->where('tipoDoc', $request->tipoDoc);
+            })
+            ->when($request->filled('client'), function ($query) use ($request) {
+                $numDoc = Client::find($request->client)?->numDoc;
+                $query->where('client->numDoc', $numDoc);
+            })
+            ->with('document')
+            ->orderBy('fechaEmision')
+            ->get();
+
+        if ($invoices->isEmpty()) {
+            session()->flash('swal', [
+                'icon' => 'error',
+                'title' => 'Error!',
+                'text' => 'No se ha encontrado data de Comprobantes con los filtros aplicados',
+            ]);
+
+            return back();
+        }
+
+        $operations = Operation::all()->keyBy('id');
+
+        // Transformar datos en el orden de columnas de InvoiceExport::headings()
+        $datos = $invoices->map(function (Invoice $invoice) use ($operations) {
+            return [
+                'fecha_emision' => $invoice->fechaEmision->format('d/m/Y'),
+                'tipo_documento' => $invoice->document?->description ?? '-',
+                'serie_correlativo' => $invoice->serie.'-'.$invoice->correlativo,
+                'cliente' => ($invoice->client['numDoc'] ?? 'S/D').' - '.($invoice->client['rznSocial'] ?? 'S/D'),
+                'moneda' => $invoice->tipoMoneda,
+                'tipo_cambio' => $invoice->tipoCambio,
+                'tipo_operacion' => $operations->get($invoice->tipoOperacion)?->description ?? ($invoice->tipoOperacion ?? '-'),
+                'detraccion' => $invoice->detraccion['mount'] ?? 0,
+                'subtotal' => $invoice->subTotal,
+                'igv' => $invoice->mtoIGV,
+                'total' => $invoice->mtoImpVenta,
+                'estado_sunat' => InvoiceExport::estadoSunat($invoice->sunatResponse, (bool) $invoice->voided),
+            ];
+        })->values()->toArray();
+
+        // Generar nombre de archivo
+        $fileName = 'Comprobantes';
+        if ($request->filled('since') && $request->filled('until')) {
+            $fileName .= '_'.Carbon::parse($request->since)->format('dmY').
+                '-'.Carbon::parse($request->until)->format('dmY');
+        }
+        $fileName .= '.xlsx';
+
+        return Excel::download(new InvoiceExport($datos), $fileName);
     }
 
     public function exportInspections(Request $request)

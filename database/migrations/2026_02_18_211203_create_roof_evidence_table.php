@@ -10,7 +10,7 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('roof_evidences', function (Blueprint $table) {
+        Schema::create('roof_evidence', function (Blueprint $table) {
             $table->id();
             $table->foreignId('eir_inspection_id')->nullable()
                 ->constrained('eir_inspections')->onDelete('no action')
@@ -36,6 +36,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('roof_evidences');
+        Schema::dropIfExists('roof_evidence');
     }
 };

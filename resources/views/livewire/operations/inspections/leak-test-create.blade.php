@@ -54,8 +54,7 @@
                         :options="$this->reefer_machines" option-label="code" option-value="id" wire:model.live="containerData.machine" />
                 </div>
                 <x-wire-input label="Año" wire:model="containerData.year" />
-                <x-wire-number :min="0" :max="12" label="Duración(minutos)" wire:model="leaktest.hours"
-                    readonly />
+                <x-wire-number :min="0" :max="12" label="Duración(minutos)" wire:model="leaktest.hours" />
                 <div class="col-span-2">
                     <x-wire-select label="Estado" wire:model="leaktest.status">
                         <x-wire-select.option value="">Pendiente</x-wire-select.option>

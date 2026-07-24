@@ -676,7 +676,7 @@
 
                 <x-slot name="footer" class="flex justify-end gap-x-4">
                     <div class="flex gap-x-4">
-                        <x-wire-button flat label="Cancel" x-on:click="close" wire:click="cancelDetailModal" />
+                        <x-wire-button flat label="Cancel" x-on:click="close" {{-- wire:click="cancelDetailModal" --}} />
 
                         <x-wire-button label="Guardar" type="submit" spinner="addDetail"
                             wire:loading.attr="disabled" />

@@ -14,8 +14,8 @@ class ExternalDispatchApiService
     public function __construct()
     {
         $this->client = new Client(['timeout' => 30]);
-        $this->baseUrl = env('EXTERNAL_DISPATCH_API_URL'); // Solo la base URL
-        $this->bearerToken = env('EXTERNAL_DISPATCH_API_TOKEN');
+        $this->baseUrl = config('services.external_dispatch.url'); // Solo la base URL
+        $this->bearerToken = config('services.external_dispatch.token');
     }
 
     /**

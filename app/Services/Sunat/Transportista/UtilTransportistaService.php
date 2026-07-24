@@ -74,7 +74,7 @@ class UtilTransportistaService extends UtilService
             'page-height' => '29.7cm',
         ]);
 
-        $report->setBinPath(env('WKHTMLTOPDF_BINARIES'));
+        $report->setBinPath(config('services.wkhtmltopdf.binaries'));
 
         $extras = [
             [

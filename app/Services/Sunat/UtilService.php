@@ -238,7 +238,7 @@ class UtilService
             'page-height' => '29.7cm',
         ]);
 
-        $report->setBinPath(env('WKHTMLTOPDF_BINARIES')); // Ruta relativa o absoluta de wkhtmltopdf
+        $report->setBinPath(config('services.wkhtmltopdf.binaries')); // Ruta relativa o absoluta de wkhtmltopdf
 
         $extras = [];
 

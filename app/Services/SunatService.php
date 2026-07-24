@@ -15,24 +15,24 @@ class SunatService
 
     public function consultarRUC(string $ruc)
     {
-        $url = env('API_RUC') . "?numero={$ruc}" ?? "https://api.decolecta.com/v1/sunat/ruc/full?numero={$ruc}";
-        return $this->request($url);
+        $base = config('services.decolecta.api_ruc') ?: 'https://api.decolecta.com/v1/sunat/ruc/full';
+        return $this->request("{$base}?numero={$ruc}");
     }
     public function consultarDNI(string $dni)
     {
-        $url = env('API_DNI') . "?numero={$dni}" ?? "https://api.decolecta.com/v1/reniec/dni={$dni}";
-        return $this->request($url);
+        $base = config('services.decolecta.api_dni') ?: 'https://api.decolecta.com/v1/reniec/dni';
+        return $this->request("{$base}?numero={$dni}");
     }
     public function consultarTC(string $fecha)
     {
-        $url = env('API_TC') . "?date={$fecha}" ?? "https://api.apis.net.pe/v1/tipo-cambio-sunat?fecha={$fecha}";
-        return $this->request($url);
+        $base = config('services.decolecta.api_tc') ?: 'https://api.decolecta.com/v1/tipo-cambio/sunat';
+        return $this->request("{$base}?date={$fecha}");
     }
 
     private function request(string $url): array
     {
         try {
-            $token = env('API_TOKEN');
+            $token = config('services.decolecta.api_token');
             $response = $this->client->get($url, [
                 'headers' => [
                     'Authorization' => "Bearer {$token}",

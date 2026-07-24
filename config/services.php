@@ -35,4 +35,20 @@ return [
         ],
     ],
 
+    'decolecta' => [
+        'api_ruc' => env('API_RUC'),
+        'api_dni' => env('API_DNI'),
+        'api_tc' => env('API_TC'),
+        'api_token' => env('API_TOKEN'),
+    ],
+
+    'wkhtmltopdf' => [
+        'binaries' => env('WKHTMLTOPDF_BINARIES'),
+    ],
+
+    'external_dispatch' => [
+        'url' => env('EXTERNAL_DISPATCH_API_URL'),
+        'token' => env('EXTERNAL_DISPATCH_API_TOKEN'),
+    ],
+
 ];

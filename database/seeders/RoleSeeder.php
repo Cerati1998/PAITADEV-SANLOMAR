@@ -96,6 +96,8 @@ class RoleSeeder extends Seeder
         Permission::create(['name' => 'vouchers.note.create'])->assignRole([$role1, $role2, $role8, $role9]);
         Permission::create(['name' => 'despatches.index'])->assignRole([$role1, $role2, $role3, $role4, $role8, $role9]);
         Permission::create(['name' => 'despatches.create'])->assignRole([$role1, $role2, $role3, $role4, $role8, $role9]);
+        Permission::create(['name' => 'despatch-transportistas.index'])->assignRole([$role1, $role2, $role3, $role4, $role8, $role9]);
+        Permission::create(['name' => 'despatch-transportistas.create'])->assignRole([$role1, $role2, $role3, $role4, $role8, $role9]);
         Permission::create(['name' => 'manage_work.eir'])->assignRole([$role1, $role2, $role3, $role4, $role5]);
         Permission::create(['name' => 'manage_work.index'])->assignRole([$role1, $role2, $role3, $role4, $role5, $role6]);
         Permission::create(['name' => 'manage_work.edit'])->assignRole([$role1, $role2, $role3, $role4, $role5, $role6]);

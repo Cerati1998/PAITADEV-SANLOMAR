@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\DespatchController;
+use App\Http\Controllers\Api\DespatchTransportistaController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\NoteController;
 use App\Http\Controllers\Api\PhoneCodeController;
@@ -65,6 +66,19 @@ Route::post('despatch/xml', [DespatchController::class, 'xml'])
 Route::post('despatch/pdf', [DespatchController::class, 'pdf'])
     ->middleware('auth:sanctum')
     ->name('api.despatch.pdf');
+
+// Despatch Transportista
+Route::post('despatch-transportista/send', [DespatchTransportistaController::class, 'send'])
+    ->middleware('auth:sanctum')
+    ->name('api.despatch-transportista.send');
+
+Route::post('despatch-transportista/xml', [DespatchTransportistaController::class, 'xml'])
+    ->middleware('auth:sanctum')
+    ->name('api.despatch-transportista.xml');
+
+Route::post('despatch-transportista/pdf', [DespatchTransportistaController::class, 'pdf'])
+    ->middleware('auth:sanctum')
+    ->name('api.despatch-transportista.pdf');
 
 Route::post('summary/send', [SummaryController::class, 'send'])
     ->middleware('auth:sanctum')

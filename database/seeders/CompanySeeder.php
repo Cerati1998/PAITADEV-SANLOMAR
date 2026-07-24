@@ -68,6 +68,11 @@ class CompanySeeder extends Seeder
             'correlativo' => '0001',
             'company_id' => $company->id,
         ]);
+        $branch->documents()->attach("31", [
+            'serie' => 'V001',
+            'correlativo' => '0001',
+            'company_id' => $company->id,
+        ]);
         //añado un documento y serie para orden de trabajo
         $branch->documents()->attach("11", [
             'serie' => 'SLOT',

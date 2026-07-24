@@ -7,6 +7,7 @@
             '07' => 'Nota de crédito',
             '08' => 'Nota de débito',
             '09' => 'Guía de remisión',
+            '31' => 'Guía de remisión transportista',
             default => 'Otro',
         } }}
         <x-wire-badge lg primary :label="$document->serie . '-' . $document->correlativo" />

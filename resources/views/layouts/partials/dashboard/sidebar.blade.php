@@ -147,23 +147,25 @@
         [
             'name' => 'Guías',
             'icon' => 'fa-solid fa-truck',
-            'route' => route('despatchs.index'),
-            'active' => request()->routeIs('despatchs*'),
-            'can' => 'despatches.index',
-            /* 'submenu' => [
+            'active' => request()->routeIs(['despatchs*', 'despatch-transportistas*']),
+            'can' => ['despatches.index', 'despatch-transportistas.index'],
+
+            'submenu' => [
                 [
-                    'name' => 'Lista de guías',
+                    'name' => 'Guía Remisión',
                     'icon' => 'fa-regular fa-circle',
                     'route' => route('despatchs.index'),
-                    'active' => request()->routeIs('despatchs.index'),
-                    ],
-                    [
-                        'name' => 'Nueva guía',
-                        'icon' => 'fa-regular fa-circle',
-                        'route' => route('despatchs.create'),
-                        'active' => request()->routeIs('despatchs.create'),
-                        ],
-                        ] */
+                    'active' => request()->routeIs('despatchs*'),
+                    'can' => 'despatches.index',
+                ],
+                [
+                    'name' => 'Guía Transportista',
+                    'icon' => 'fa-regular fa-circle',
+                    'route' => route('despatch-transportistas.index'),
+                    'active' => request()->routeIs('despatch-transportistas*'),
+                    'can' => 'despatch-transportistas.index',
+                ],
+            ],
         ],
         [
             'header' => 'Gestor de Costos',

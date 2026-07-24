@@ -50,6 +50,7 @@ class ManageVouchers extends Component
                 //Puede empezar con F o B
                 Rule::when(in_array($this->newDocument['document'], ['07', '08']), ["regex:/^(F|B)/"]),
                 Rule::when($this->newDocument['document'] == '09', "regex:/^T/"),
+                Rule::when($this->newDocument['document'] == '31', "regex:/^V/"),
                 Rule::unique('branch_company_document', 'serie')
                     ->where(function ($query) {
                         return $query->where('company_id', session('company')->id);

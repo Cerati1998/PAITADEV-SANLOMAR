@@ -12,6 +12,7 @@ use App\Http\Controllers\CustomBrokerController;
 use App\Http\Controllers\DamageController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DespatchController;
+use App\Http\Controllers\DespatchTransportistaController;
 use App\Http\Controllers\DevolutionController;
 use App\Http\Controllers\DischargueController;
 use App\Http\Controllers\LocationController;
@@ -66,6 +67,9 @@ Route::middleware([
 
         Route::get('despatchs', [DespatchController::class, 'index'])->name('despatchs.index')->middleware('can:despatches.index');
         Route::get('despatchs/create', [DespatchController::class, 'create'])->name('despatchs.create')->middleware('can:despatches.create');
+
+        Route::get('despatch-transportistas', [DespatchTransportistaController::class, 'index'])->name('despatch-transportistas.index')->middleware('can:despatch-transportistas.index');
+        Route::get('despatch-transportistas/create', [DespatchTransportistaController::class, 'create'])->name('despatch-transportistas.create')->middleware('can:despatch-transportistas.create');
 
         Route::resource('clients', ClientController::class)->middleware('can:clients');
         Route::resource('providers', ProviderController::class)->middleware('can:providers');

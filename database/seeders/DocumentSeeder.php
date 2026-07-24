@@ -66,6 +66,10 @@ class DocumentSeeder extends Seeder
                 'id' => '16',
                 'description' => 'REPORTE DE LEAK TEST',
             ],
+            [
+                'id' => '31',
+                'description' => 'Guía de Remisión Transportista',
+            ],
         ];
 
         foreach ($documents as $document) {

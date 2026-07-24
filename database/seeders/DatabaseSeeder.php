@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
 
             DocumentSeeder::class,
+            RelatedDocumentSeeder::class,
             OperationSeeder::class,
             IntegrationSeeder::class,
 

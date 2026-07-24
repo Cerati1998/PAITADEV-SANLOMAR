@@ -182,6 +182,15 @@ class VoucherTable extends DataTableComponent
 
     public function sendXml(Invoice $invoice)
     {
+        if (empty($invoice->xml_path)) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error al enviar el comprobante',
+                'text' => 'Este comprobante no tiene un XML generado, no se puede reenviar.'
+            ]);
+            return;
+        }
+
         $directory = $invoice->production ? 'sunat/' : 'sunat/beta/';
         /* $name = session('company')->ruc."-{$invoice->tipoDoc}-". $invoice->serie.'-'. $invoice->correlativo; */
 
@@ -203,7 +212,7 @@ class VoucherTable extends DataTableComponent
             $invoice->save();
 
             $this->showResponse($invoice);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->dispatch('swal', [
                 'icon' => 'error',
                 'title' => 'Error al enviar el comprobante',

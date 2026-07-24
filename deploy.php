@@ -14,6 +14,10 @@ set('keep_releases', 5);
 set('shared_files', ['.env']);
 set('shared_dirs', ['storage']);
 set('writable_dirs', ['bootstrap/cache', 'storage']);
+// El usuario que despliega y el que corre PHP-FPM son el mismo en CloudPanel
+// (inspectec-sanlomar), asi que no hace falta ACL/chown entre usuarios distintos;
+// setfacl no esta disponible en el VPS y hacia fallar deploy:writable.
+set('writable_mode', 'chmod');
 
 // wkhtmltopdf y otros paths de storage/certificados viven fuera del release,
 // dentro de shared/storage — ver guia-transportista.md y CLAUDE.md.

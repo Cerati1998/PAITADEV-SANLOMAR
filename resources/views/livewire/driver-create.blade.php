@@ -1,4 +1,13 @@
-<div x-data="dataCreate">
+<div x-data="{
+    driver: $wire.entangle('driver'),
+    init() {
+        this.$watch('driver.tipoDoc', value => {
+            if (value == '-') {
+                this.driver.numDoc = '';
+            }
+        });
+    }
+}">
     <form wire:submit="save">
 
         <x-wire-modal-card title="Datos de Conductor" name="driverCreate" wire:model="openModal" width="3xl">
@@ -72,23 +81,4 @@
 
         </x-wire-modal-card>
     </form>
-
-    @push('js')
-        <script>
-            function dataCreate() {
-                return {
-
-                    driver: @entangle('driver'),
-                    init() {
-                        this.$watch('driver.tipoDoc', value => {
-
-                            if (value == '-') {
-                                this.driver.numDoc = '';
-                            }
-                        });
-                    }
-                }
-            }
-        </script>
-    @endpush
 </div>

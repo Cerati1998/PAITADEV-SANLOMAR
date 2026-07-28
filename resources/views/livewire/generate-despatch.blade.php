@@ -197,25 +197,22 @@
                             <hr class="flex-1">
                         </header>
 
-                        <div class="grid grid-cols-2 xl:grid-cols-6 gap-4 mb-4">
-                            <div class="col-span-2 xl:col-span-5">
-                                <x-label>
+                        <div class="mb-4">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-sm text-gray-700">
                                     Buscar transportista
-                                </x-label>
-
-                                <x-wire-select class="!text-sm"
-                                    placeholder="Buscar por número de documento o razón social" :async-data="[
-                                        'api' => route('api.transports.index'),
-                                        'method' => 'POST',
-                                    ]" option-label="name" option-value="id" wire:model.live="transportista_id" />
+                                </label>
+                                <button type="button" x-on:click="$openModal('transportCreate')"
+                                    class="text-xs text-blue-600 font-semibold hover:underline">
+                                    + Nuevo transportista
+                                </button>
                             </div>
 
-                            <div class="col-span-2 xl:col-span-1">
-                                <x-wire-button type="button" sm icon="plus" outline secondary class="w-full xl:mt-5.5"
-                                    x-on:click="$openModal('transportCreate')">
-                                    Nuevo
-                                </x-wire-button>
-                            </div>
+                            <x-wire-select class="!text-sm"
+                                placeholder="Buscar por número de documento o razón social" :async-data="[
+                                    'api' => route('api.transports.index'),
+                                    'method' => 'POST',
+                                ]" option-label="name" option-value="id" wire:model.live="transportista_id" />
                         </div>
 
                         <div class="grid grid-cols-2 xl:grid-cols-6 gap-4">
@@ -277,21 +274,26 @@
                         <template x-if="!ml1">
                             <div>
 
-                                {{-- Transportista para altas rápidas (+): a qué transportista pertenece
-                                     un vehículo/chofer nuevo que aún no está en ninguna flota --}}
-                                <div class="grid grid-cols-2 xl:grid-cols-3 gap-4 mb-4">
-                                    <div class="col-span-2 xl:col-span-3">
-                                        <x-label>
-                                            Transportista para altas nuevas (solo si vas a usar el botón +)
-                                        </x-label>
-                                        <x-wire-select class="!text-sm"
-                                            placeholder="Buscar transportista por número de documento o razón social"
-                                            :async-data="[
-                                                'api' => route('api.transports.index'),
-                                                'method' => 'POST',
-                                            ]" option-label="name" option-value="id"
-                                            wire:model.live="quick_add_transport_id" />
+                                {{-- Transportista al que pertenece un vehículo/chofer nuevo que aún no
+                                     está en ninguna flota; habilita los botones de agregar de abajo --}}
+                                <div class="mb-4">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <label class="text-sm text-gray-700">
+                                            Transportista para registrar vehículos/choferes nuevos
+                                        </label>
+                                        <button type="button" x-on:click="$openModal('transportCreate')"
+                                            class="text-xs text-blue-600 font-semibold hover:underline">
+                                            + Nuevo transportista
+                                        </button>
                                     </div>
+
+                                    <x-wire-select class="!text-sm"
+                                        placeholder="Buscar transportista por número de documento o razón social"
+                                        :async-data="[
+                                            'api' => route('api.transports.index'),
+                                            'method' => 'POST',
+                                        ]" option-label="name" option-value="id"
+                                        wire:model.live="quick_add_transport_id" />
                                 </div>
 
                                 <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -314,22 +316,23 @@
 
                                     <ul class="space-y-4 mb-4">
                                         <li>
-                                            <div class="flex items-center justify-between">
-                                                <x-label>
+                                            <div class="flex justify-between items-center mb-1">
+                                                <label class="text-sm text-gray-700">
                                                     Vehiculo 1
-                                                </x-label>
+                                                </label>
+                                                <button type="button" @disabled(!$quickAddTransport)
+                                                    x-on:click="$openModal('vehicleCreate')"
+                                                    class="text-xs text-blue-600 font-semibold hover:underline disabled:opacity-40 disabled:cursor-not-allowed disabled:no-underline">
+                                                    + Nuevo vehículo
+                                                </button>
                                             </div>
-                                            <div class="flex items-center space-x-2">
-                                                <x-wire-select class="!text-sm w-full" placeholder="Buscar placa"
-                                                    :async-data="[
-                                                        'api' => route('api.vehicles.index'),
-                                                        'method' => 'POST',
-                                                    ]" option-label="name" option-value="id"
-                                                    wire:model.live="vehiculo_id" />
-
-                                                <x-wire-mini-button type="button" sm rounded icon="plus"
-                                                    @disabled(!$quickAddTransport) x-on:click="$openModal('vehicleCreate')" />
-                                            </div>
+                                            <x-wire-select class="!text-sm w-full" placeholder="Buscar placa"
+                                                :async-data="[
+                                                    'api' => route('api.vehicles.index'),
+                                                    'method' => 'POST',
+                                                    'params' => ['transport_id' => $quickAddTransport?->id],
+                                                ]" option-label="name" option-value="id"
+                                                wire:model.live="vehiculo_id" />
                                             @if ($vehiculo_info)
                                                 <p class="text-xs text-gray-400 mt-1">
                                                     {{ $vehiculo_info->brand }} {{ $vehiculo_info->model }} —
@@ -340,15 +343,23 @@
 
                                         @foreach ($despatch->envio['vehiculo']['secundarios'] as $index => $secundario)
                                             <li wire:key="vehiculo-sec-{{ $index }}">
-                                                <x-label>
-                                                    Vehiculo {{ $index + 2 }}
-                                                </x-label>
+                                                <div class="flex justify-between items-center mb-1">
+                                                    <label class="text-sm text-gray-700">
+                                                        Vehiculo {{ $index + 2 }}
+                                                    </label>
+                                                    <button type="button" @disabled(!$quickAddTransport)
+                                                        x-on:click="$openModal('vehicleCreate')"
+                                                        class="text-xs text-blue-600 font-semibold hover:underline disabled:opacity-40 disabled:cursor-not-allowed disabled:no-underline">
+                                                        + Nuevo vehículo
+                                                    </button>
+                                                </div>
 
                                                 <div class="flex items-center space-x-2">
                                                     <x-wire-select class="!text-sm w-full" placeholder="Buscar placa"
                                                         :async-data="[
                                                             'api' => route('api.vehicles.index'),
                                                             'method' => 'POST',
+                                                            'params' => ['transport_id' => $quickAddTransport?->id],
                                                         ]" option-label="name" option-value="id"
                                                         wire:model.live="vehiculo_secundario_ids.{{ $index }}" />
 
@@ -394,18 +405,22 @@
                                         @foreach ($despatch->envio['choferes'] as $index => $chofer)
                                             <li wire:key="choferes-{{ $index }}">
 
-                                                <div class="flex items-center space-x-2 mb-2">
-                                                    <x-label class="grow mb-0">
+                                                <div class="flex justify-between items-center mb-1">
+                                                    <label class="text-sm text-gray-700">
                                                         Chofer {{ $index + 1 }}
-                                                    </x-label>
-                                                    <x-wire-mini-button type="button" sm rounded icon="plus"
-                                                        @disabled(!$quickAddTransport) x-on:click="$openModal('driverCreate')" />
+                                                    </label>
+                                                    <button type="button" @disabled(!$quickAddTransport)
+                                                        x-on:click="$openModal('driverCreate')"
+                                                        class="text-xs text-blue-600 font-semibold hover:underline disabled:opacity-40 disabled:cursor-not-allowed disabled:no-underline">
+                                                        + Nuevo chofer
+                                                    </button>
                                                 </div>
 
                                                 <x-wire-select class="!text-sm w-full mb-2" placeholder="Buscar chofer"
                                                     :async-data="[
                                                         'api' => route('api.drivers.index'),
                                                         'method' => 'POST',
+                                                        'params' => ['transport_id' => $quickAddTransport?->id],
                                                     ]" option-label="name" option-value="id"
                                                     wire:model.live="chofer_ids.{{ $index }}" />
 

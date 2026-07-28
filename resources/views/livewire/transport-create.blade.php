@@ -1,4 +1,13 @@
-<div x-data="dataCreate">
+<div x-data="{
+    transport: $wire.entangle('transport'),
+    init() {
+        this.$watch('transport.tipoDoc', value => {
+            if (value == '-') {
+                this.transport.numDoc = '';
+            }
+        });
+    }
+}">
     <form wire:submit="save">
 
         <x-wire-modal-card title="Datos de Transportista" name="transportCreate" wire:model="openModal" width="3xl">
@@ -78,23 +87,4 @@
 
         </x-wire-modal-card>
     </form>
-
-    @push('js')
-        <script>
-            function dataCreate() {
-                return {
-
-                    transport: @entangle('transport'),
-                    init() {
-                        this.$watch('transport.tipoDoc', value => {
-
-                            if (value == '-') {
-                                this.transport.numDoc = '';
-                            }
-                        });
-                    }
-                }
-            }
-        </script>
-    @endpush
 </div>

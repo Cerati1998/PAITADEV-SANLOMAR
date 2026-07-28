@@ -1,4 +1,4 @@
-<div x-data="dataCreate">
+<div x-data="{ vehicle: $wire.entangle('vehicle') }">
     <form wire:submit="save">
 
         <x-wire-modal-card title="Datos de Vehiculo" name="vehicleCreate" wire:model="openModal" width="3xl">
@@ -27,19 +27,19 @@
                     <x-label class="mb-1">
                         Marca
                     </x-label>
-                    <x-input required x-model="vehicle.brand" placeholder="Ingrese la marca" class="w-full" />
+                    <x-input x-model="vehicle.brand" placeholder="Ingrese la marca" class="w-full" />
                 </div>
                 <div class="col-span-2 lg:col-span-1">
                     <x-label class="mb-1">
                         Modelo
                     </x-label>
-                    <x-input required x-model="vehicle.model" placeholder="Ingrese el modelo" class="w-full" />
+                    <x-input x-model="vehicle.model" placeholder="Ingrese el modelo" class="w-full" />
                 </div>
                 <div class="col-span-2 lg:col-span-1">
                     <x-label class="mb-1">
                         N° Autorización MTC
                     </x-label>
-                    <x-input required x-model="vehicle.autorization_number" placeholder="Ingrese el número de autorización" class="w-full" />
+                    <x-input x-model="vehicle.autorization_number" placeholder="Ingrese el número de autorización (Opcional)" class="w-full" />
                 </div>
                 <div class="col-span-2 lg:col-span-1">
                     <x-label class="mb-1">
@@ -84,15 +84,4 @@
 
         </x-wire-modal-card>
     </form>
-
-    @push('js')
-        <script>
-            function dataCreate() {
-                return {
-
-                    vehicle: @entangle('vehicle')
-                }
-            }
-        </script>
-    @endpush
 </div>

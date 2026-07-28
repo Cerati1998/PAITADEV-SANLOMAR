@@ -256,6 +256,12 @@ class GenerateDespatch extends Component
                 'nroMtc' => '',
             ];
         }
+
+        // El transportista recién creado también queda seleccionado como
+        // "transportista para altas nuevas" (transporte privado), para poder
+        // agregar de inmediato sus vehículos/choferes.
+        $this->quick_add_transport_id = $id;
+        $this->quickAddTransport = $transport;
     }
 
     #[On('clientAdded')]

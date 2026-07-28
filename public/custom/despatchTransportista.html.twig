@@ -54,6 +54,13 @@
                                         <strong>Dirección: </strong>{{ cp.address.direccion }}
                                     </td>
                                 </tr>
+                                {% if doc.envio.transportista and doc.envio.transportista.nroMtc %}
+                                <tr>
+                                    <td align="left">
+                                        <strong>N° MTC/RNT: </strong>{{ doc.envio.transportista.nroMtc }}
+                                    </td>
+                                </tr>
+                                {% endif %}
                                 <tr>
                                     <td align="left">
                                         {{ params.user.header|raw }}
@@ -126,9 +133,15 @@
                     <tr class="border_top">
                         <td width="60%" align="left">
                             <strong>Vehículo principal:</strong>  {{ vehiculo.placa }}
+                            {% if vehiculo.nroAutorizacion %}
+                            - <strong>Cod. Autorización:</strong>  {{ vehiculo.nroAutorizacion }}
+                            {% endif %}
                             {% for secundario in vehiculo.secundarios %}
                             <br>
                             <strong>Vehículo secundario:</strong>  {{ secundario.placa }}
+                            {% if secundario.nroAutorizacion %}
+                            - <strong>Cod. Autorización:</strong>  {{ secundario.nroAutorizacion }}
+                            {% endif %}
                             {% endfor %}
                         </td>
                         <td width="40%" align="left">

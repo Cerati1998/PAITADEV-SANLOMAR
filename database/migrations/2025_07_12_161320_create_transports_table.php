@@ -16,6 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('razonSocial', 255);
             $table->string('numDoc', 45)->index();
+            $table->string('nroMtc', 45)->nullable();
             $table->string('tipoDoc');
             $table->foreign('tipoDoc')
                 ->references('id')

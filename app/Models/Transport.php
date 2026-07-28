@@ -11,6 +11,7 @@ class Transport extends Model
     protected $fillable = [
         'razonSocial',
         'numDoc',
+        'nroMtc',
         'tipoDoc',
         'direccion',
         'email',

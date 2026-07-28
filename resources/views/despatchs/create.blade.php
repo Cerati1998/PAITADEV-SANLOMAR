@@ -19,4 +19,8 @@
         'identities' => $identities
     ], key('client-create'))
 
+    @livewire('transport-create', [
+        'identities' => $identities
+    ], key('transport-create'))
+
 </x-dashboard-layout>

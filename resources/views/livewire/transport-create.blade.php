@@ -52,6 +52,14 @@
                     <x-input x-model="transport.direccion" placeholder="Ingrese la dirección" class="w-full" />
                 </div>
 
+                <div class="col-span-2">
+                    <x-label class="mb-1">
+                        N° MTC / RNT
+                    </x-label>
+                    <x-input x-model="transport.nroMtc" placeholder="Ingrese el N° de inscripción MTC/RNT (Opcional)"
+                        class="w-full" />
+                </div>
+
                 <x-wire-input label="Correo Electrónico" x-model="transport.email"
                     placeholder="Ingrese el correo electrónico (Opcional)" />
 

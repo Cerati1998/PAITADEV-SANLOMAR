@@ -3,6 +3,14 @@
     showSubcontratador: @entangle('showSubcontratador').live,
     showDocumentoRelacionado: @entangle('showDocumentoRelacionado').live,
 }">
+    @unless ($ownTransport)
+        <x-wire-alert warning class="mb-4" title="No hay un transportista propio configurado">
+            Para emitir guías de remisión transportista, registra en el módulo <a href="{{ route('transports.index') }}"
+                class="underline font-semibold">Transportistas</a> un transportista con el mismo RUC de la empresa
+            y su N° MTC/RNT.
+        </x-wire-alert>
+    @endunless
+
     <x-wire-card>
         <div class="mb-6">
             <header class="flex items-center border-b border-gray-200 pb-2 mb-4">
@@ -222,13 +230,13 @@
                         placeholder="Peso total" />
                 </div>
 
-                {{-- N. MTC / RNT del transportista --}}
+                {{-- N. MTC / RNT del transportista (propio, autocompletado y de solo lectura) --}}
                 <div class="col-span-1">
                     <x-label>
                         N° MTC / RNT del transportista
                     </x-label>
 
-                    <x-wire-input wire:model="despatch.envio.mtc" placeholder="Registro MTC" />
+                    <x-wire-input wire:model="despatch.envio.mtc" disabled placeholder="Registro MTC" />
                 </div>
 
                 {{-- Unidad --}}
@@ -314,7 +322,7 @@
                         <hr class="flex-1">
                         <p class="flex items-center">
                             <x-wire-icon name="truck" class="w-4 h-4" />
-                            <span class="ml-2 text-sm">Vehículos</span>
+                            <span class="ml-2 text-sm">Vehículos (flota propia)</span>
                         </p>
                         <hr class="flex-1">
                     </div>
@@ -322,21 +330,47 @@
                     <ul class="space-y-4 mb-4">
                         <li>
                             <x-label>Vehículo 1</x-label>
-                            <x-wire-input wire:model="despatch.envio.vehiculo.placa"
-                                placeholder="Placa. Ejm: ABC123" class="w-full" />
+                            <div class="flex items-center space-x-2">
+                                <x-wire-select class="!text-sm w-full" placeholder="Buscar placa" :async-data="[
+                                    'api' => route('api.vehicles.index'),
+                                    'method' => 'POST',
+                                    'params' => ['transport_id' => $ownTransport?->id],
+                                ]" option-label="name" option-value="id" wire:model.live="vehiculo_id"
+                                    :disabled="!$ownTransport" />
+
+                                <x-wire-mini-button type="button" sm rounded icon="plus"
+                                    @disabled(!$ownTransport) x-on:click="$openModal('vehicleCreate')" />
+                            </div>
+                            @if ($vehiculo_info)
+                                <p class="text-xs text-gray-400 mt-1">
+                                    {{ $vehiculo_info->brand }} {{ $vehiculo_info->model }} —
+                                    {{ $vehiculo_info->category }}
+                                </p>
+                            @endif
                         </li>
 
                         @foreach ($despatch->envio['vehiculo']['secundarios'] as $index => $secundario)
-                            <li>
+                            <li wire:key="vehiculo-sec-{{ $index }}">
                                 <x-label>Vehículo {{ $index + 2 }}</x-label>
                                 <div class="flex items-center space-x-2">
-                                    <x-wire-input
-                                        wire:model="despatch.envio.vehiculo.secundarios.{{ $index }}.placa"
-                                        placeholder="Placa" class="w-full" />
+                                    <x-wire-select class="!text-sm w-full" placeholder="Buscar placa" :async-data="[
+                                        'api' => route('api.vehicles.index'),
+                                        'method' => 'POST',
+                                        'params' => ['transport_id' => $ownTransport?->id],
+                                    ]" option-label="name" option-value="id"
+                                        wire:model.live="vehiculo_secundario_ids.{{ $index }}" />
+
                                     <x-wire-mini-button sm rounded negative icon="x-mark"
                                         wire:click="removeVehicle({{ $index }})"
                                         spinner="removeVehicle({{ $index }})" />
                                 </div>
+                                @if ($vehiculo_secundario_info[$index] ?? null)
+                                    <p class="text-xs text-gray-400 mt-1">
+                                        {{ $vehiculo_secundario_info[$index]->brand }}
+                                        {{ $vehiculo_secundario_info[$index]->model }} —
+                                        {{ $vehiculo_secundario_info[$index]->category }}
+                                    </p>
+                                @endif
                             </li>
                         @endforeach
                     </ul>
@@ -352,7 +386,7 @@
                         <hr class="flex-1">
                         <p class="flex items-center">
                             <x-wire-icon name="user" class="w-4 h-4" />
-                            <span class="ml-2 text-sm">Choferes</span>
+                            <span class="ml-2 text-sm">Choferes (flota propia)</span>
                         </p>
                         <hr class="flex-1">
                     </div>
@@ -360,11 +394,22 @@
                     <ul class="space-y-4 mb-4">
                         @foreach ($despatch->envio['choferes'] as $index => $chofer)
                             <li wire:key="choferes-{{ $index }}">
-                                <x-label>Chofer {{ $index + 1 }}</x-label>
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <x-label class="grow mb-0">Chofer {{ $index + 1 }}</x-label>
+                                    <x-wire-mini-button type="button" sm rounded icon="plus"
+                                        @disabled(!$ownTransport) x-on:click="$openModal('driverCreate')" />
+                                </div>
+
+                                <x-wire-select class="!text-sm w-full mb-2" placeholder="Buscar chofer" :async-data="[
+                                    'api' => route('api.drivers.index'),
+                                    'method' => 'POST',
+                                    'params' => ['transport_id' => $ownTransport?->id],
+                                ]" option-label="name" option-value="id"
+                                    wire:model.live="chofer_ids.{{ $index }}" :disabled="!$ownTransport" />
 
                                 <div class="grid grid-cols-6 gap-4">
                                     <div class="col-span-2">
-                                        <x-select class="w-full"
+                                        <x-select disabled class="w-full"
                                             wire:model="despatch.envio.choferes.{{ $index }}.tipoDoc">
                                             @foreach ($identities as $identity)
                                                 <option value="{{ $identity->id }}">
@@ -375,26 +420,26 @@
                                     </div>
 
                                     <div class="col-span-4">
-                                        <x-wire-input
+                                        <x-wire-input disabled
                                             wire:model="despatch.envio.choferes.{{ $index }}.nroDoc"
                                             placeholder="Num. Doc." />
                                     </div>
 
                                     <div class="col-span-3">
-                                        <x-wire-input
+                                        <x-wire-input disabled
                                             wire:model="despatch.envio.choferes.{{ $index }}.nombres"
                                             placeholder="Nombres" />
                                     </div>
 
                                     <div class="col-span-3">
-                                        <x-wire-input
+                                        <x-wire-input disabled
                                             wire:model="despatch.envio.choferes.{{ $index }}.apellidos"
                                             placeholder="Apellidos" />
                                     </div>
 
                                     <div class="col-span-6">
                                         <div class="flex items-center space-x-4">
-                                            <x-wire-input class="w-full"
+                                            <x-wire-input disabled class="w-full"
                                                 wire:model="despatch.envio.choferes.{{ $index }}.licencia"
                                                 placeholder="Licencia de conducir" />
 
@@ -417,6 +462,12 @@
                 </div>
             </div>
         </div>
+
+        @if ($ownTransport)
+            <livewire:vehicle-create :transport="$ownTransport" :key="'vehicle-create-' . $ownTransport->id" />
+            <livewire:driver-create :transport="$ownTransport" :identities="$identities"
+                :key="'driver-create-' . $ownTransport->id" />
+        @endif
 
         <div class="mb-6">
             <header class="flex items-center border-b border-gray-200 pb-2 mb-4">

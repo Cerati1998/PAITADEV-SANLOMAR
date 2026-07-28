@@ -421,11 +421,13 @@ class DocumentService
 
         foreach ($vehiculo['secundarios'] ?? [] as $item) {
             $secundarios[] = (new Vehicle())
-                ->setPlaca(strtoupper($item['placa']));
+                ->setPlaca(strtoupper($item['placa']))
+                ->setNroAutorizacion($item['nroAutorizacion'] ?? null);
         }
 
         return (new Vehicle())
             ->setPlaca(strtoupper($vehiculo['placa']))
+            ->setNroAutorizacion($vehiculo['nroAutorizacion'] ?? null)
             ->setSecundarios($secundarios);
     }
 

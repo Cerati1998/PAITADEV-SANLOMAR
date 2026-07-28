@@ -69,8 +69,8 @@ class VehicleCreate extends Component
             'vehicle.model' => 'nullable|string',
             'vehicle.category' => 'required|string',
             'vehicle.type' => 'required|string',
-            'vehicle.color' => 'required|string|min:4',
-            'vehicle.autorization_number' => 'required|string|min:12|max:15',
+            'vehicle.color' => 'nullable|string|min:4',
+            'vehicle.autorization_number' => 'nullable|string|min:9|max:15',
         ], [], [
             'vehicle.code' => 'Placa de Vehiculo',
             'vehicle.brand' => 'Marca de Vehiculo',

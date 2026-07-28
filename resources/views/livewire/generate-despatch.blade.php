@@ -197,13 +197,34 @@
                             <hr class="flex-1">
                         </header>
 
+                        <div class="grid grid-cols-2 xl:grid-cols-6 gap-4 mb-4">
+                            <div class="col-span-2 xl:col-span-5">
+                                <x-label>
+                                    Buscar transportista
+                                </x-label>
+
+                                <x-wire-select class="!text-sm"
+                                    placeholder="Buscar por número de documento o razón social" :async-data="[
+                                        'api' => route('api.transports.index'),
+                                        'method' => 'POST',
+                                    ]" option-label="name" option-value="id" wire:model.live="transportista_id" />
+                            </div>
+
+                            <div class="col-span-2 xl:col-span-1">
+                                <x-wire-button type="button" sm icon="plus" outline secondary class="w-full xl:mt-5.5"
+                                    x-on:click="$openModal('transportCreate')">
+                                    Nuevo
+                                </x-wire-button>
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-2 xl:grid-cols-6 gap-4">
                             <div>
                                 <x-label>
                                     Tipo de documento
                                 </x-label>
 
-                                <x-select wire:model="despatch.envio.transportista.tipoDoc" class="w-full">
+                                <x-select disabled wire:model="despatch.envio.transportista.tipoDoc" class="w-full">
 
                                     @foreach ($identities as $identity)
                                         <option value="{{ $identity->id }}">
@@ -219,8 +240,8 @@
                                     Número de documento
                                 </x-label>
 
-                                <x-input wire:model="despatch.envio.transportista.numDoc" placeholder="Num. Doc."
-                                    class="w-full" />
+                                <x-input disabled wire:model="despatch.envio.transportista.numDoc"
+                                    placeholder="Num. Doc." class="w-full" />
                             </div>
 
                             <div class="col-span-2 xl:col-span-3">
@@ -228,7 +249,7 @@
                                     Razón social
                                 </x-label>
 
-                                <x-input wire:model="despatch.envio.transportista.rznSocial" class="w-full"
+                                <x-input disabled wire:model="despatch.envio.transportista.rznSocial" class="w-full"
                                     placeholder="Nombre del transportista" />
                             </div>
 
@@ -237,7 +258,7 @@
                                     Registro MTC
                                 </x-label>
 
-                                <x-input wire:model="despatch.envio.transportista.nroMtc" class="w-full" />
+                                <x-input disabled wire:model="despatch.envio.transportista.nroMtc" class="w-full" />
                             </div>
 
                         </div>
@@ -254,7 +275,26 @@
 
                         {{-- Vehiculos y Choferes --}}
                         <template x-if="!ml1">
-                            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                            <div>
+
+                                {{-- Transportista para altas rápidas (+): a qué transportista pertenece
+                                     un vehículo/chofer nuevo que aún no está en ninguna flota --}}
+                                <div class="grid grid-cols-2 xl:grid-cols-3 gap-4 mb-4">
+                                    <div class="col-span-2 xl:col-span-3">
+                                        <x-label>
+                                            Transportista para altas nuevas (solo si vas a usar el botón +)
+                                        </x-label>
+                                        <x-wire-select class="!text-sm"
+                                            placeholder="Buscar transportista por número de documento o razón social"
+                                            :async-data="[
+                                                'api' => route('api.transports.index'),
+                                                'method' => 'POST',
+                                            ]" option-label="name" option-value="id"
+                                            wire:model.live="quick_add_transport_id" />
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
 
                                 {{-- Vehiculos --}}
                                 <div>
@@ -274,30 +314,56 @@
 
                                     <ul class="space-y-4 mb-4">
                                         <li>
-                                            <x-label>
-                                                Vehiculo 1
-                                            </x-label>
+                                            <div class="flex items-center justify-between">
+                                                <x-label>
+                                                    Vehiculo 1
+                                                </x-label>
+                                            </div>
+                                            <div class="flex items-center space-x-2">
+                                                <x-wire-select class="!text-sm w-full" placeholder="Buscar placa"
+                                                    :async-data="[
+                                                        'api' => route('api.vehicles.index'),
+                                                        'method' => 'POST',
+                                                    ]" option-label="name" option-value="id"
+                                                    wire:model.live="vehiculo_id" />
 
-                                            <x-wire-input wire:model="despatch.envio.vehiculo.placa"
-                                                placeholder="Placa. Ejm: ABC123" class="w-full" />
+                                                <x-wire-mini-button type="button" sm rounded icon="plus"
+                                                    @disabled(!$quickAddTransport) x-on:click="$openModal('vehicleCreate')" />
+                                            </div>
+                                            @if ($vehiculo_info)
+                                                <p class="text-xs text-gray-400 mt-1">
+                                                    {{ $vehiculo_info->brand }} {{ $vehiculo_info->model }} —
+                                                    {{ $vehiculo_info->transport->razonSocial ?? '' }}
+                                                </p>
+                                            @endif
                                         </li>
 
                                         @foreach ($despatch->envio['vehiculo']['secundarios'] as $index => $secundario)
-                                            <li>
+                                            <li wire:key="vehiculo-sec-{{ $index }}">
                                                 <x-label>
                                                     Vehiculo {{ $index + 2 }}
                                                 </x-label>
 
                                                 <div class="flex items-center space-x-2">
-                                                    <x-wire-input
-                                                        wire:model="despatch.envio.vehiculo.secundarios.{{ $index }}.placa"
-                                                        placeholder="Placa" class="w-full" />
+                                                    <x-wire-select class="!text-sm w-full" placeholder="Buscar placa"
+                                                        :async-data="[
+                                                            'api' => route('api.vehicles.index'),
+                                                            'method' => 'POST',
+                                                        ]" option-label="name" option-value="id"
+                                                        wire:model.live="vehiculo_secundario_ids.{{ $index }}" />
 
                                                     <x-wire-mini-button sm rounded negative icon="x-mark"
                                                         wire:click="removeVehicle({{ $index }})"
                                                         spinner="removeVehicle({{ $index }})" />
 
                                                 </div>
+                                                @if ($vehiculo_secundario_info[$index] ?? null)
+                                                    <p class="text-xs text-gray-400 mt-1">
+                                                        {{ $vehiculo_secundario_info[$index]->brand }}
+                                                        {{ $vehiculo_secundario_info[$index]->model }} —
+                                                        {{ $vehiculo_secundario_info[$index]->transport->razonSocial ?? '' }}
+                                                    </p>
+                                                @endif
                                             </li>
                                         @endforeach
                                     </ul>
@@ -328,15 +394,26 @@
                                         @foreach ($despatch->envio['choferes'] as $index => $chofer)
                                             <li wire:key="choferes-{{ $index }}">
 
-                                                <x-label>
-                                                    Chofer {{ $index + 1 }}
-                                                </x-label>
+                                                <div class="flex items-center space-x-2 mb-2">
+                                                    <x-label class="grow mb-0">
+                                                        Chofer {{ $index + 1 }}
+                                                    </x-label>
+                                                    <x-wire-mini-button type="button" sm rounded icon="plus"
+                                                        @disabled(!$quickAddTransport) x-on:click="$openModal('driverCreate')" />
+                                                </div>
+
+                                                <x-wire-select class="!text-sm w-full mb-2" placeholder="Buscar chofer"
+                                                    :async-data="[
+                                                        'api' => route('api.drivers.index'),
+                                                        'method' => 'POST',
+                                                    ]" option-label="name" option-value="id"
+                                                    wire:model.live="chofer_ids.{{ $index }}" />
 
                                                 <div class="grid grid-cols-6 gap-4">
 
                                                     <div class="col-span-2">
 
-                                                        <x-select class="w-full"
+                                                        <x-select disabled class="w-full"
                                                             wire:model="despatch.envio.choferes.{{ $index }}.tipoDoc">
 
                                                             @foreach ($identities as $identity)
@@ -350,26 +427,26 @@
                                                     </div>
 
                                                     <div class="col-span-4">
-                                                        <x-wire-input {{-- class="w-full" --}}
+                                                        <x-wire-input disabled
                                                             wire:model="despatch.envio.choferes.{{ $index }}.nroDoc"
                                                             placeholder="Num. Doc." />
                                                     </div>
 
                                                     <div class="col-span-3">
-                                                        <x-wire-input {{-- class="w-full" --}}
+                                                        <x-wire-input disabled
                                                             wire:model="despatch.envio.choferes.{{ $index }}.nombres"
                                                             placeholder="Nombres" />
                                                     </div>
 
                                                     <div class="col-span-3">
-                                                        <x-wire-input {{-- class="w-full" --}}
+                                                        <x-wire-input disabled
                                                             wire:model="despatch.envio.choferes.{{ $index }}.apellidos"
                                                             placeholder="Apellidos" />
                                                     </div>
 
                                                     <div class="col-span-6">
                                                         <div class="flex items-center space-x-4">
-                                                            <x-wire-input class="w-full"
+                                                            <x-wire-input disabled class="w-full"
                                                                 wire:model="despatch.envio.choferes.{{ $index }}.licencia"
                                                                 placeholder="Licencia de conducir" />
 
@@ -391,6 +468,7 @@
                                         spinner="addDriver" class="w-full">
                                         Agregar choferes
                                     </x-wire-button>
+                                </div>
                                 </div>
                             </div>
                         </template>
@@ -648,6 +726,13 @@
             </x-wire-button>
         </div>
     </x-wire-card>
+
+    {{-- Altas rápidas de vehículo/chofer (transporte privado): el componente
+         se remonta con el transportista elegido en "quick_add_transport_id" --}}
+    <livewire:vehicle-create :transport="$quickAddTransport"
+        :key="'vehicle-create-quick-' . ($quickAddTransport?->id ?? 'none')" />
+    <livewire:driver-create :transport="$quickAddTransport" :identities="$identities"
+        :key="'driver-create-quick-' . ($quickAddTransport?->id ?? 'none')" />
 
     {{-- Modal para agregar productos --}}
     <div x-data="dataProduct">

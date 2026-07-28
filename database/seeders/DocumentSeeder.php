@@ -67,7 +67,7 @@ class DocumentSeeder extends Seeder
                 'description' => 'REPORTE DE LEAK TEST',
             ],
             [
-                'id' => '31',
+                'id' => '17',
                 'description' => 'Guía de Remisión Transportista',
             ],
         ];

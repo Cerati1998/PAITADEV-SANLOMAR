@@ -5,8 +5,11 @@ namespace App\Livewire;
 use App\Livewire\Forms\DespatchTransportistaForm;
 use App\Models\Client;
 use App\Models\DespatchTransportista;
+use App\Models\Driver;
 use App\Models\Product;
 use App\Models\ReasonTransfer;
+use App\Models\Transport;
+use App\Models\Vehicle;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -31,6 +34,17 @@ class GenerateDespatchTransportista extends Component
     public $showSubcontratador = false;
     public $showDocumentoRelacionado = false;
 
+    // Transportista propio (RUC = RUC de la empresa): único autorizado a
+    // emitir esta guía, por lo que sus vehículos/choferes son los únicos
+    // seleccionables aquí.
+    public ?Transport $ownTransport = null;
+
+    public $vehiculo_id = null;
+    public $vehiculo_info = null;
+    public $vehiculo_secundario_ids = [];
+    public $vehiculo_secundario_info = [];
+    public $chofer_ids = [];
+
     public $product = [
         'cantidad' => 1,
         'unidad' => 'NIU',
@@ -46,6 +60,17 @@ class GenerateDespatchTransportista extends Component
         $this->despatch->production = session('company')->production;
 
         $this->despatch->envio['fecTraslado'] = now()->format('Y-m-d');
+
+        $this->ownTransport = Transport::where('tipoDoc', '6')
+            ->where('numDoc', session('company')->ruc)
+            ->where('branch_id', session('branch')->id)
+            ->first();
+
+        if ($this->ownTransport) {
+            $this->despatch->envio['mtc'] = $this->ownTransport->nroMtc ?? '';
+        }
+
+        $this->chofer_ids = [null];
 
         $this->getSeries();
 
@@ -66,6 +91,35 @@ class GenerateDespatchTransportista extends Component
             $product = Product::find($value);
             $this->addDetail($product);
             $this->product_id = null;
+        }
+
+        if ($property === 'vehiculo_id') {
+            $vehicle = $value ? Vehicle::find($value) : null;
+            $this->despatch->envio['vehiculo']['placa'] = $vehicle->code ?? '';
+            $this->despatch->envio['vehiculo']['nroAutorizacion'] = $vehicle->autorization_number ?? '';
+            $this->vehiculo_info = $vehicle;
+        }
+
+        if (preg_match('/^vehiculo_secundario_ids\.(\d+)$/', $property, $matches)) {
+            $index = (int) $matches[1];
+            $vehicle = $value ? Vehicle::find($value) : null;
+            $this->despatch->envio['vehiculo']['secundarios'][$index]['placa'] = $vehicle->code ?? '';
+            $this->despatch->envio['vehiculo']['secundarios'][$index]['nroAutorizacion'] = $vehicle->autorization_number ?? '';
+            $this->vehiculo_secundario_info[$index] = $vehicle;
+        }
+
+        if (preg_match('/^chofer_ids\.(\d+)$/', $property, $matches)) {
+            $index = (int) $matches[1];
+            $driver = $value ? Driver::find($value) : null;
+
+            $this->despatch->envio['choferes'][$index] = [
+                'tipo' => $index === 0 ? 'Principal' : 'Secundario',
+                'tipoDoc' => $driver->tipoDoc ?? '1',
+                'nroDoc' => $driver->numDoc ?? '',
+                'licencia' => $driver->brevete ?? '',
+                'nombres' => $driver->nombres ?? '',
+                'apellidos' => $driver->apellidos ?? '',
+            ];
         }
     }
 
@@ -140,13 +194,22 @@ class GenerateDespatchTransportista extends Component
     {
         $this->despatch->envio['vehiculo']['secundarios'][] = [
             'placa' => '',
+            'nroAutorizacion' => '',
         ];
+        $this->vehiculo_secundario_ids[] = null;
+        $this->vehiculo_secundario_info[] = null;
     }
 
     public function removeVehicle($index)
     {
         unset($this->despatch->envio['vehiculo']['secundarios'][$index]);
         $this->despatch->envio['vehiculo']['secundarios'] = array_values($this->despatch->envio['vehiculo']['secundarios']);
+
+        unset($this->vehiculo_secundario_ids[$index]);
+        $this->vehiculo_secundario_ids = array_values($this->vehiculo_secundario_ids);
+
+        unset($this->vehiculo_secundario_info[$index]);
+        $this->vehiculo_secundario_info = array_values($this->vehiculo_secundario_info);
     }
 
     public function addDriver()
@@ -159,12 +222,16 @@ class GenerateDespatchTransportista extends Component
             'nombres' => '',
             'apellidos' => '',
         ];
+        $this->chofer_ids[] = null;
     }
 
     public function removeDriver($index)
     {
         unset($this->despatch->envio['choferes'][$index]);
         $this->despatch->envio['choferes'] = array_values($this->despatch->envio['choferes']);
+
+        unset($this->chofer_ids[$index]);
+        $this->chofer_ids = array_values($this->chofer_ids);
     }
 
     public function editDetail($key)

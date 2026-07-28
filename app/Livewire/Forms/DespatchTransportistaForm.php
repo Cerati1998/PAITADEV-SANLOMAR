@@ -57,6 +57,7 @@ class DespatchTransportistaForm extends Form
         ],
         'vehiculo' => [
             'placa' => '',
+            'nroAutorizacion' => '',
             'secundarios' => [],
         ],
         'choferes' => [
@@ -126,8 +127,10 @@ class DespatchTransportistaForm extends Form
             "envio.partida.direccion" => ["required", "string"],
 
             "envio.vehiculo.placa" => ["required", 'regex:/^[a-zA-Z0-9]{6}$/'],
+            "envio.vehiculo.nroAutorizacion" => ["nullable", "string"],
             "envio.vehiculo.secundarios" => ['nullable', 'array'],
             "envio.vehiculo.secundarios.*.placa" => ["required"],
+            "envio.vehiculo.secundarios.*.nroAutorizacion" => ["nullable", "string"],
 
             "envio.choferes" => ["required", "array", "min:1"],
             "envio.choferes.*.tipo" => ["required", "in:Principal,Secundario"],
@@ -176,7 +179,9 @@ class DespatchTransportistaForm extends Form
             'envio.partida.ubigueo' => 'ubigeo de partida',
             'envio.partida.direccion' => 'dirección de partida',
             'envio.vehiculo.placa' => 'placa del vehículo',
+            'envio.vehiculo.nroAutorizacion' => 'código de autorización del vehículo',
             'envio.vehiculo.secundarios.*.placa' => 'placa del vehículo secundario',
+            'envio.vehiculo.secundarios.*.nroAutorizacion' => 'código de autorización del vehículo secundario',
             'envio.choferes.*.tipo' => 'tipo de chofer',
             'envio.choferes.*.tipoDoc' => 'tipo de documento del chofer',
             'envio.choferes.*.nroDoc' => 'número de documento del chofer',

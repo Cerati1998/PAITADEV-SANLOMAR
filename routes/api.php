@@ -12,7 +12,10 @@ use App\Http\Controllers\Api\UbigeoController;
 use App\Http\Controllers\Api\VoidedController;
 use App\Models\Client;
 use App\Models\Country;
+use App\Models\Driver;
 use App\Models\Product;
+use App\Models\Transport;
+use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -149,6 +152,59 @@ Route::post('products', function (Request $request) {
         ->get();
 })->middleware('web')
     ->name('api.products.index');
+
+Route::post('transports', function (Request $request) {
+
+    return Transport::select('id', 'razonSocial as name', 'numDoc as description', 'tipoDoc', 'numDoc', 'razonSocial', 'nroMtc')
+        ->when($request->search, function ($query, $search) {
+
+            $query->where(function ($query) use ($search) {
+                $query->where('razonSocial', 'like', '%' . $search . '%')
+                    ->orWhere('numDoc', 'like', '%' . $search . '%');
+            });
+        })->when(
+            $request->exists('selected'),
+            fn($query) => $query->whereIn('id', $request->input('selected', [])),
+            fn($query) => $query->limit(10)
+        )->where('branch_id', session('branch')->id)
+        ->get();
+})->middleware('web')
+    ->name('api.transports.index');
+
+Route::post('vehicles', function (Request $request) {
+
+    return Vehicle::select('id', 'code as name', 'code as description', 'brand', 'model', 'transport_id')
+        ->when($request->search, function ($query, $search) {
+            $query->where('code', 'like', '%' . $search . '%');
+        })->when($request->transport_id, function ($query, $transportId) {
+            $query->where('transport_id', $transportId);
+        })->when(
+            $request->exists('selected'),
+            fn($query) => $query->whereIn('id', $request->input('selected', [])),
+            fn($query) => $query->limit(10)
+        )->get();
+})->middleware('web')
+    ->name('api.vehicles.index');
+
+Route::post('drivers', function (Request $request) {
+
+    return Driver::select('id', 'nombres', 'apellidos', 'numDoc as description', 'transport_id')
+        ->selectRaw("CONCAT(nombres, ' ', apellidos) as name")
+        ->when($request->search, function ($query, $search) {
+            $query->where(function ($query) use ($search) {
+                $query->where('nombres', 'like', '%' . $search . '%')
+                    ->orWhere('apellidos', 'like', '%' . $search . '%')
+                    ->orWhere('numDoc', 'like', '%' . $search . '%');
+            });
+        })->when($request->transport_id, function ($query, $transportId) {
+            $query->where('transport_id', $transportId);
+        })->when(
+            $request->exists('selected'),
+            fn($query) => $query->whereIn('id', $request->input('selected', [])),
+            fn($query) => $query->limit(10)
+        )->get();
+})->middleware('web')
+    ->name('api.drivers.index');
 
 Route::post('countries', function (Request $request) {
 

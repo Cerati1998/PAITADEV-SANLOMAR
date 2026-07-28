@@ -44,6 +44,12 @@ class TransportTable extends DataTableComponent
                 ->format(function ($value) {
                     return $value ? $value : 'S/N';
                 }),
+            Column::make("N° MTC/RNT", "nroMtc")
+                ->searchable()
+                ->sortable()
+                ->format(function ($value) {
+                    return $value ? $value : 'S/N';
+                }),
 
             Column::make("Direccion", "direccion")
                 ->sortable(),
@@ -71,6 +77,7 @@ class TransportTable extends DataTableComponent
         'razonSocial' => '',
         'tipoDoc' => '-',
         'numDoc' => '',
+        'nroMtc' => '',
         'direccion' => '',
         'email' => '',
         'phone' => '',
@@ -79,7 +86,7 @@ class TransportTable extends DataTableComponent
 
     public function edit(Transport $transport)
     {
-        $this->transport = $transport->only(['razonSocial', 'tipoDoc', 'numDoc', 'direccion', 'email', 'phone', 'observations']);
+        $this->transport = $transport->only(['razonSocial', 'tipoDoc', 'numDoc', 'nroMtc', 'direccion', 'email', 'phone', 'observations']);
         $this->transportId = $transport->id;
         $this->openModal = true;
     }
@@ -108,6 +115,7 @@ class TransportTable extends DataTableComponent
                 })->ignore($this->transportId),
             ],
             'transport.razonSocial' => 'required',
+            'transport.nroMtc' => 'nullable|string|max:45',
             'transport.direccion' => Rule::requiredIf($this->transport['tipoDoc'] == 6),
             'transport.phone' => 'nullable',
             'transport.email' => 'nullable',
@@ -116,6 +124,7 @@ class TransportTable extends DataTableComponent
             'transport.tipoDoc' => 'Tipo de Documento',
             'transport.numDoc' => 'Número de Documento',
             'transport.razonSocial' => 'Razón Social',
+            'transport.nroMtc' => 'N° MTC/RNT',
             'transport.direccion' => 'Dirección',
             'transport.phone' => 'Telefono',
             'transport.email' => 'Correo electronico',

@@ -6,6 +6,7 @@ use App\Livewire\Forms\EmailForm;
 use App\Livewire\Forms\WhatsappForm;
 use App\Mail\DocumentSent;
 use App\Models\DespatchTransportista;
+use App\Models\Vehicle;
 use App\Services\Sunat\Transportista\DocumentTransportistaService;
 use App\Services\Sunat\Transportista\UtilTransportistaService;
 use Illuminate\Database\Eloquent\Builder;
@@ -133,7 +134,54 @@ class DespatchTransportistaTable extends DataTableComponent
     //Métodos
     public function downloadPDF(DespatchTransportista $despatch)
     {
+        $this->regeneratePdf($despatch);
+
         return Storage::download($despatch->pdf_path);
+    }
+
+    /**
+     * Reconstruye el PDF con la plantilla actual antes de servirlo, para que
+     * guías ya emitidas reflejen cambios de formato (ej. MTC, cod. autorización)
+     * sin tener que reenviar el comprobante a SUNAT.
+     *
+     * También rellena envio.vehiculo.nroAutorizacion en guías antiguas que se
+     * generaron antes de que ese campo existiera, buscando el vehículo por
+     * placa dentro de la misma sucursal.
+     */
+    protected function regeneratePdf(DespatchTransportista $despatch)
+    {
+        $envio = $despatch->envio;
+
+        if (empty($envio['vehiculo']['nroAutorizacion']) && !empty($envio['vehiculo']['placa'])) {
+            $envio['vehiculo']['nroAutorizacion'] = $this->findAutorizacion($despatch->branch_id, $envio['vehiculo']['placa']);
+        }
+
+        foreach ($envio['vehiculo']['secundarios'] ?? [] as $index => $secundario) {
+            if (empty($secundario['nroAutorizacion']) && !empty($secundario['placa'])) {
+                $envio['vehiculo']['secundarios'][$index]['nroAutorizacion'] = $this->findAutorizacion($despatch->branch_id, $secundario['placa']);
+            }
+        }
+
+        if ($envio !== $despatch->envio) {
+            $despatch->envio = $envio;
+            $despatch->save();
+        }
+
+        $util = new UtilTransportistaService(session('company'));
+        $document = new DocumentTransportistaService();
+        $despatchGreenter = $document->getDespatch($despatch);
+
+        $pdf = $util->getReportPdf($despatchGreenter, $despatch->hash);
+        Storage::put($despatch->pdf_path, $pdf);
+    }
+
+    protected function findAutorizacion($branchId, $placa)
+    {
+        $vehicle = Vehicle::whereHas('transport', fn($query) => $query->where('branch_id', $branchId))
+            ->where('code', $placa)
+            ->first();
+
+        return $vehicle->autorization_number ?? null;
     }
 
     public function downloadXML(DespatchTransportista $despatch)
@@ -261,6 +309,8 @@ class DespatchTransportistaTable extends DataTableComponent
     {
         $this->whatsapp->validate();
 
+        $this->regeneratePdf($this->whatsapp->document);
+
         $phone = $this->whatsapp->phone_code . $this->whatsapp->phone_number;
         $pdf_url = Storage::url($this->whatsapp->document->pdf_path);
         $mensaje = "Estimado%20cliente%2C%0ASe%20envía%20la%20GUÍA%20ELECTRÓNICA%20{$this->whatsapp->document->serie}-{$this->whatsapp->document->correlativo}.%20Para%20ver%20click%20en%20el%20siguiente%20enlace%3A%0A%0A{$pdf_url}";
@@ -286,6 +336,8 @@ class DespatchTransportistaTable extends DataTableComponent
     public function sendEmail()
     {
         $this->email->validate();
+
+        $this->regeneratePdf($this->email->document);
 
         Mail::to($this->email->value)
             ->send(new DocumentSent($this->email->document, $this->email->client));

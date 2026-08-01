@@ -246,7 +246,7 @@ class DespatchForm extends Form
     {
         $this->validate();
 
-        $despatch = Despatch::create($this->toArray());
+        $despatch = Despatch::create(UtilService::repairUtf8($this->toArray()));
 
         $util = new UtilService(session('company'));
         $document = new DocumentService();

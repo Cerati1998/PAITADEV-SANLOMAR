@@ -97,9 +97,38 @@ class UtilService
 
         $xml = $builder->build($document);
 
+        // DIAG-4068: log temporal para rastrear en que punto se corrompe la direccion (quitar tras diagnosticar).
+        if ($className === Despatch::class) {
+            \Illuminate\Support\Facades\Log::debug('DIAG-4068 config PHP runtime', [
+                'default_charset' => ini_get('default_charset'),
+                'mbstring.internal_encoding' => ini_get('mbstring.internal_encoding'),
+                'mb_internal_encoding' => mb_internal_encoding(),
+                'mbstring.http_output' => ini_get('mbstring.http_output'),
+                'mbstring.http_input' => ini_get('mbstring.http_input'),
+                'php_sapi' => php_sapi_name(),
+                'php_version' => PHP_VERSION,
+            ]);
+            preg_match('/<cac:AddressLine>.*?<\/cac:AddressLine>/s', $xml, $matches);
+            \Illuminate\Support\Facades\Log::debug('DIAG-4068 xml antes de firmar', [
+                'address_lines' => $matches[0] ?? null,
+                'address_lines_hex' => isset($matches[0]) ? bin2hex($matches[0]) : null,
+                'mb_valid_utf8' => mb_check_encoding($xml, 'UTF-8'),
+            ]);
+        }
+
         $signer = new SignedXml();
         $signer->setCertificate($this->company->certificate);
         $xmlSigned = $signer->signXml($xml);
+
+        // DIAG-4068: log temporal (quitar tras diagnosticar).
+        if ($className === Despatch::class) {
+            preg_match('/<cac:AddressLine>.*?<\/cac:AddressLine>/s', $xmlSigned, $matchesSigned);
+            \Illuminate\Support\Facades\Log::debug('DIAG-4068 xml despues de firmar', [
+                'address_lines' => $matchesSigned[0] ?? null,
+                'address_lines_hex' => isset($matchesSigned[0]) ? bin2hex($matchesSigned[0]) : null,
+                'mb_valid_utf8' => mb_check_encoding($xmlSigned, 'UTF-8'),
+            ]);
+        }
 
         return $xmlSigned;
     }
@@ -107,6 +136,40 @@ class UtilService
     public function getHashSign($xmlSigned)
     {
         return (new XmlUtils())->getHashSign($xmlSigned);
+    }
+
+    /**
+     * Repara texto UTF-8 que fue doblemente codificado (p.ej. pegado desde Word/Excel
+     * con codificación Windows-1252 y reinterpretado como ISO-8859-1), que produce
+     * caracteres de control C1 (U+0080-U+009F) inválidos para XML y provoca que SUNAT
+     * rechace el comprobante (errorCode 4068 en AddressLine, por ejemplo).
+     *
+     * Solo actúa cuando el texto ya contiene un control C1 literal (huella inequívoca
+     * del doble-encoding) y el "downgrade" a bytes Latin-1 es reversible sin pérdida,
+     * para no tocar texto correctamente tildado (ñ, á, –, etc.).
+     */
+    public static function repairUtf8($data)
+    {
+        if (is_array($data)) {
+            return array_map([self::class, 'repairUtf8'], $data);
+        }
+
+        if (!is_string($data) || $data === '' || !mb_check_encoding($data, 'UTF-8')) {
+            return $data;
+        }
+
+        if (!preg_match('/[\x{0080}-\x{009F}]/u', $data)) {
+            return $data;
+        }
+
+        $downgraded = @mb_convert_encoding($data, 'ISO-8859-1', 'UTF-8');
+        $roundtrip = @mb_convert_encoding($downgraded, 'UTF-8', 'ISO-8859-1');
+
+        if ($roundtrip !== $data || $downgraded === $data || !mb_check_encoding($downgraded, 'UTF-8')) {
+            return $data;
+        }
+
+        return $downgraded;
     }
 
     public function getResponse($result)

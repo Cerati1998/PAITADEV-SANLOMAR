@@ -35,7 +35,7 @@ class DespatchController extends Controller
 
     public function send(DespatchRequest $request)
     {
-        $data = $request->all();
+        $data = UtilService::repairUtf8($request->all());
         $data['company_id'] = $this->company->id;
         $data['production'] = $this->company->production;
 

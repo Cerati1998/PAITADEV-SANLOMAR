@@ -164,6 +164,9 @@ class DespatchTable extends DataTableComponent
 
             // Si no tiene ticket ni XML (fallo al generar la primera vez), lo regeneramos.
             if (!$despatch->sunat_ticket && empty($despatch->xml_path)) {
+                $despatch->envio = UtilService::repairUtf8($despatch->envio);
+                $despatch->destinatario = UtilService::repairUtf8($despatch->destinatario);
+
                 $document = new DocumentService();
                 $despatchGreenter = $document->getDespatch($despatch);
 

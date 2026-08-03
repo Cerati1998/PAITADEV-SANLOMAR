@@ -281,13 +281,20 @@ class UtilService
         return $report->render($invoice, $params);
     }
 
-    public function getReportPdf(DocumentInterface $document, $hash)
+    public function getReportPdf(DocumentInterface $document, $hash, $tipoCambio = null)
     {
         // wkhtmltopdf via Greenter\Report\PdfReport: unica implementacion soportada.
         // Un intento previo de migrar a DomPDF (Pdf::loadHTML()->stream()) quedo
         // descartado porque stream() devuelve un Illuminate\Http\Response, no el
         // binario del PDF, lo que rompe cada Storage::put($path, $pdf) del proyecto.
-        $htmlReport = new HtmlReport();
+        //
+        // Se pasa public_path('custom/pdf') para que las plantillas propias vivan en el
+        // repo y no dentro de vendor/ (que es gitignored y lo pisa cada composer install
+        // del deploy: asi se perdio el "S/" fijo de la detraccion y salio en USD).
+        // HtmlReport::getDirectories() encadena [custom/pdf, vendor/Templates], asi que
+        // solo hace falta versionar las plantillas que realmente se sobrescriben; el
+        // resto (guias, bajas, resumenes) sigue resolviendo desde vendor.
+        $htmlReport = new HtmlReport(public_path('custom/pdf'));
         $resolver = new DefaultTemplateResolver();
         $htmlReport->setTemplate($resolver->getTemplate($document));
 
@@ -320,6 +327,13 @@ class UtilService
         ];
 
         $user['extras'] = $extras;
+
+        // El tipo de cambio ya no vive en el documento Greenter (ver DocumentService::
+        // getInvoice): la plantilla lo lee desde params.user.tipoCambio y omite la fila
+        // si no se envia.
+        if ($tipoCambio) {
+            $user['tipoCambio'] = $tipoCambio;
+        }
 
         if ($this->company->invoice_header) {
             $user['header'] = $this->company->invoice_header;

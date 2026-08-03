@@ -55,7 +55,7 @@ class NoteController extends Controller
         Storage::put($invoice->xml_path, $xml);
 
         //PDF
-        $pdf = $util->getReportPdf($invoiceGreenter, $invoice->hash);
+        $pdf = $util->getReportPdf($invoiceGreenter, $invoice->hash, $invoice->tipoCambio);
         $invoice->pdf_path = $directory . 'cpe/' . $invoiceGreenter->getName() . '.pdf';
         Storage::put($invoice->pdf_path, $pdf);
         $invoice->save();

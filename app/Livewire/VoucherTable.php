@@ -181,7 +181,7 @@ class VoucherTable extends DataTableComponent
                     : $document->getInvoice($invoice);
 
                 $util = new UtilService(session('company'));
-                $pdf = $util->getReportPdf($invoiceGreenter, $invoice->hash);
+                $pdf = $util->getReportPdf($invoiceGreenter, $invoice->hash, $invoice->tipoCambio);
 
                 $directory = $invoice->production ? 'sunat/' : 'sunat/beta/';
                 $invoice->pdf_path = $directory . 'cpe/' . $invoiceGreenter->getName() . '.pdf';
@@ -226,7 +226,7 @@ class VoucherTable extends DataTableComponent
                 $invoice->xml_path = $directory . 'xml/' . $invoiceGreenter->getName() . '.xml';
                 Storage::put($invoice->xml_path, $xml);
 
-                $pdf = $util->getReportPdf($invoiceGreenter, $invoice->hash);
+                $pdf = $util->getReportPdf($invoiceGreenter, $invoice->hash, $invoice->tipoCambio);
                 $invoice->pdf_path = $directory . 'cpe/' . $invoiceGreenter->getName() . '.pdf';
                 Storage::put($invoice->pdf_path, $pdf);
 

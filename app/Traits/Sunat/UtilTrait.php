@@ -191,8 +191,9 @@ trait UtilTrait
 
     public function getReportPdf($invoice, $hash, $company)
     {
-        /* $htmlReport = new HtmlReport(public_path('custom')); */
-        $htmlReport = new HtmlReport();
+        // Mismas plantillas versionadas que UtilService::getReportPdf(), para que la
+        // detraccion tambien salga en S/ por esta via (ver comentario alli).
+        $htmlReport = new HtmlReport(public_path('custom/pdf'));
         $resolver = new DefaultTemplateResolver();
         $htmlReport->setTemplate($resolver->getTemplate($invoice));
 

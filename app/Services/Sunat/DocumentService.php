@@ -44,8 +44,13 @@ class DocumentService
             ->setFormaPago($this->getFormaPago($data['formaPago'] ?? null))
             ->setCuotas($this->getCuotas($data['cuotas'] ?? []))
             ->setTipoMoneda($data['tipoMoneda']) // Sol - Catalog. 02
-            ->setTipoCambio($data['tipoCambio']) // de SUNAT
 
+            // OJO: no llamar a setTipoCambio() aqui. Greenter\Model\Sale\BaseSale NO
+            // declara tipoCambio (verificado contra greenter/core v5.1.1 upstream); el
+            // vendor/ que corria en produccion lo tenia agregado a mano y ese parche se
+            // perdio en el primer deploy real con composer install. El XML de factura no
+            // usa el tipo de cambio, solo se mostraba en el PDF: ahora viaja por params
+            // hacia la plantilla (ver UtilService::getReportPdf).
             ->setGuias($data['guias'] ?? [])
 
             //Compañia

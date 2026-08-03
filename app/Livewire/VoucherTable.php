@@ -173,6 +173,31 @@ class VoucherTable extends DataTableComponent
     //Métodos
     public function downloadPDF(Invoice $invoice)
     {
+        if (empty($invoice->pdf_path) && !empty($invoice->xml_path)) {
+            try {
+                $document = new DocumentService();
+                $invoiceGreenter = in_array($invoice->tipoDoc, ['07', '08'])
+                    ? $document->getNote($invoice)
+                    : $document->getInvoice($invoice);
+
+                $util = new UtilService(session('company'));
+                $pdf = $util->getReportPdf($invoiceGreenter, $invoice->hash);
+
+                $directory = $invoice->production ? 'sunat/' : 'sunat/beta/';
+                $invoice->pdf_path = $directory . 'cpe/' . $invoiceGreenter->getName() . '.pdf';
+                Storage::put($invoice->pdf_path, $pdf);
+                $invoice->save();
+            } catch (\Throwable $e) {
+                $this->dispatch('swal', [
+                    'icon' => 'error',
+                    'title' => 'Error al generar el PDF',
+                    'text' => $e->getMessage()
+                ]);
+
+                return;
+            }
+        }
+
         return Storage::download($invoice->pdf_path);
     }
 

@@ -142,3 +142,7 @@ None - no external service configuration required.
 - `App\Enums\VoidedStatus` y `App\Services\Sunat\VoidedTicketFlowService` quedan listos para que el Plan 02 (`VoidedForm::send()`) y el Plan 03 (`VoidedTable::sendXml()`) deleguen en ellos, cumpliendo D-11 (eliminar la duplicación del flujo defectuoso)
 - La verificación real contra SUNAT beta (D-14) sigue pendiente: este plan no invoca el servicio desde ningún llamador Livewire todavía, así que no hay tráfico SOAP real que probar aquí — corresponde al Plan 02
 - Sin bloqueos para continuar con el Plan 02
+
+## Self-Check: PASSED
+
+Todos los archivos declarados existen en disco y los tres hashes de commit (`674d700`, `23f6107`, `f3166dd`) están presentes en el historial de git.

@@ -10,11 +10,11 @@ baja, en la vía web y en la API. Cada requisito mapea a una fase del roadmap.
 
 ### Ticket y estados
 
-- [ ] **TICKET-01**: El sistema guarda el ticket que SUNAT devuelve al enviar una comunicación de baja, antes de consultar su estado
-- [ ] **TICKET-02**: Una anulación cuya consulta de estado responde "en proceso" (código 98) conserva su ticket y no queda registrada como rechazada
-- [ ] **TICKET-03**: Una anulación cuya consulta de estado falla por error de transporte (`SoapFault`, p. ej. `"Bad Request"`) conserva su ticket y no queda registrada como rechazada
-- [ ] **TICKET-04**: Al obtenerse el CDR, el sistema guarda la respuesta de SUNAT, archiva el ZIP del CDR y limpia el ticket
-- [ ] **TICKET-05**: El registro de una anulación distingue tres estados — aceptada, pendiente y rechazada — en lugar de solo éxito/error
+- [x] **TICKET-01**: El sistema guarda el ticket que SUNAT devuelve al enviar una comunicación de baja, antes de consultar su estado
+- [x] **TICKET-02**: Una anulación cuya consulta de estado responde "en proceso" (código 98) conserva su ticket y no queda registrada como rechazada
+- [x] **TICKET-03**: Una anulación cuya consulta de estado falla por error de transporte (`SoapFault`, p. ej. `"Bad Request"`) conserva su ticket y no queda registrada como rechazada
+- [x] **TICKET-04**: Al obtenerse el CDR, el sistema guarda la respuesta de SUNAT, archiva el ZIP del CDR y limpia el ticket
+- [x] **TICKET-05**: El registro de una anulación distingue tres estados — aceptada, pendiente y rechazada — en lugar de solo éxito/error
 
 ### Anulación web
 
@@ -22,7 +22,7 @@ baja, en la vía web y en la API. Cada requisito mapea a una fase del roadmap.
 - [ ] **WEB-02**: El usuario puede reconsultar el estado de una anulación pendiente desde el listado, sin reenviar el XML
 - [ ] **WEB-03**: El reenvío del XML a SUNAT solo ocurre cuando la anulación no tiene ticket guardado
 - [ ] **WEB-04**: El usuario distingue en el listado de anulaciones cuáles fueron aceptadas, cuáles siguen pendientes y cuáles rechazó SUNAT
-- [ ] **WEB-05**: Los comprobantes incluidos en una anulación se marcan como dados de baja únicamente cuando el CDR la acepta
+- [x] **WEB-05**: Los comprobantes incluidos en una anulación se marcan como dados de baja únicamente cuando el CDR la acepta
 
 ### Anulación por API
 
@@ -71,21 +71,22 @@ Reconocidos pero fuera del roadmap actual.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TICKET-01 | Phase 1 | Pending |
-| TICKET-02 | Phase 1 | Pending |
-| TICKET-03 | Phase 1 | Pending |
-| TICKET-04 | Phase 1 | Pending |
-| TICKET-05 | Phase 1 | Pending |
+| TICKET-01 | Phase 1 | Complete |
+| TICKET-02 | Phase 1 | Complete |
+| TICKET-03 | Phase 1 | Complete |
+| TICKET-04 | Phase 1 | Complete |
+| TICKET-05 | Phase 1 | Complete |
 | WEB-01 | Phase 1 | Pending |
 | WEB-02 | Phase 2 | Pending |
 | WEB-03 | Phase 2 | Pending |
 | WEB-04 | Phase 2 | Pending |
-| WEB-05 | Phase 1 | Pending |
+| WEB-05 | Phase 1 | Complete |
 | API-01 | Phase 3 | Pending |
 | API-02 | Phase 3 | Pending |
 | API-03 | Phase 3 | Pending |
 
 **Coverage:**
+
 - v1 requirements: 13 total
 - Mapped to phases: 13
 - Unmapped: 0 ✓

@@ -3,13 +3,13 @@
 namespace App\Livewire;
 
 use App\Models\Invoice;
-use Rappasoft\LaravelLivewireTables\DataTableComponent;
-use Rappasoft\LaravelLivewireTables\Views\Column;
 use App\Models\Voided;
 use App\Services\Sunat\UtilService;
 use App\Services\Sunat\VoidedService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
+use Rappasoft\LaravelLivewireTables\DataTableComponent;
+use Rappasoft\LaravelLivewireTables\Views\Column;
 
 class VoidedTable extends DataTableComponent
 {
@@ -23,13 +23,13 @@ class VoidedTable extends DataTableComponent
     public function columns(): array
     {
         return [
-            Column::make("Fecha Generacion", "fecGeneracion")
+            Column::make('Fecha Generacion', 'fecGeneracion')
                 ->format(function ($value) {
                     return $value->format('d/m/Y');
                 })
                 ->sortable(),
 
-            Column::make("Fecha Comunicación", "fecComunicacion")
+            Column::make('Fecha Comunicación', 'fecComunicacion')
                 ->format(function ($value) {
                     return $value->format('d/m/Y');
                 })
@@ -38,28 +38,28 @@ class VoidedTable extends DataTableComponent
             Column::make('correlativo')
                 ->format(
                     function ($value) {
-                        return 'Comunicación de baja: ' . $value;
+                        return 'Comunicación de baja: '.$value;
                     }
                 ),
 
             Column::make('PDF', 'pdf_path')
                 ->format(
-                    fn($value, $row) => view('vouchers.partials.pdf', compact('row'))
+                    fn ($value, $row) => view('vouchers.partials.pdf', compact('row'))
                 )->collapseOnTablet(),
 
             Column::make('XML', 'xml_path')
                 ->format(
-                    fn($value, $row) => view('vouchers.partials.xml', compact('value', 'row'))
+                    fn ($value, $row) => view('vouchers.partials.xml', compact('value', 'row'))
                 )->collapseOnTablet(),
 
             Column::make('CDR', 'cdr_path')
                 ->format(
-                    fn($value, $row) => view('vouchers.partials.cdr', compact('value', 'row'))
+                    fn ($value, $row) => view('vouchers.partials.cdr', compact('value', 'row'))
                 )->collapseOnTablet(),
 
-            Column::make('Sunat', 'sunatResponse')
+            Column::make('Sunat', 'sunat_status')
                 ->format(
-                    fn($value, $row) => view('vouchers.partials.response', compact('value', 'row'))
+                    fn ($value, $row) => view('voideds.partials.response', compact('row'))
                 )->collapseOnTablet(),
         ];
     }
@@ -78,7 +78,7 @@ class VoidedTable extends DataTableComponent
     public function sendXml(Voided $voided)
     {
         $directory = $voided->production ? 'sunat/' : 'sunat/beta/';
-        $name = session('company')->ruc . "-RC-" . $voided->fecGeneracion->format('Ymd') . '-' . $voided->correlativo;
+        $name = session('company')->ruc.'-RC-'.$voided->fecGeneracion->format('Ymd').'-'.$voided->correlativo;
 
         //Enviar a SUNAT
         try {
@@ -87,15 +87,15 @@ class VoidedTable extends DataTableComponent
 
             // Si no tiene XML (fallo al generar la primera vez), lo regeneramos.
             if (empty($voided->xml_path)) {
-                $voidedGreenter = (new VoidedService())->getVoided($voided);
+                $voidedGreenter = (new VoidedService)->getVoided($voided);
 
                 $xml = $util->getXmlSigned($voidedGreenter);
                 $voided->hash = $util->getHashSign($xml);
-                $voided->xml_path = $directory . 'xml/' . $voidedGreenter->getName() . '.xml';
+                $voided->xml_path = $directory.'xml/'.$voidedGreenter->getName().'.xml';
                 Storage::put($voided->xml_path, $xml);
 
                 $pdf = $util->getReportPdf($voidedGreenter, $voided->hash);
-                $voided->pdf_path = $directory . 'cpe/' . $voidedGreenter->getName() . '.pdf';
+                $voided->pdf_path = $directory.'cpe/'.$voidedGreenter->getName().'.pdf';
                 Storage::put($voided->pdf_path, $pdf);
 
                 $voided->save();
@@ -106,16 +106,16 @@ class VoidedTable extends DataTableComponent
             $see = $util->getSee();
             $result = $see->sendXmlFile($xml);
 
-            if (!$result->isSuccess()) {
+            if (! $result->isSuccess()) {
 
                 $voided->update([
                     'sunatResponse' => [
                         'success' => false,
                         'error' => [
                             'code' => $result->getError()->getCode(),
-                            'message' => $result->getError()->getMessage()
-                        ]
-                    ]
+                            'message' => $result->getError()->getMessage(),
+                        ],
+                    ],
                 ]);
 
                 $this->showResponse($voided);
@@ -129,7 +129,7 @@ class VoidedTable extends DataTableComponent
             $voided->sunatResponse = $util->getResponse($result);
 
             if ($result->getCdrZip()) {
-                $voided->cdr_path = $directory . 'cdr/R-' . $name . '.zip';
+                $voided->cdr_path = $directory.'cdr/R-'.$name.'.zip';
                 Storage::put($voided->cdr_path, $result->getCdrZip());
             }
 
@@ -153,7 +153,7 @@ class VoidedTable extends DataTableComponent
             $this->dispatch('swal', [
                 'icon' => 'error',
                 'title' => 'Error al enviar el comprobante',
-                'text' => $e->getMessage()
+                'text' => $e->getMessage(),
             ]);
         }
     }
@@ -163,13 +163,13 @@ class VoidedTable extends DataTableComponent
         $title = 'Detalle de la comunicación de baja';
 
         $html = view('voideds.partials.sunatResponse', [
-            'document' => $voided
+            'document' => $voided,
         ])->render();
 
         $this->dispatch('swal', [
             'icon' => $voided->sunatResponse['success'] ? 'info' : 'error',
             'title' => $title,
-            'html' => $html
+            'html' => $html,
         ]);
     }
 

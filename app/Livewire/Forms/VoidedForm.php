@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Forms;
 
-use App\Models\Invoice;
+use App\Enums\VoidedStatus;
 use App\Models\Voided;
 use App\Services\Sunat\UtilService;
 use App\Services\Sunat\VoidedService;
+use App\Services\Sunat\VoidedTicketFlowService;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Attributes\Validate;
 use Livewire\Form;
 
 class VoidedForm extends Form
@@ -15,6 +15,7 @@ class VoidedForm extends Form
     public $correlativo;
 
     public $fecGeneracion;
+
     public $fecComunicacion;
 
     public $details = [];
@@ -22,6 +23,7 @@ class VoidedForm extends Form
     public $sunatResponse;
 
     public $branch_id;
+
     public $company_id;
 
     public $production;
@@ -34,10 +36,11 @@ class VoidedForm extends Form
 
         $voided = Voided::create($this->all());
         $util = new UtilService(session('company'));
+        $flow = new VoidedTicketFlowService($util);
 
         //Enviar a SUNAT
         try {
-            $voidedGreenter = (new VoidedService())->getVoided($voided);
+            $voidedGreenter = (new VoidedService)->getVoided($voided);
 
             //Directorio
             $directory = $this->production ? 'sunat/' : 'sunat/beta/';
@@ -46,77 +49,52 @@ class VoidedForm extends Form
             $xml = $util->getXmlSigned($voidedGreenter);
             $voided->hash = $util->getHashSign($xml);
 
-            $voided->xml_path = $directory . 'xml/' . $voidedGreenter->getName() . '.xml';
+            $voided->xml_path = $directory.'xml/'.$voidedGreenter->getName().'.xml';
             Storage::put($voided->xml_path, $xml);
 
             //PDF
             $pdf = $util->getReportPdf($voidedGreenter, $voided->hash);
-            $voided->pdf_path = $directory . 'cpe/' . $voidedGreenter->getName() . '.pdf';
+            $voided->pdf_path = $directory.'cpe/'.$voidedGreenter->getName().'.pdf';
             Storage::put($voided->pdf_path, $pdf);
             $voided->save();
 
-            $see = $util->getSee();
-            $result = $see->sendXmlFile($xml);
+            $cdrPath = $directory.'cdr/R-'.$voidedGreenter->getName().'.zip';
+            $status = $flow->sendAndResolve($voided, $xml, $cdrPath);
 
-            if (!$result->isSuccess()) {
-                $voided->sunatResponse = [
-                    'success' => false,
-                    'error' => [
-                        'code' => $result->getError()->getCode(),
-                        'message' => $result->getError()->getMessage()
-                    ]
-                ];
+            if ($status === VoidedStatus::Pendiente) {
+                session()->flash('swal', [
+                    'icon' => 'info',
+                    'title' => 'En proceso',
+                    'text' => 'SUNAT recibió la comunicación de baja pero aún la procesa. Su ticket quedó guardado.',
+                ]);
 
-                $voided->save();
-
-                return redirect()->route('vouchers.index');
-            }
-
-            $ticket = $result->getTicket();
-            $result = $see->getStatus($ticket);
-
-            $voided->sunatResponse = $util->getResponse($result);
-
-            if ($result->getCdrZip()) {
-                $voided->cdr_path = $directory . 'cdr/R-' . $voidedGreenter->getName() . '.zip';
-                Storage::put($voided->cdr_path, $result->getCdrZip());
-            }
-
-            $voided->save();
-
-            if($voided->sunatResponse['success'] && $voided->sunatResponse['cdrResponse']['code'] == '0')
-            {
-                foreach ($voided->details as $item) {
-                    Invoice::where('tipoDoc', $item['tipoDoc'])
-                        ->where('serie', $item['serie'])
-                        ->where('correlativo', $item['correlativo'])
-                        ->where('branch_id', session('branch')->id)
-                        ->where('company_id', session('company')->id)
-                        ->update(['voided' => true]);
-                }
+                return redirect()->route('voideds.index');
             }
 
             $this->showResponse($voided);
 
-            return redirect()->route('voideds.index', $voided);
+            return redirect()->route('voideds.index');
 
         } catch (\Throwable $e) {
-            $voided->sunatResponse = [
-                'success' => false,
-                'error' => [
-                    'code' => null,
-                    'message' => $e->getMessage(),
-                ],
-            ];
-            $voided->save();
+            $status = $flow->classifyFailure($voided, $e);
+
+            if ($status === VoidedStatus::Pendiente) {
+                session()->flash('swal', [
+                    'icon' => 'info',
+                    'title' => 'En proceso',
+                    'text' => 'SUNAT recibió la comunicación de baja pero aún la procesa. Su ticket quedó guardado.',
+                ]);
+
+                return redirect()->route('voideds.index');
+            }
 
             session()->flash('swal', [
                 'icon' => 'error',
                 'title' => 'Error al generar el comprobante',
-                'text' => $e->getMessage()
+                'text' => $e->getMessage(),
             ]);
 
-            return redirect()->route('vouchers.index');
+            return redirect()->route('voideds.index');
         }
     }
 
@@ -125,13 +103,13 @@ class VoidedForm extends Form
         $title = 'Detalle de la comunicación de baja';
 
         $html = view('voideds.partials.sunatResponse', [
-            'document' => $voided
+            'document' => $voided,
         ])->render();
 
         session()->flash('swal', [
             'icon' => $voided->sunatResponse['success'] ? 'info' : 'error',
             'title' => $title,
-            'html' => $html
+            'html' => $html,
         ]);
     }
 }

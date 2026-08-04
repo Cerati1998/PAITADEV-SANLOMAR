@@ -69,29 +69,35 @@ Reconocidos pero fuera del roadmap actual.
 
 ## Traceability
 
-Se completa durante la creación del roadmap.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TICKET-01 | — | Pending |
-| TICKET-02 | — | Pending |
-| TICKET-03 | — | Pending |
-| TICKET-04 | — | Pending |
-| TICKET-05 | — | Pending |
-| WEB-01 | — | Pending |
-| WEB-02 | — | Pending |
-| WEB-03 | — | Pending |
-| WEB-04 | — | Pending |
-| WEB-05 | — | Pending |
-| API-01 | — | Pending |
-| API-02 | — | Pending |
-| API-03 | — | Pending |
+| TICKET-01 | Phase 1 | Pending |
+| TICKET-02 | Phase 1 | Pending |
+| TICKET-03 | Phase 1 | Pending |
+| TICKET-04 | Phase 1 | Pending |
+| TICKET-05 | Phase 1 | Pending |
+| WEB-01 | Phase 1 | Pending |
+| WEB-02 | Phase 2 | Pending |
+| WEB-03 | Phase 2 | Pending |
+| WEB-04 | Phase 2 | Pending |
+| WEB-05 | Phase 1 | Pending |
+| API-01 | Phase 3 | Pending |
+| API-02 | Phase 3 | Pending |
+| API-03 | Phase 3 | Pending |
 
 **Coverage:**
 - v1 requirements: 13 total
-- Mapped to phases: 0
-- Unmapped: 13 ⚠️ (se resuelve al crear el roadmap)
+- Mapped to phases: 13
+- Unmapped: 0 ✓
+
+**Por fase:**
+
+| Phase | Requirements | Count |
+|-------|--------------|-------|
+| 1 — Ticket persistido y semántica de tres estados | TICKET-01, TICKET-02, TICKET-03, TICKET-04, TICKET-05, WEB-01, WEB-05 | 7 |
+| 2 — Reconsulta de anulaciones pendientes | WEB-02, WEB-03, WEB-04 | 3 |
+| 3 — Anulación por API con recuperación por ticket | API-01, API-02, API-03 | 3 |
 
 ---
 *Requirements defined: 2026-08-04*
-*Last updated: 2026-08-04 after initial definition*
+*Last updated: 2026-08-04 after roadmap creation (traceability mapped)*

@@ -202,7 +202,7 @@ class UtilService
         // Mismo directorio de plantillas que getReportPdf(): antes esta vista
         // apuntaba a public/custom, un fork mas viejo sin el bloque de detraccion,
         // asi que la previsualizacion HTML y el PDF descargado no coincidian.
-        $report = new HtmlReport(public_path('custom/pdf'));
+        $report = new HtmlReport(app_path('Services/Sunat/Templates/pdf'));
 
         $resolver = new DefaultTemplateResolver();
         $report->setTemplate($resolver->getTemplate($invoice));
@@ -248,13 +248,15 @@ class UtilService
         // descartado porque stream() devuelve un Illuminate\Http\Response, no el
         // binario del PDF, lo que rompe cada Storage::put($path, $pdf) del proyecto.
         //
-        // Se pasa public_path('custom/pdf') para que las plantillas propias vivan en el
-        // repo y no dentro de vendor/ (que es gitignored y lo pisa cada composer install
-        // del deploy: asi se perdio el "S/" fijo de la detraccion y salio en USD).
-        // HtmlReport::getDirectories() encadena [custom/pdf, vendor/Templates], asi que
-        // solo hace falta versionar las plantillas que realmente se sobrescriben; el
-        // resto (guias, bajas, resumenes) sigue resolviendo desde vendor.
-        $htmlReport = new HtmlReport(public_path('custom/pdf'));
+        // Las plantillas propias viven en app/Services/Sunat/Templates/pdf y no dentro
+        // de vendor/ (que es gitignored y lo pisa cada composer install del deploy: asi
+        // se perdio el "S/" fijo de la detraccion y salio en USD). Tampoco en public/,
+        // donde el servidor las entregaba como texto plano a cualquiera que pidiera la
+        // URL del .twig.
+        // HtmlReport::getDirectories() encadena [Templates/pdf, vendor/Templates], asi
+        // que solo hace falta versionar las plantillas que realmente se sobrescriben; el
+        // resto sigue resolviendo desde vendor.
+        $htmlReport = new HtmlReport(app_path('Services/Sunat/Templates/pdf'));
         $resolver = new DefaultTemplateResolver();
         $htmlReport->setTemplate($resolver->getTemplate($document));
 

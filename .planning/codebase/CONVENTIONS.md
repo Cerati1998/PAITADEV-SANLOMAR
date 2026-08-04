@@ -199,7 +199,10 @@ use Livewire\Component;
   and edit the copy. `SunatXmlBuilder` chains the loader `[repo, vendor]`, so the
   repo copy wins and untouched templates keep resolving from the package.
 - To change a PDF/RIDE: same idea, from
-  `vendor/greenter/report/src/Report/Templates/` into `public/custom/pdf/`.
+  `vendor/greenter/report/src/Report/Templates/` into `app/Services/Sunat/Templates/pdf/`.
+- Keep templates under `app/`, never under `public/`. They lived in
+  `public/custom/pdf/` until 2026-08-04, inside the docroot, where the server
+  served the raw `.twig` to anyone who requested its URL.
 - Data that does not exist on the Greenter model (e.g. `tipoCambio`, absent from
   `BaseSale`) is passed through report params and read as
   `params.user.<field>` — do not add setters to vendor models.

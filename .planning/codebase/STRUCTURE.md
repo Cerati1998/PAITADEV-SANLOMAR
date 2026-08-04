@@ -207,10 +207,11 @@ project-root/
 - `Templates/` – The XML twig templates themselves. Never edit `vendor/greenter`: it is gitignored and `composer install` wipes it on every deploy (see CONCERNS.md)
 - `Transportista/` – Guía transportista is a document type Greenter does not model; it has its own model, template, builder and service
 
-**`public/custom/pdf/`:**
+**`app/Services/Sunat/Templates/pdf/`:**
 - Purpose: Report (PDF/RIDE) twig templates, repo-owned, with chained fallback to `greenter/report`
 - Holds `invoice`, `despatch`, `voided`, `summary`, `perception`, `retention`, `despatchTransportista` and `assets/style.css`
 - Single source for both `getReportPdf()` and `getReportHtml()`; they used to point at different directories and produced different output
+- Lived in `public/custom/pdf/` until 2026-08-04. Moved out of the docroot because the web server was serving the raw `.twig` files to anyone requesting their URL. Templates belong under `app/`, never under `public/`
 
 **`app/Models/`:**
 - Purpose: Domain entities with Eloquent relationships

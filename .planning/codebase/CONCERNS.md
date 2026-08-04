@@ -92,6 +92,12 @@
   - Use Laravel's built-in sensitive field masking in logs
   - Never log response body containing authentication tokens
 
+**Twig Templates Served From the Docroot — RESOLVED (2026-08-04):**
+- Was: report templates lived in `public/custom/pdf/`, inside the docroot. Apache served the `.twig` files as plain text to any unauthenticated request (`GET /custom/pdf/invoice.html.twig` returned the full source), exposing the RIDE structure, field names and the detraction logic
+- Impact: information disclosure only — no credentials are present in the templates — but it revealed internal business logic to anyone who guessed the path
+- Resolution: moved to `app/Services/Sunat/Templates/pdf/`, outside the docroot; `public/custom/` no longer exists. Verified the URL now returns 404. XML templates were never exposed, they already lived under `app/`
+- Prevention: rule recorded in CLAUDE.md and CONVENTIONS.md — SUNAT templates belong under `app/`, never under `public/`
+
 **Stored Company Credentials Accessible via API:**
 - Risk: If API endpoints expose company data (e.g., `GET /api/company`), SUNAT credentials would be included in JSON response
 - Files: Routes in `routes/api.php` (if present); `app/Http/Controllers/Api/*`
@@ -205,7 +211,7 @@
 - Risk: Community-maintained PHP library for SUNAT UBL generation; SUNAT API changes periodically, and Greenter may not update immediately
 - Impact: If SUNAT adds new mandatory fields or changes validation rules, invoices will fail to send until Greenter updates
 - Migration plan: Monitor Greenter GitHub releases monthly; maintain version lock in composer.json; test with SUNAT beta API quarterly; consider commercial SUNAT provider (Nubefact, Facturación.pe) as fallback
-- **Reduced surface (2026-08-03):** Greenter is no longer used to *generate* anything. XML and report templates are repo-owned (`app/Services/Sunat/Templates/`, `public/custom/pdf/`) and rendered by `SunatXmlBuilder`; Greenter now only provides models, signing, submission and CDR parsing. Adapting to a SUNAT UBL change no longer requires waiting for an upstream release — the template can be edited in this repo. See ARCHITECTURE.md, "SUNAT templates are repo-owned".
+- **Reduced surface (2026-08-03):** Greenter is no longer used to *generate* anything. XML and report templates are repo-owned (`app/Services/Sunat/Templates/`, `app/Services/Sunat/Templates/pdf/`) and rendered by `SunatXmlBuilder`; Greenter now only provides models, signing, submission and CDR parsing. Adapting to a SUNAT UBL change no longer requires waiting for an upstream release — the template can be edited in this repo. See ARCHITECTURE.md, "SUNAT templates are repo-owned".
 
 **Hand-patched `vendor/` — RESOLVED (2026-08-03):**
 - Was: SUNAT XML and PDF output depended on files edited by hand inside `vendor/greenter`, which is gitignored. The first Deployer run executed `composer install`, restored pristine code and silently wiped every patch.

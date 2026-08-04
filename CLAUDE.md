@@ -64,8 +64,13 @@ only for its models, XML signing (`SignedXml`), submission and CDR parsing.
 |------|-------|
 | XML templates (invoice, notacr, notadb, despatch2022, voided, summary) | `app/Services/Sunat/Templates/` |
 | XML builder for every document type | `app/Services/Sunat/Xml/SunatXmlBuilder.php` |
-| Report templates + `assets/style.css` | `public/custom/pdf/` |
+| Report templates + `assets/style.css` | `app/Services/Sunat/Templates/pdf/` |
 | Guía transportista (document type Greenter does not model) | `app/Services/Sunat/Transportista/` |
+
+All of them live under `app/` on purpose. The report templates used to sit in
+`public/custom/pdf/`, inside the docroot, where the web server handed them out as
+plain text to anyone requesting the `.twig` URL — exposing the RIDE structure and
+the detraction logic. Do not move templates back into `public/`.
 
 `vendor/` is gitignored and was historically uploaded to the VPS already
 hand-patched. The first real Deployer run executed `composer install` and

@@ -103,7 +103,7 @@ SUNAT, firma, lectura de CDR, credenciales).
 | `app/Services/Sunat/Transportista/Model/DespatchTransportista.php` | Modelo de documento **propio**, implementa `Greenter\Model\DocumentInterface`. Agrega `remitente`, `subcontratador` (ausentes en `Greenter\Model\Despatch\Despatch`). `getName()` idéntico al de Greenter (`RUC-tipoDoc-serie-correlativo`). |
 | `app/Services/Sunat/Transportista/Xml/TransportistaXmlBuilder.php` | Réplica de `Greenter\Xml\Builder\TwigBuilder` (mismos filtros `n_format`/`n_format_limit` de `Greenter\Xml\Filter\FormatFilter`, misma zona horaria) apuntando a un directorio de templates propio. |
 | `app/Services/Sunat/Transportista/Templates/despatchTransportista.xml.twig` | **XML UBL 2.1 de la GRE-Transportista.** Basado en `despatch2022.xml.twig` de Greenter, con los bloques nuevos: `cac:DespatchParty` (remitente, dentro de `Shipment/Delivery/Despatch`) y `cac:Consignment/cac:LogisticsOperatorParty` (subcontratador, condicional). Vehículo/choferes/direcciones/ítems reutilizan los mismos tags que la GRE-Remitente porque `Greenter\Model\Despatch\Shipment` ya modela ambos escenarios y los tags coinciden exactamente con los del Anexo 14-a para esos bloques compartidos. |
-| `public/custom/pdf/despatchTransportista.html.twig` | Template PDF (representación impresa), adaptado de `public/custom/pdf/despatch.html.twig` (la versión ya personalizada del proyecto, no la de vendor). Agrega secciones REMITENTE, EMPRESA SUBCONTRATADA y DOCUMENTO(S) RELACIONADO(S). |
+| `app/Services/Sunat/Templates/pdf/despatchTransportista.html.twig` | Template PDF (representación impresa), adaptado de `app/Services/Sunat/Templates/pdf/despatch.html.twig` (la versión ya personalizada del proyecto, no la de vendor). Agrega secciones REMITENTE, EMPRESA SUBCONTRATADA y DOCUMENTO(S) RELACIONADO(S). |
 
 ### Fase 4 — Servicios de dominio
 
@@ -286,7 +286,7 @@ repetir las pruebas.
 | Agregar un campo nuevo al formulario | `DespatchTransportistaForm` (Livewire Form) + `DespatchTransportistaRequest` (API) + `DocumentTransportistaService::getDespatch()`/`getEnvio()` (mapeo a Greenter) + el template XML/PDF |
 | Cambiar cómo se envía a SUNAT (URLs, credenciales) | `App\Services\Sunat\UtilService::getSeeApi()` — es **compartido** con la guía remitente, cualquier cambio ahí afecta a ambos tipos de documento |
 | Agregar un nuevo código al catálogo 61 (documento relacionado) | `database/seeders/RelatedDocumentSeeder.php` + migración de retrofit similar a `2026_07_24_100100_*` |
-| Revisar la representación impresa (PDF) | `public/custom/pdf/despatchTransportista.html.twig` |
+| Revisar la representación impresa (PDF) | `app/Services/Sunat/Templates/pdf/despatchTransportista.html.twig` |
 | Ver qué campos son "asumidos" y deben validarse contra SUNAT real | Sección 5 de este documento |
 
 ## 8. Resumen ejecutivo de servicios nuevos (para localizar rápido)

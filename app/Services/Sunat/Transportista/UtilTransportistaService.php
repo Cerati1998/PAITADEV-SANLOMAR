@@ -36,7 +36,7 @@ class UtilTransportistaService extends UtilService
 
     public function getReportHtml($document, $hash)
     {
-        $report = new HtmlReport(public_path('custom/pdf'));
+        $report = new HtmlReport(app_path('Services/Sunat/Templates/pdf'));
         $report->setTemplate('despatchTransportista.html.twig');
 
         $params = [
@@ -63,7 +63,7 @@ class UtilTransportistaService extends UtilService
         // wkhtmltopdf via Greenter\Report\PdfReport, igual que UtilService::getReportPdf()
         // (Pdf::loadHTML()->stream() de DomPDF devuelve un Response, no el binario del
         // PDF, y rompe el Storage::put($path, $pdf) de DespatchTransportistaForm).
-        $htmlReport = new HtmlReport(public_path('custom/pdf'));
+        $htmlReport = new HtmlReport(app_path('Services/Sunat/Templates/pdf'));
         $htmlReport->setTemplate('despatchTransportista.html.twig');
 
         $report = new PdfReport($htmlReport);

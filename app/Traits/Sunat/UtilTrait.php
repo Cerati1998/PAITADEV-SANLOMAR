@@ -161,7 +161,7 @@ trait UtilTrait
 
         // Mismo directorio de plantillas que getReportPdf(): antes apuntaba a
         // public/custom, un fork mas viejo sin el bloque de detraccion.
-        $report = new HtmlReport(public_path('custom/pdf'));
+        $report = new HtmlReport(app_path('Services/Sunat/Templates/pdf'));
 
         $resolver = new DefaultTemplateResolver();
         $report->setTemplate($resolver->getTemplate($invoice));
@@ -202,7 +202,7 @@ trait UtilTrait
     {
         // Mismas plantillas versionadas que UtilService::getReportPdf(), para que la
         // detraccion tambien salga en S/ por esta via (ver comentario alli).
-        $htmlReport = new HtmlReport(public_path('custom/pdf'));
+        $htmlReport = new HtmlReport(app_path('Services/Sunat/Templates/pdf'));
         $resolver = new DefaultTemplateResolver();
         $htmlReport->setTemplate($resolver->getTemplate($invoice));
 

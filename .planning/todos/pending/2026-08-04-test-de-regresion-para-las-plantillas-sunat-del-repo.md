@@ -5,7 +5,7 @@ area: sunat
 files:
   - app/Services/Sunat/Templates/
   - app/Services/Sunat/Xml/SunatXmlBuilder.php
-  - public/custom/pdf/
+  - app/Services/Sunat/Templates/pdf/
   - tests/
 ---
 
@@ -38,7 +38,7 @@ Un test de regresion sobre las plantillas propias, que corra en la suite normal:
   - que contenga los nodos criticos, empezando por exactamente **un**
     `<cac:LoadingTransportEvent>` en el namespace CAC para la guia remitente.
 - Para los reportes: que cada plantilla que pide `DefaultTemplateResolver`
-  resuelva desde `public/custom/pdf` y no desde vendor, y que una factura en
+  resuelva desde `app/Services/Sunat/Templates/pdf` y no desde vendor, y que una factura en
   moneda extranjera con detraccion imprima el monto en `S/`.
 
 Los scripts usados durante la migracion sirven de base directa; estan en el

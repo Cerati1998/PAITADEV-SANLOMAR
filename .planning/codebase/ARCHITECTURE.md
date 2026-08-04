@@ -219,7 +219,7 @@ This is a Laravel 11 mini-ERP for container terminal logistics (INSPECTEC SERVIC
    - `UtilService::getReportPdf()` and `getReportHtml()`, plus the `UtilTrait`
      and `UtilTransportistaService` variants
    - Uses `mikehaertl/phpwkhtmltopdf` via `Greenter\Report\PdfReport`
-   - Templates live in `public/custom/pdf/` (versioned in the repo), with the
+   - Templates live in `app/Services/Sunat/Templates/pdf/` (versioned in the repo), with the
      same chained fallback to `greenter/report`
    - `tipoCambio` travels through report params, not on the document model:
      `Greenter\Model\Sale\BaseSale` has no such property
@@ -234,7 +234,7 @@ is rendered from templates that live **in the repository**, never from
 |------|-------|
 | XML templates (invoice, notes, despatch, voided, summary) | `app/Services/Sunat/Templates/` |
 | XML builder | `app/Services/Sunat/Xml/SunatXmlBuilder.php` |
-| Report templates (invoice, despatch, voided, summary, perception, retention, transportista) + `assets/style.css` | `public/custom/pdf/` |
+| Report templates (invoice, despatch, voided, summary, perception, retention, transportista) + `assets/style.css` | `app/Services/Sunat/Templates/pdf/` |
 | Transportista XML (own document type) | `app/Services/Sunat/Transportista/` |
 
 **Why:** `vendor/` is gitignored and was historically uploaded to the VPS

@@ -36,6 +36,14 @@ depende de un archivo de `vendor/`.
 Documentado en `CLAUDE.md`, `.planning/codebase/ARCHITECTURE.md`,
 `CONVENTIONS.md`, `CONCERNS.md` y `STRUCTURE.md`.
 
+**Correccion posterior (2026-08-04):** las plantillas de reporte quedaron primero
+en `public/custom/pdf/`, que esta dentro del docroot: el servidor entregaba el
+`.twig` en crudo a cualquiera que pidiera su URL, dejando a la vista la
+estructura del RIDE y la logica de detracciones. Se movieron a
+`app/Services/Sunat/Templates/pdf/` y `public/custom/` desaparecio. Comprobado
+que la URL responde 404. Las plantillas XML nunca estuvieron expuestas porque ya
+vivian bajo `app/`.
+
 ### Seguimiento abierto
 
 Test de regresion sobre las plantillas propias (XML bien formado + nodos

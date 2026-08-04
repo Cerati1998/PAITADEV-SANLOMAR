@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 01
 current_phase_name: ticket-persistido-y-sem-ntica-de-tres-estados
 status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-08-04T23:38:51.763Z"
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-08-04T23:50:31.775Z"
 last_activity: 2026-08-04
 last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-08-04)
 ## Current Position
 
 Phase: 01 (ticket-persistido-y-sem-ntica-de-tres-estados) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-08-04 — Phase 01 execution started
 
@@ -56,6 +56,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 01 P01 | 8min | 2 tasks | 4 files |
+| Phase 01 P02 | 8min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,9 @@ Recent decisions affecting current work:
 - [Roadmap]: Milestone acotado a anulación web + API, sin comando de sondeo automático.
 - [Roadmap]: El test de regresión de plantillas SUNAT queda como milestone aparte.
 - [Phase 01-01]: El See construido en sendAndResolve() se reutiliza en resolveTicket() para no reabrir una segunda conexión SOAP en el mismo flujo de envío — Evita una llamada SOAP redundante al reconstruir el cliente; resolveTicket() sigue aceptando un See nulo para su uso futuro como reconsulta independiente
+- [Phase 01-02]: El catch exterior de VoidedForm::send() delega en VoidedTicketFlowService::classifyFailure() en vez de escribir el desenlace a mano, para no reescribir un ticket ya persistido como rechazo
+- [Phase 01-02]: sunatResponse.blade.php usa el prop dinámico :color del componente x-wire-badge de WireUI para pintar el badge según VoidedStatus::badgeColor(), en vez de tres bloques @if con props booleanos
+- [Phase 01-02]: Todas las ramas de VoidedForm::send() redirigen a voideds.index; se retiraron los dos redirect a vouchers.index del código original
 
 ### Pending Todos
 
@@ -92,6 +96,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-04T23:38:51.753Z
-Stopped at: Completed 01-01-PLAN.md
+Last session: 2026-08-04T23:50:31.764Z
+Stopped at: Completed 01-02-PLAN.md
 Resume file: None

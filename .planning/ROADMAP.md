@@ -41,7 +41,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Los comprobantes incluidos en la anulación aparecen como dados de baja únicamente después de un CDR aceptado (código `0`); si la baja quedó pendiente, siguen sin marcar.
   5. El estado guardado de una anulación se lee como uno de tres valores explícitos — aceptada, pendiente o rechazada — en lugar del `success: true/false` actual.
 
-**Plans**: 1/3 plans executed
+**Plans**: 2/3 plans executed
 
 Plans:
 **Wave 1**
@@ -50,7 +50,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 01-02-PLAN.md — `VoidedForm::send()` delega en el servicio, avisa "En proceso" y el modal de detalle muestra los tres estados
+- [x] 01-02-PLAN.md — `VoidedForm::send()` delega en el servicio, avisa "En proceso" y el modal de detalle muestra los tres estados
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
@@ -93,7 +93,7 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Ticket persistido y semántica de tres estados | 1/3 | In Progress|  |
+| 1. Ticket persistido y semántica de tres estados | 2/3 | In Progress|  |
 | 2. Reconsulta de anulaciones pendientes | 0/TBD | Not started | - |
 | 3. Anulación por API con recuperación por ticket | 0/TBD | Not started | - |
 

@@ -2,10 +2,11 @@
 
 namespace App\Livewire;
 
-use App\Models\Invoice;
+use App\Enums\VoidedStatus;
 use App\Models\Voided;
 use App\Services\Sunat\UtilService;
 use App\Services\Sunat\VoidedService;
+use App\Services\Sunat\VoidedTicketFlowService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
@@ -77,13 +78,29 @@ class VoidedTable extends DataTableComponent
 
     public function sendXml(Voided $voided)
     {
+        // D-09: guarda de reenvío, primero de todo. Las acciones de Livewire
+        // son invocables directamente desde el cliente, así que ocultar el
+        // botón en la vista no basta: si SUNAT ya recibió esta comunicación
+        // de baja (hay ticket), reenviar el XML devuelve 2109 y el CDR nunca
+        // se recupera.
+        if (! is_null($voided->sunat_ticket)) {
+            $this->dispatch('swal', [
+                'icon' => 'info',
+                'title' => 'En proceso',
+                'text' => 'SUNAT ya recibió esta comunicación de baja y su ticket quedó guardado.',
+            ]);
+
+            return;
+        }
+
         $directory = $voided->production ? 'sunat/' : 'sunat/beta/';
         $name = session('company')->ruc.'-RC-'.$voided->fecGeneracion->format('Ymd').'-'.$voided->correlativo;
 
+        $util = new UtilService(session('company'));
+        $flow = new VoidedTicketFlowService($util);
+
         //Enviar a SUNAT
         try {
-
-            $util = new UtilService(session('company'));
 
             // Si no tiene XML (fallo al generar la primera vez), lo regeneramos.
             if (empty($voided->xml_path)) {
@@ -103,53 +120,35 @@ class VoidedTable extends DataTableComponent
                 $xml = $voided->xml;
             }
 
-            $see = $util->getSee();
-            $result = $see->sendXmlFile($xml);
+            $cdrPath = $directory.'cdr/R-'.$name.'.zip';
+            $status = $flow->sendAndResolve($voided, $xml, $cdrPath);
 
-            if (! $result->isSuccess()) {
-
-                $voided->update([
-                    'sunatResponse' => [
-                        'success' => false,
-                        'error' => [
-                            'code' => $result->getError()->getCode(),
-                            'message' => $result->getError()->getMessage(),
-                        ],
-                    ],
+            if ($status === VoidedStatus::Pendiente) {
+                $this->dispatch('swal', [
+                    'icon' => 'info',
+                    'title' => 'En proceso',
+                    'text' => 'SUNAT recibió la comunicación de baja pero aún la procesa. Su ticket quedó guardado.',
                 ]);
 
-                $this->showResponse($voided);
-
                 return;
-            }
-
-            $ticket = $result->getTicket();
-            $result = $see->getStatus($ticket);
-
-            $voided->sunatResponse = $util->getResponse($result);
-
-            if ($result->getCdrZip()) {
-                $voided->cdr_path = $directory.'cdr/R-'.$name.'.zip';
-                Storage::put($voided->cdr_path, $result->getCdrZip());
-            }
-
-            $voided->save();
-
-            if ($voided->sunatResponse['success'] && $voided->sunatResponse['cdrResponse']['code'] == '0') {
-                foreach ($voided->details as $item) {
-                    Invoice::where('tipoDoc', $item['tipoDoc'])
-                        ->where('serie', $item['serie'])
-                        ->where('correlativo', $item['correlativo'])
-                        ->where('branch_id', session('branch')->id)
-                        ->where('company_id', session('company')->id)
-                        ->update(['voided' => true]);
-                }
             }
 
             $this->showResponse($voided);
 
             return;
         } catch (\Throwable $e) {
+            $status = $flow->classifyFailure($voided, $e);
+
+            if ($status === VoidedStatus::Pendiente) {
+                $this->dispatch('swal', [
+                    'icon' => 'info',
+                    'title' => 'En proceso',
+                    'text' => 'SUNAT recibió la comunicación de baja pero aún la procesa. Su ticket quedó guardado.',
+                ]);
+
+                return;
+            }
+
             $this->dispatch('swal', [
                 'icon' => 'error',
                 'title' => 'Error al enviar el comprobante',
@@ -166,8 +165,15 @@ class VoidedTable extends DataTableComponent
             'document' => $voided,
         ])->render();
 
+        $icon = match ($voided->sunat_status) {
+            VoidedStatus::Aceptada => 'info',
+            VoidedStatus::Pendiente => 'warning',
+            VoidedStatus::Rechazada => 'error',
+            null => ($voided->sunatResponse['success'] ?? false) ? 'info' : 'error',
+        };
+
         $this->dispatch('swal', [
-            'icon' => $voided->sunatResponse['success'] ? 'info' : 'error',
+            'icon' => $icon,
             'title' => $title,
             'html' => $html,
         ]);

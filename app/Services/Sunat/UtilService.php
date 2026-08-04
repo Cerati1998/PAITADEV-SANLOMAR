@@ -14,7 +14,7 @@ use Greenter\Report\Resolver\InvalidDocumentException;
 use Greenter\Report\XmlUtils;
 use Greenter\See;
 use Greenter\Ws\Services\SunatEndpoints;
-use Greenter\Xml\Builder\DespatchBuilder;
+use App\Services\Sunat\Xml\DespatchXmlBuilder;
 use Greenter\Xml\Builder\InvoiceBuilder;
 use Greenter\Xml\Builder\NoteBuilder;
 use Greenter\Xml\Builder\VoidedBuilder;
@@ -86,7 +86,10 @@ class UtilService
                 $builder = new NoteBuilder();
                 break;
             case Despatch::class:
-                $builder = new DespatchBuilder();
+                // Builder propio: el template vive en app/Services/Sunat/Templates
+                // (versionado) en vez de vendor/, que el composer install del deploy
+                // deja pristine. Ver DespatchXmlBuilder.
+                $builder = new DespatchXmlBuilder();
                 break;
             case Voided::class:
                 $builder = new VoidedBuilder();

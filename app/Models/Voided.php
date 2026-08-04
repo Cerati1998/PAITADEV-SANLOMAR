@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\VoidedStatus;
 use App\Observers\VoidedObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -21,11 +22,13 @@ class Voided extends Model
         'xml_path',
         'cdr_path',
         'hash',
+        'sunat_ticket',
+        'sunat_status',
 
         'sunatResponse',
         'branch_id',
         'company_id',
-        'production'
+        'production',
     ];
 
     protected $casts = [
@@ -34,24 +37,26 @@ class Voided extends Model
         'company' => 'array',
         'details' => 'array',
         'sunatResponse' => 'array',
+        'sunat_status' => VoidedStatus::class,
     ];
 
     //Mutadores y accesores
-    protected function xml():Attribute
+    protected function xml(): Attribute
     {
         return new Attribute(
-            get: fn() => Storage::get($this->xml_path),
+            get: fn () => Storage::get($this->xml_path),
         );
     }
 
-    protected function cdr():Attribute
+    protected function cdr(): Attribute
     {
         return new Attribute(
-            get: fn() => Storage::get($this->cdr_path),
+            get: fn () => Storage::get($this->cdr_path),
         );
     }
 
-    public function branch(){
+    public function branch()
+    {
         return $this->belongsTo(Branch::class);
     }
 }

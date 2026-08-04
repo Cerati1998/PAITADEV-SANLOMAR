@@ -183,8 +183,21 @@ class VoucherTable extends DataTableComponent
                 $util = new UtilService(session('company'));
                 $pdf = $util->getReportPdf($invoiceGreenter, $invoice->hash, $invoice->tipoCambio);
 
-                $directory = $invoice->production ? 'sunat/' : 'sunat/beta/';
-                $invoice->pdf_path = $directory . 'cpe/' . $invoiceGreenter->getName() . '.pdf';
+                // El PDF se nombra a partir del xml_path ya guardado en vez de
+                // reconstruirlo: la emision no usa una convencion unica (InvoiceForm
+                // nombra con el RUC del cliente y el correlativo con padding a 6,
+                // mientras NoteForm y los controladores de la API usan
+                // Greenter::getName()). Derivarlo respeta la que se haya usado al
+                // emitir y evita que el PDF regenerado quede con otro nombre,
+                // dejando huerfano al anterior.
+                $pdfPath = preg_replace('#/xml/(.+)\.xml$#', '/cpe/$1.pdf', $invoice->xml_path, 1, $reemplazos);
+
+                if ($reemplazos !== 1) {
+                    $directory = $invoice->production ? 'sunat/' : 'sunat/beta/';
+                    $pdfPath = $directory . 'cpe/' . $invoiceGreenter->getName() . '.pdf';
+                }
+
+                $invoice->pdf_path = $pdfPath;
                 Storage::put($invoice->pdf_path, $pdf);
                 $invoice->save();
             } catch (\Throwable $e) {

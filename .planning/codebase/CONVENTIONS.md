@@ -190,6 +190,22 @@ use Livewire\Component;
 - Models use `HasFactory` for Eloquent factory support
 - Livewire components inherit `Component` base class; no trait-heavy design
 
+**SUNAT templates — never edit `vendor/`:**
+- `vendor/` is gitignored and every deploy runs `composer install`, so any change
+  made there is silently destroyed on the next release. This already caused two
+  production incidents (see CONCERNS.md).
+- To change the XML sent to SUNAT: copy the template from
+  `vendor/greenter/xml/src/Xml/Templates/` into `app/Services/Sunat/Templates/`
+  and edit the copy. `SunatXmlBuilder` chains the loader `[repo, vendor]`, so the
+  repo copy wins and untouched templates keep resolving from the package.
+- To change a PDF/RIDE: same idea, from
+  `vendor/greenter/report/src/Report/Templates/` into `public/custom/pdf/`.
+- Data that does not exist on the Greenter model (e.g. `tipoCambio`, absent from
+  `BaseSale`) is passed through report params and read as
+  `params.user.<field>` — do not add setters to vendor models.
+- After changing an XML template, diff the generated output against the previous
+  builder for real vouchers before shipping: this is what SUNAT receives.
+
 ---
 
 *Convention analysis: 2026-07-24*

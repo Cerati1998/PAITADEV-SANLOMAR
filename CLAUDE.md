@@ -54,6 +54,48 @@ Permissions use Spatie `laravel-permission` (`config/permission.php`) with route
 - **Ventas / SUNAT e-invoicing**: `Invoice`, `Voided`, `Despatch` (guía de remisión), `Detraction`, `Perception` models; `app/Services/Sunat/*` (`DocumentService` builds Greenter model objects for invoices/despatches/notes/summaries, `SummaryService`, `VoidedService`, `UtilService`) plus `app/Traits/Sunat/*`. Company-level SUNAT credentials (`sol_user`, `sol_pass`, `client_id`, `client_secret`, `certificate`, `production` flag) live directly on the `Company` model. Branch-level series and external integrations are managed via `BranchController::series`/`integrations` and the `BranchIntegration`/`Integration` models.
 - **Gastos**: `ArchingCash`, `Bill`, `CashDeposit` for cash-box/expense tracking.
 
+### SUNAT output is generated from repo-owned templates — never edit `vendor/greenter`
+
+Everything handed to SUNAT (signed XML) or to the customer (PDF/RIDE) is
+rendered from Twig templates that live **in this repository**. Greenter is used
+only for its models, XML signing (`SignedXml`), submission and CDR parsing.
+
+| What | Where |
+|------|-------|
+| XML templates (invoice, notacr, notadb, despatch2022, voided, summary) | `app/Services/Sunat/Templates/` |
+| XML builder for every document type | `app/Services/Sunat/Xml/SunatXmlBuilder.php` |
+| Report templates + `assets/style.css` | `public/custom/pdf/` |
+| Guía transportista (document type Greenter does not model) | `app/Services/Sunat/Transportista/` |
+
+`vendor/` is gitignored and was historically uploaded to the VPS already
+hand-patched. The first real Deployer run executed `composer install` and
+silently destroyed every patch, causing two production incidents in one day (a
+fatal `Invoice::setTipoCambio()` that broke all invoice and note emission, and
+the detraction printed in USD when it is always in soles) plus one silent
+regression: the `<cac:LoadingTransportEvent>` node vanished from the guía de
+remisión remitente XML without any visible symptom, since it never appears on
+the PDF.
+
+When you need to change SUNAT output:
+
+- Copy the template from `vendor/greenter/xml/src/Xml/Templates/` (or
+  `vendor/greenter/report/src/Report/Templates/`) into the matching repo
+  directory and edit the copy. Both loaders chain `[repo, vendor]`, so the repo
+  copy wins and untouched templates keep resolving from the package.
+- Do not add properties or setters to Greenter models. Data absent from them —
+  `tipoCambio` is not on `Greenter\Model\Sale\BaseSale` — travels through report
+  params and is read as `params.user.<field>`.
+- After changing an XML template, diff the generated output against the previous
+  one for real vouchers before shipping. That XML is what SUNAT receives.
+
+Greenter's own builders (`InvoiceBuilder`, `NoteBuilder`, `DespatchBuilder`,
+`VoidedBuilder`, `SummaryBuilder`) are no longer instantiated anywhere in
+`app/`; `UtilService::getXmlSigned()` delegates to `SunatXmlBuilder`.
+
+`getReportPdf()` and `getReportHtml()` (in `UtilService`, `UtilTrait` and
+`UtilTransportistaService`) share the same template directory and the same
+params — they used to diverge and produce different output for the same voucher.
+
 ### Controllers vs. Livewire split
 
 Controllers (`app/Http/Controllers`) mostly render the outer Blade page (index/create scaffolding, PDF generation, report exports) while the interactive listing/CRUD UI lives in Livewire components (`app/Livewire/**`, paired with `app/Livewire/Forms/**` for Jetstream-style form objects, and Blade views under `resources/views/livewire/**`). When adding a new CRUD feature, expect to touch: a controller action for the page shell, a `*Table` Livewire component (via `rappasoft/laravel-livewire-tables`) for listing, and a `*Create`/`*Edit` Livewire component + Form object for the modal/form.

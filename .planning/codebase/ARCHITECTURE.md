@@ -87,6 +87,8 @@ This is a Laravel 11 mini-ERP for container terminal logistics (INSPECTEC SERVIC
 | **ContainerOperationalTraceService** | Manages container lifecycle state transitions | `app/Services/Container/ContainerOperationalTraceService.php` |
 | **ContainerStatusService** | Validates & calculates final container status from box/machine states | `app/Services/Container/ContainerStatusService.php` |
 | **DocumentService** | Builds Greenter SUNAT document models for invoices/despatches/notes | `app/Services/Sunat/DocumentService.php` |
+| **SunatXmlBuilder** | Renders the signed-XML payload for every document type from repo-owned Twig templates | `app/Services/Sunat/Xml/SunatXmlBuilder.php` |
+| **UtilService** | Signs, submits and reads CDR; renders HTML/PDF reports | `app/Services/Sunat/UtilService.php` |
 | **EirPhotoService** | Uploads/deletes EIR header & detail photos to DO Spaces | `app/Services/inspections/EirPhotoService.php` |
 | **RoofEvidencePhotoService** | Manages roof evidence photos for damage tracking | `app/Services/inspections/RoofEvidencePhotoService.php` |
 | **WorkLaborPhotoService** | Handles work order labor progress photos | `app/Services/WorkOrders/WorkLaborPhotoService.php` |
@@ -198,17 +200,58 @@ This is a Laravel 11 mini-ERP for container terminal logistics (INSPECTEC SERVIC
    - Builds Greenter `Invoice` / `Despatch` / `Note` / `Summary` / `Voided` object
    - Validates document structure
 
-3. **SUNAT Submission**
-   - Greenter SDK signs XML and submits to SUNAT API
+3. **XML Generation** (`app/Services/Sunat/Xml/SunatXmlBuilder.php`)
+   - `UtilService::getXmlSigned()` delegates to `SunatXmlBuilder`, **not** to
+     Greenter's builders (`InvoiceBuilder`, `NoteBuilder`, `DespatchBuilder`,
+     `VoidedBuilder`, `SummaryBuilder` are no longer instantiated anywhere)
+   - Templates live in `app/Services/Sunat/Templates/` (versioned in the repo);
+     the Twig loader chains `[repo, vendor]`, so anything not overridden still
+     resolves from `greenter/xml`
+   - See "SUNAT templates are repo-owned" below for why
+
+4. **SUNAT Submission**
+   - Greenter signs the XML (`SignedXml`) and submits to the SUNAT API
    - On success: model status → 'enviado', ticket stored
    - On failure: status → 'error', error message logged
    - Response includes ticket or rejection reason
 
-4. **PDF Generation** (Export)
-   - `VoucherController::show()` or report export
-   - Uses `barryvdh/laravel-dompdf` + `mikehaertl/phpwkhtmltopdf`
-   - Renders Blade template with invoice data + custom footer (from `Company.invoice_footer`)
-   - Returns downloadable PDF
+5. **PDF / HTML Generation** (Export)
+   - `UtilService::getReportPdf()` and `getReportHtml()`, plus the `UtilTrait`
+     and `UtilTransportistaService` variants
+   - Uses `mikehaertl/phpwkhtmltopdf` via `Greenter\Report\PdfReport`
+   - Templates live in `public/custom/pdf/` (versioned in the repo), with the
+     same chained fallback to `greenter/report`
+   - `tipoCambio` travels through report params, not on the document model:
+     `Greenter\Model\Sale\BaseSale` has no such property
+
+### SUNAT templates are repo-owned
+
+Everything the system hands to SUNAT (signed XML) or to the customer (PDF/RIDE)
+is rendered from templates that live **in the repository**, never from
+`vendor/greenter`:
+
+| What | Where |
+|------|-------|
+| XML templates (invoice, notes, despatch, voided, summary) | `app/Services/Sunat/Templates/` |
+| XML builder | `app/Services/Sunat/Xml/SunatXmlBuilder.php` |
+| Report templates (invoice, despatch, voided, summary, perception, retention, transportista) + `assets/style.css` | `public/custom/pdf/` |
+| Transportista XML (own document type) | `app/Services/Sunat/Transportista/` |
+
+**Why:** `vendor/` is gitignored and was historically uploaded to the VPS
+already hand-patched. The first real Deployer run executed `composer install`,
+replaced it with pristine packagist code and silently destroyed every patch.
+That caused two production incidents in one day: a fatal
+`Call to undefined method Invoice::setTipoCambio()` that broke *all* invoice and
+note emission, and the detraction amount printed in USD on four invoices when it
+is always expressed in soles. A third patch — the `<cac:LoadingTransportEvent>`
+node in the guía de remisión remitente XML — disappeared with no visible symptom
+at all, since it never shows up on the PDF.
+
+**Rule for contributors:** never edit anything under `vendor/greenter`. Copy the
+template into the matching repo directory and edit it there. The chained loader
+makes the repo copy win.
+
+Greenter is still used for models, XML signing, submission and CDR parsing.
 
 ### Container Lifecycle Flow
 

@@ -1,19 +1,46 @@
 ---
 created: 2026-08-04T00:00:07.930Z
+completed: 2026-08-04
+status: complete
 title: Migrar generacion SUNAT de invoices y despatches a control local versionable
 area: sunat
+commits:
+  - 88de853  # regenerar el PDF cuando pdf_path es NULL
+  - b187645  # invoice PDF deja de depender del vendor parcheado
+  - 90912af  # Fase 1: guia remitente (XML) + CSS del logo
+  - 689b26e  # el PDF regenerado conserva el nombre de emision
+  - 549463f  # Fase 2: todo el XML sale de plantillas del repo
+  - b700664  # Fase 3: plantillas de reporte unificadas + quita DIAG-4068
 files:
+  - app/Services/Sunat/Xml/SunatXmlBuilder.php
+  - app/Services/Sunat/Templates/
+  - public/custom/pdf/
+  - app/Services/Sunat/UtilService.php
+  - app/Services/Sunat/DocumentService.php
+  - app/Traits/Sunat/UtilTrait.php
   - app/Services/Sunat/Transportista/UtilTransportistaService.php
-  - app/Services/Sunat/Transportista/Xml/TransportistaXmlBuilder.php
-  - app/Services/Sunat/Transportista/Templates/despatchTransportista.xml.twig
-  - app/Services/Sunat/UtilService.php:254,297
-  - app/Services/Sunat/DocumentService.php:32
-  - app/Traits/Sunat/UtilTrait.php:162,196
-  - public/custom/pdf/invoice.html.twig
-  - vendor/greenter/xml/src/Xml/Templates/despatch2022.xml.twig
-  - vendor/greenter/report/src/Report/Templates/assets/style.css
-  - deploy.php
+  - app/Livewire/VoucherTable.php
+  - app/Http/Controllers/Api/VoidedController.php
+  - app/Http/Controllers/Api/SummaryController.php
 ---
+
+## Resultado
+
+**Cerrado el 2026-08-04.** Validado por el usuario en el VPS emitiendo factura y
+guia de remision **contra SUNAT beta** (no produccion oficial): ambas correctas.
+
+Greenter queda reducido a modelos, firma, envio y lectura de CDR. Ningun builder
+de Greenter se instancia ya en `app/`, y ninguna salida a SUNAT o al cliente
+depende de un archivo de `vendor/`.
+
+Documentado en `CLAUDE.md`, `.planning/codebase/ARCHITECTURE.md`,
+`CONVENTIONS.md`, `CONCERNS.md` y `STRUCTURE.md`.
+
+### Seguimiento abierto
+
+Test de regresion sobre las plantillas propias (XML bien formado + nodos
+criticos, sobre todo `<cac:LoadingTransportEvent>`). Ver "Guardrail transversal"
+mas abajo: el guardrail planteado originalmente quedo obsoleto con la migracion.
 
 ## Problem
 

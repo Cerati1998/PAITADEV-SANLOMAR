@@ -58,6 +58,9 @@ project-root/
 │   │   ├── Container/              # ContainerOperationalTraceService, ContainerStatusService
 │   │   ├── inspections/            # EirPhotoService, RoofEvidencePhotoService
 │   │   ├── Sunat/                  # DocumentService, SummaryService, UtilService, VoidedService
+│   │   │   ├── Templates/          # XML twig templates sent to SUNAT (repo-owned, NOT vendor)
+│   │   │   ├── Xml/                # SunatXmlBuilder (replaces Greenter's XML builders)
+│   │   │   └── Transportista/      # Guía transportista: own model, template, builder, service
 │   │   ├── WorkOrders/             # WorkLaborPhotoService
 │   │   ├── SunatService.php        # Decolecta API (RUC, DNI, exchange rate)
 │   │   └── ExternalDispatchApiService.php (sync container dispatches)
@@ -195,11 +198,19 @@ project-root/
 - `ContainerStatusService.php` – Static methods for status validation and calculation
 
 **`app/Services/Sunat/`:**
-- Purpose: SUNAT e-invoicing integration (Greenter SDK wrapper)
+- Purpose: SUNAT e-invoicing integration. Greenter provides models, signing, submission and CDR parsing; **XML and report rendering are repo-owned**
 - `DocumentService.php` – Builds Greenter Invoice/Despatch/Note/Summary/Voided models from app data
 - `SummaryService.php` – Groups invoices into daily/monthly summaries for SUNAT
 - `VoidedService.php` – Handles document voiding (notas de crédito/débito)
-- `UtilService.php` – Utility methods for SUNAT operations
+- `UtilService.php` – Signs and submits documents, reads CDR, renders HTML/PDF reports
+- `Xml/SunatXmlBuilder.php` – Renders the XML for every document type; replaces Greenter's `InvoiceBuilder`/`NoteBuilder`/`DespatchBuilder`/`VoidedBuilder`/`SummaryBuilder`, none of which are instantiated anywhere in `app/`
+- `Templates/` – The XML twig templates themselves. Never edit `vendor/greenter`: it is gitignored and `composer install` wipes it on every deploy (see CONCERNS.md)
+- `Transportista/` – Guía transportista is a document type Greenter does not model; it has its own model, template, builder and service
+
+**`public/custom/pdf/`:**
+- Purpose: Report (PDF/RIDE) twig templates, repo-owned, with chained fallback to `greenter/report`
+- Holds `invoice`, `despatch`, `voided`, `summary`, `perception`, `retention`, `despatchTransportista` and `assets/style.css`
+- Single source for both `getReportPdf()` and `getReportHtml()`; they used to point at different directories and produced different output
 
 **`app/Models/`:**
 - Purpose: Domain entities with Eloquent relationships

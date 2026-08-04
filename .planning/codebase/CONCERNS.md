@@ -205,6 +205,13 @@
 - Risk: Community-maintained PHP library for SUNAT UBL generation; SUNAT API changes periodically, and Greenter may not update immediately
 - Impact: If SUNAT adds new mandatory fields or changes validation rules, invoices will fail to send until Greenter updates
 - Migration plan: Monitor Greenter GitHub releases monthly; maintain version lock in composer.json; test with SUNAT beta API quarterly; consider commercial SUNAT provider (Nubefact, Facturación.pe) as fallback
+- **Reduced surface (2026-08-03):** Greenter is no longer used to *generate* anything. XML and report templates are repo-owned (`app/Services/Sunat/Templates/`, `public/custom/pdf/`) and rendered by `SunatXmlBuilder`; Greenter now only provides models, signing, submission and CDR parsing. Adapting to a SUNAT UBL change no longer requires waiting for an upstream release — the template can be edited in this repo. See ARCHITECTURE.md, "SUNAT templates are repo-owned".
+
+**Hand-patched `vendor/` — RESOLVED (2026-08-03):**
+- Was: SUNAT XML and PDF output depended on files edited by hand inside `vendor/greenter`, which is gitignored. The first Deployer run executed `composer install`, restored pristine code and silently wiped every patch.
+- Impact at the time: two production incidents in one day (fatal `Invoice::setTipoCambio()` breaking all invoice/note emission; detraction printed in USD on four invoices) plus one silent regression (`<cac:LoadingTransportEvent>` missing from despatch XML, invisible on the PDF).
+- Resolution: all four patched files were audited against pristine `v5.1.1` sources and moved into the repo. Verified with a 40-document byte-for-byte diff against Greenter's builders, plus marker-injection tests proving the system reads repo templates and not `vendor/`.
+- Residual risk: **editing `vendor/greenter` again**. There is no automated guard yet — a regression test over the repo templates (well-formed XML + presence of critical nodes such as `LoadingTransportEvent`) is the open follow-up.
 
 **Jetstream (Authentication/Authorization):**
 - Risk: Laravel Jetstream deprecated in favor of Breeze; support and community updates may slow

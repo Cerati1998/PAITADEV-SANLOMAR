@@ -106,8 +106,15 @@ class VoidedForm extends Form
             'document' => $voided,
         ])->render();
 
+        $icon = match ($voided->sunat_status) {
+            VoidedStatus::Aceptada => 'info',
+            VoidedStatus::Pendiente => 'warning',
+            VoidedStatus::Rechazada => 'error',
+            null => ($voided->sunatResponse['success'] ?? false) ? 'info' : 'error',
+        };
+
         session()->flash('swal', [
-            'icon' => $voided->sunatResponse['success'] ? 'info' : 'error',
+            'icon' => $icon,
             'title' => $title,
             'html' => $html,
         ]);

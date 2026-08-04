@@ -36,12 +36,13 @@ class UtilTransportistaService extends UtilService
 
     public function getReportHtml($document, $hash)
     {
-        $report = new HtmlReport(public_path('custom'));
+        $report = new HtmlReport(public_path('custom/pdf'));
         $report->setTemplate('despatchTransportista.html.twig');
 
         $params = [
             'system' => [
-                'logo' => $this->company->image_path ? Storage::get($this->company->image_path) : file_get_contents(public_path('img/no-image.jpg')),
+                // logo_path, no image_path: esa columna no existe en companies.
+                'logo' => $this->company->logo_path ? Storage::get($this->company->logo_path) : file_get_contents(public_path('img/no-image.jpg')),
                 'hash' => $hash,
             ],
             'user' => [
@@ -62,7 +63,7 @@ class UtilTransportistaService extends UtilService
         // wkhtmltopdf via Greenter\Report\PdfReport, igual que UtilService::getReportPdf()
         // (Pdf::loadHTML()->stream() de DomPDF devuelve un Response, no el binario del
         // PDF, y rompe el Storage::put($path, $pdf) de DespatchTransportistaForm).
-        $htmlReport = new HtmlReport(public_path('custom'));
+        $htmlReport = new HtmlReport(public_path('custom/pdf'));
         $htmlReport->setTemplate('despatchTransportista.html.twig');
 
         $report = new PdfReport($htmlReport);

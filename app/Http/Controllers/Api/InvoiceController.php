@@ -159,7 +159,7 @@ class InvoiceController extends Controller
         $hash = $util->getHashSign($xml);
 
         return response()->json([
-            'html' => $util->getReportHtml($invoiceGreenter, $hash),
+            'html' => $util->getReportHtml($invoiceGreenter, $hash, $data['tipoCambio'] ?? null),
         ]);
     }
 }

@@ -152,21 +152,24 @@ trait UtilTrait
 
     }
 
-    public function getReportHtml($invoice, $hash, $company){
+    public function getReportHtml($invoice, $hash, $company, $tipoCambio = null){
 
         /* $twigOptions = [
             'cache' => __DIR__ . '/cache',
             'strict_variables' => true,
         ]; */
 
-        $report = new HtmlReport(public_path('custom'));
+        // Mismo directorio de plantillas que getReportPdf(): antes apuntaba a
+        // public/custom, un fork mas viejo sin el bloque de detraccion.
+        $report = new HtmlReport(public_path('custom/pdf'));
 
         $resolver = new DefaultTemplateResolver();
         $report->setTemplate($resolver->getTemplate($invoice));
 
         $params = [
             'system' => [
-                'logo' => $company->image_path ? Storage::get($company->image_path) : file_get_contents(public_path('img/no-image.jpg')),
+                // logo_path, no image_path: esa columna no existe en companies.
+                'logo' => $company->logo_path ? Storage::get($company->logo_path) : file_get_contents(public_path('img/no-image.jpg')),
                 'hash' => $hash, // Valor Resumen 
             ],
             'user' => [
@@ -185,6 +188,12 @@ trait UtilTrait
                 'footer'     => 'Gracias por su compra.', // Texto que se ubica debajo de las observaciones
             ]
         ];
+
+        // El tipo de cambio no vive en el documento Greenter, viaja por params
+        // igual que en getReportPdf(); la plantilla omite la fila si no llega.
+        if ($tipoCambio) {
+            $params['user']['tipoCambio'] = $tipoCambio;
+        }
 
         return $report->render($invoice, $params);
     }

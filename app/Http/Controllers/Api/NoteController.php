@@ -159,7 +159,7 @@ class NoteController extends Controller
         $hash = $util->getHashSign($xml);
 
         return response()->json([
-            'pdf' => $util->getReportHtml($invoiceGreenter, $hash),
+            'pdf' => $util->getReportHtml($invoiceGreenter, $hash, $data['tipoCambio'] ?? null),
         ]);
     }
 }

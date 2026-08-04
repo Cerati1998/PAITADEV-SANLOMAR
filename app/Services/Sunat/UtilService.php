@@ -2,7 +2,6 @@
 
 namespace App\Services\Sunat;
 
-use Greenter\Model\Despatch\Despatch;
 use Greenter\Model\DocumentInterface;
 use Greenter\Model\Sale\Invoice;
 use Greenter\Report\HtmlReport;
@@ -70,48 +69,16 @@ class UtilService
 
     public function getXmlSigned(DocumentInterface $document)
     {
-        $className = get_class($document);
-
         // Builder propio para todos los tipos: las plantillas viven en
         // app/Services/Sunat/Templates (versionadas) en vez de vendor/, que el
         // composer install del deploy deja pristine. De Greenter se siguen usando
         // los modelos, la firma, el envio y la lectura del CDR. Ver SunatXmlBuilder.
         $xml = (new SunatXmlBuilder())->build($document);
 
-        // DIAG-4068: log temporal para rastrear en que punto se corrompe la direccion (quitar tras diagnosticar).
-        if ($className === Despatch::class) {
-            \Illuminate\Support\Facades\Log::debug('DIAG-4068 config PHP runtime', [
-                'default_charset' => ini_get('default_charset'),
-                'mbstring.internal_encoding' => ini_get('mbstring.internal_encoding'),
-                'mb_internal_encoding' => mb_internal_encoding(),
-                'mbstring.http_output' => ini_get('mbstring.http_output'),
-                'mbstring.http_input' => ini_get('mbstring.http_input'),
-                'php_sapi' => php_sapi_name(),
-                'php_version' => PHP_VERSION,
-            ]);
-            preg_match('/<cac:AddressLine>.*?<\/cac:AddressLine>/s', $xml, $matches);
-            \Illuminate\Support\Facades\Log::debug('DIAG-4068 xml antes de firmar', [
-                'address_lines' => $matches[0] ?? null,
-                'address_lines_hex' => isset($matches[0]) ? bin2hex($matches[0]) : null,
-                'mb_valid_utf8' => mb_check_encoding($xml, 'UTF-8'),
-            ]);
-        }
-
         $signer = new SignedXml();
         $signer->setCertificate($this->company->certificate);
-        $xmlSigned = $signer->signXml($xml);
 
-        // DIAG-4068: log temporal (quitar tras diagnosticar).
-        if ($className === Despatch::class) {
-            preg_match('/<cac:AddressLine>.*?<\/cac:AddressLine>/s', $xmlSigned, $matchesSigned);
-            \Illuminate\Support\Facades\Log::debug('DIAG-4068 xml despues de firmar', [
-                'address_lines' => $matchesSigned[0] ?? null,
-                'address_lines_hex' => isset($matchesSigned[0]) ? bin2hex($matchesSigned[0]) : null,
-                'mb_valid_utf8' => mb_check_encoding($xmlSigned, 'UTF-8'),
-            ]);
-        }
-
-        return $xmlSigned;
+        return $signer->signXml($xml);
     }
 
     public function getHashSign($xmlSigned)
@@ -224,7 +191,7 @@ class UtilService
         return $response;
     }
 
-    public function getReportHtml($invoice, $hash)
+    public function getReportHtml($invoice, $hash, $tipoCambio = null)
     {
 
         /* $twigOptions = [
@@ -232,14 +199,20 @@ class UtilService
             'strict_variables' => true,
         ]; */
 
-        $report = new HtmlReport(public_path('custom'));
+        // Mismo directorio de plantillas que getReportPdf(): antes esta vista
+        // apuntaba a public/custom, un fork mas viejo sin el bloque de detraccion,
+        // asi que la previsualizacion HTML y el PDF descargado no coincidian.
+        $report = new HtmlReport(public_path('custom/pdf'));
 
         $resolver = new DefaultTemplateResolver();
         $report->setTemplate($resolver->getTemplate($invoice));
 
         $params = [
             'system' => [
-                'logo' => $this->company->image_path ? Storage::get($this->company->image_path) : file_get_contents(public_path('img/no-image.jpg')),
+                // logo_path, no image_path: esa columna no existe en companies, asi
+                // que esta vista siempre caia al placeholder mientras el PDF si
+                // mostraba el logo. Ver getReportPdf().
+                'logo' => $this->company->logo_path ? Storage::get($this->company->logo_path) : file_get_contents(public_path('img/no-image.jpg')),
                 'hash' => $hash, // Valor Resumen 
             ],
             'user' => [
@@ -258,6 +231,12 @@ class UtilService
                 'footer' => 'Gracias por su compra.', // Texto que se ubica debajo de las observaciones
             ]
         ];
+
+        // El tipo de cambio no vive en el documento Greenter, viaja por params
+        // igual que en getReportPdf(); la plantilla omite la fila si no llega.
+        if ($tipoCambio) {
+            $params['user']['tipoCambio'] = $tipoCambio;
+        }
 
         return $report->render($invoice, $params);
     }

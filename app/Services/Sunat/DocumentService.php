@@ -4,7 +4,6 @@ namespace App\Services\Sunat;
 
 use App\Models\District;
 use DateTime;
-use Illuminate\Support\Facades\Log;
 use Greenter\Model\Client\Client;
 use Greenter\Model\Company\Address;
 use Greenter\Model\Company\Company;
@@ -399,26 +398,7 @@ class DocumentService
         $province = $district->province;
         $department = $province->department;
 
-        // DIAG-4068: log temporal para rastrear en que punto se corrompe la direccion (quitar tras diagnosticar).
-        Log::debug('DIAG-4068 getDirection input', [
-            'ubigueo' => $data['ubigueo'],
-            'direccion_raw' => $data['direccion'],
-            'direccion_raw_hex' => bin2hex((string) $data['direccion']),
-            'department_name' => $department->name,
-            'department_name_hex' => bin2hex((string) $department->name),
-            'province_name' => $province->name,
-            'province_name_hex' => bin2hex((string) $province->name),
-            'district_name' => $district->name,
-            'district_name_hex' => bin2hex((string) $district->name),
-        ]);
-
         $direccion = $department->name . ' - ' . $province->name . ' - ' . $district->name . ' - ' . $data['direccion'];
-
-        // DIAG-4068: log temporal (quitar tras diagnosticar).
-        Log::debug('DIAG-4068 getDirection concatenado', [
-            'direccion_final' => $direccion,
-            'direccion_final_hex' => bin2hex($direccion),
-        ]);
 
         $direction = new Direction($data['ubigueo'], $direccion);
 

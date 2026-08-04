@@ -42,7 +42,21 @@ en `public/custom/pdf/`, que esta dentro del docroot: el servidor entregaba el
 estructura del RIDE y la logica de detracciones. Se movieron a
 `app/Services/Sunat/Templates/pdf/` y `public/custom/` desaparecio. Comprobado
 que la URL responde 404. Las plantillas XML nunca estuvieron expuestas porque ya
-vivian bajo `app/`.
+vivian bajo `app/`. Commit `a1e296c`, desplegado y verificado en el VPS.
+
+## Estado final
+
+Cerrado y validado en produccion. Ninguna salida a SUNAT o al cliente depende ya
+de un archivo de `vendor/`, y ninguna plantilla es accesible desde fuera.
+
+| Que | Donde |
+|-----|-------|
+| XML de factura, boleta, notas, guia remitente, anulacion, resumen | `app/Services/Sunat/Templates/` |
+| XML de guia transportista | `app/Services/Sunat/Transportista/Templates/` |
+| Builder de XML | `app/Services/Sunat/Xml/SunatXmlBuilder.php` |
+| PDF/RIDE de todos los tipos + `assets/style.css` | `app/Services/Sunat/Templates/pdf/` |
+
+De Greenter se usan modelos, firma, envio y lectura de CDR. Nada mas.
 
 ### Seguimiento abierto
 

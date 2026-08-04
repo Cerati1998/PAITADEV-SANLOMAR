@@ -37,7 +37,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Cuando SUNAT entrega el CDR en el mismo envío, la anulación queda registrada como aceptada, el ZIP del CDR queda archivado en el disco configurado y el ticket queda vacío.
   4. Los comprobantes incluidos en la anulación aparecen como dados de baja únicamente después de un CDR aceptado (código `0`); si la baja quedó pendiente, siguen sin marcar.
   5. El estado guardado de una anulación se lee como uno de tres valores explícitos — aceptada, pendiente o rechazada — en lugar del `success: true/false` actual.
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Enum `VoidedStatus`, columnas `sunat_ticket`/`sunat_status` y el servicio `VoidedTicketFlowService` que concentra la semántica de los tres estados
+- [ ] 01-02-PLAN.md — `VoidedForm::send()` delega en el servicio, avisa "En proceso" y el modal de detalle muestra los tres estados
+- [ ] 01-03-PLAN.md — Vista propia del listado con los tres estados y `VoidedTable::sendXml()` sin reenvío cuando ya hay ticket
 
 ### Phase 2: Reconsulta de anulaciones pendientes
 **Goal**: El usuario recupera desde el listado el resultado final de una anulación pendiente, y el listado dice la verdad sobre en qué estado está cada baja
@@ -70,7 +75,7 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Ticket persistido y semántica de tres estados | 0/TBD | Not started | - |
+| 1. Ticket persistido y semántica de tres estados | 0/3 | Not started | - |
 | 2. Reconsulta de anulaciones pendientes | 0/TBD | Not started | - |
 | 3. Anulación por API con recuperación por ticket | 0/TBD | Not started | - |
 

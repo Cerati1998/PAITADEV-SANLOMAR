@@ -1,6 +1,14 @@
 ---
-gsd_state_version: '1.0'  # placeholder; syncStateFrontmatter overwrites on first state.* call
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+current_phase: 1
+current_phase_name: Ticket persistido y semántica de tres estados
 status: planning
+stopped_at: Phase 1 context gathered
+last_updated: "2026-08-04T21:51:09.860Z"
+last_activity: 2026-08-04
+last_activity_desc: Roadmap creado, 13 requisitos v1 mapeados a 3 fases
 progress:
   total_phases: 3
   completed_phases: 0
@@ -30,6 +38,7 @@ Progress: [░░░░░░░░░░] 0%
 ## Performance Metrics
 
 **Velocity:**
+
 - Total plans completed: 0
 - Average duration: —
 - Total execution time: —
@@ -41,6 +50,7 @@ Progress: [░░░░░░░░░░] 0%
 | - | - | - | - |
 
 **Recent Trend:**
+
 - Last 5 plans: —
 - Trend: —
 
@@ -61,6 +71,7 @@ Recent decisions affecting current work:
 ### Pending Todos
 
 2 pendientes en `.planning/todos/pending/`:
+
 - `2026-08-04-anulacion-no-recupera-el-cdr-de-la-comunicacion-de-baja.md` — diagnóstico raíz de este milestone (se cierra al completarlo)
 - `2026-08-04-test-de-regresion-para-las-plantillas-sunat-del-repo.md` — milestone aparte, fuera de alcance
 
@@ -79,6 +90,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-04
-Stopped at: ROADMAP.md y STATE.md escritos; traceability de REQUIREMENTS.md actualizada
-Resume file: None
+Last session: 2026-08-04T21:51:09.850Z
+Stopped at: Phase 1 context gathered
+Resume file: .planning/phases/01-ticket-persistido-y-sem-ntica-de-tres-estados/01-CONTEXT.md

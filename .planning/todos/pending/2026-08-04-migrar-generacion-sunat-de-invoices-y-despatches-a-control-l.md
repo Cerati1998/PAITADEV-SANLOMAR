@@ -1,0 +1,108 @@
+---
+created: 2026-08-04T00:00:07.930Z
+title: Migrar generacion SUNAT de invoices y despatches a control local versionable
+area: sunat
+files:
+  - app/Services/Sunat/Transportista/UtilTransportistaService.php
+  - app/Services/Sunat/Transportista/Xml/TransportistaXmlBuilder.php
+  - app/Services/Sunat/Transportista/Templates/despatchTransportista.xml.twig
+  - app/Services/Sunat/UtilService.php:254,297
+  - app/Services/Sunat/DocumentService.php:32
+  - app/Traits/Sunat/UtilTrait.php:162,196
+  - public/custom/pdf/invoice.html.twig
+  - vendor/greenter/xml/src/Xml/Templates/despatch2022.xml.twig
+  - vendor/greenter/report/src/Report/Templates/assets/style.css
+  - deploy.php
+---
+
+## Problem
+
+Todo lo que el sistema le entrega a SUNAT (XML firmado) y al cliente (PDF/RIDE)
+se genera hoy con plantillas y modelos que viven dentro de `vendor/greenter`.
+`vendor/` esta en `.gitignore` y durante mucho tiempo se subio **a mano y ya
+parcheado** al VPS — lo dice el propio comentario en `deploy.php`: *"vendor/
+subido manualmente, nunca paso por un composer install real"*.
+
+El primer deploy real con Deployer corrio `composer install` y reemplazo ese
+vendor por el pristine de packagist, borrando los parches sin aviso. Resultado:
+dos incidentes en produccion el mismo dia.
+
+1. `Call to undefined method Greenter\Model\Sale\Invoice::setTipoCambio()` —
+   rompia **toda** emision de factura y nota, no solo el PDF.
+2. La detraccion salio impresa en USD en 4 facturas, cuando el monto siempre es
+   en soles.
+
+### Auditoria hecha (2026-08-03)
+
+Se clonaron las fuentes pristine de `greenter/core@v5.1.1`,
+`greenter/report@v5.1.1` y `greenter/xml@v5.1.1` y se diffearon contra el
+vendor local (que todavia conserva los parches) ignorando CRLF. De ~100
+archivos, **exactamente 4 estaban parcheados a mano**:
+
+| # | Archivo | Que hacia el parche | Estado |
+|---|---------|---------------------|--------|
+| 1 | `core/.../Sale/BaseSale.php` | agregaba la propiedad `tipoCambio` + getter/setter (NO existe en upstream) | resuelto en `b187645` |
+| 2 | `report/.../Templates/invoice.html.twig` | detraccion con `S/` fijo en vez de `{{ moneda }}`, + fila "Tipo Cambio" | resuelto en `b187645` |
+| 3 | `report/.../Templates/assets/style.css` | en `@media print`, logo `img{max-width:100%}` -> `90%` | **VIVO** |
+| 4 | `xml/.../Templates/despatch2022.xml.twig` | agrega `<cac:LoadingTransportEvent><cbc:OccurrenceDate>` a la guia de remision remitente | **VIVO Y CRITICO** |
+
+El #4 es el grave: ese nodo va dentro del **XML que se envia a SUNAT** para la
+guia de remision remitente (tipoDoc 09). Produccion lo perdio en el deploy, asi
+que las guias que se emiten ahora salen sin la fecha de inicio de traslado.
+
+El #3 solo cambia el tamano del logo en el PDF (cosmetico).
+
+## Solution
+
+Replicar el patron que **ya existe y funciona** para guia transportista, donde
+nada critico depende de `vendor/`:
+
+```
+app/Services/Sunat/Transportista/
+├── Model/DespatchTransportista.php            # modelo propio
+├── Templates/despatchTransportista.xml.twig   # XML propio, versionado
+├── Xml/TransportistaXmlBuilder.php            # builder propio
+├── DocumentTransportistaService.php
+└── UtilTransportistaService.php               # extiende UtilService
+```
+
+Greenter queda reducido a lo que si conviene reusar y es estable: firma
+(`SignedXml`), envio (`See` / GRE API), lectura de CDR y los modelos de datos.
+
+### Fase 1 — Parar la hemorragia (urgente, chica)
+
+- Recuperar el parche #4 bajo control propio: plantilla `despatch2022.xml.twig`
+  versionada + builder propio para guia remitente, espejo de transportista.
+- Versionar `assets/style.css` en `public/custom/pdf/assets/` (parche #3).
+  OJO: hoy `{% include 'assets/style.css' %}` cae por fallback a vendor; al
+  crear `public/custom/pdf/assets/` pasa a ganar el propio.
+- Verificacion: emitir una guia remitente en beta y diffear el XML generado
+  contra uno emitido antes del deploy — debe reaparecer `LoadingTransportEvent`.
+
+### Fase 2 — XML de facturas y notas bajo control
+
+- `App\Services\Sunat\Templates\` con `invoice2.1.xml.twig`, `notacr2.1`,
+  `notadb2.1` + `InvoiceXmlBuilder` propio.
+- Verificacion obligatoria: generar el XML con el builder viejo y el nuevo para
+  N comprobantes reales y exigir **diff byte a byte = 0** antes de cambiar el
+  default. Es lo que va a SUNAT, no admite "se ve bien".
+
+### Fase 3 — Reportes PDF completos
+
+- Mover `despatch`, `voided`, `summary` a `public/custom/pdf/`.
+- Unificar `getReportHtml()` y `getReportPdf()`: hoy divergen — el PDF usa
+  `public/custom/pdf` (y fallback a vendor) y la preview usa `public/custom`,
+  que es un fork viejo sin bloque de detraccion.
+
+### Guardrail transversal (lo mas valioso)
+
+Un test que clone/descargue las fuentes pristine de los paquetes greenter
+pinneados en `composer.lock` y falle si algun archivo de `vendor/greenter`
+difiere (ignorando CRLF). Convierte "se perdio un parche silenciosamente" en un
+build rojo. Es el mismo script que se uso en la auditoria del 2026-08-03.
+
+### Alternativa considerada y descartada
+
+`cweagans/composer-patches`: reaplicaria los parches en cada `composer install`.
+Se descarta porque mantiene el acoplamiento a internals de vendor, se rompe en
+cada upgrade y no es el estilo ya establecido en el repo (transportista).

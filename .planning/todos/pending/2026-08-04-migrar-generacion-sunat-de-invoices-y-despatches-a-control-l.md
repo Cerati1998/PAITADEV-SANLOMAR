@@ -43,8 +43,8 @@ archivos, **exactamente 4 estaban parcheados a mano**:
 |---|---------|---------------------|--------|
 | 1 | `core/.../Sale/BaseSale.php` | agregaba la propiedad `tipoCambio` + getter/setter (NO existe en upstream) | resuelto en `b187645` |
 | 2 | `report/.../Templates/invoice.html.twig` | detraccion con `S/` fijo en vez de `{{ moneda }}`, + fila "Tipo Cambio" | resuelto en `b187645` |
-| 3 | `report/.../Templates/assets/style.css` | en `@media print`, logo `img{max-width:100%}` -> `90%` | **VIVO** |
-| 4 | `xml/.../Templates/despatch2022.xml.twig` | agrega `<cac:LoadingTransportEvent><cbc:OccurrenceDate>` a la guia de remision remitente | **VIVO Y CRITICO** |
+| 3 | `report/.../Templates/assets/style.css` | en `@media print`, logo `img{max-width:100%}` -> `90%` | resuelto en `90912af` |
+| 4 | `xml/.../Templates/despatch2022.xml.twig` | agrega `<cac:LoadingTransportEvent><cbc:OccurrenceDate>` a la guia de remision remitente | resuelto en `90912af` |
 
 El #4 es el grave: ese nodo va dentro del **XML que se envia a SUNAT** para la
 guia de remision remitente (tipoDoc 09). Produccion lo perdio en el deploy, asi
@@ -79,13 +79,18 @@ Greenter queda reducido a lo que si conviene reusar y es estable: firma
 - Verificacion: emitir una guia remitente en beta y diffear el XML generado
   contra uno emitido antes del deploy — debe reaparecer `LoadingTransportEvent`.
 
-### Fase 2 — XML de facturas y notas bajo control
+### Fase 2 — XML de facturas y notas bajo control  [HECHA]
 
 - `App\Services\Sunat\Templates\` con `invoice2.1.xml.twig`, `notacr2.1`,
-  `notadb2.1` + `InvoiceXmlBuilder` propio.
-- Verificacion obligatoria: generar el XML con el builder viejo y el nuevo para
-  N comprobantes reales y exigir **diff byte a byte = 0** antes de cambiar el
-  default. Es lo que va a SUNAT, no admite "se ve bien".
+  `notadb2.1`, `voided`, `summary` (mas `despatch2022` de la Fase 1).
+- En vez de un `InvoiceXmlBuilder` aparte se unifico todo en
+  `App\Services\Sunat\Xml\SunatXmlBuilder`, que absorbe tambien al
+  `DespatchXmlBuilder` de la Fase 1: los cinco builders de Greenter eran
+  envoltorios finos sobre `TwigBuilder` que solo elegian nombre de plantilla.
+- Ya no queda ningun builder de Greenter instanciado en `app/`.
+- Verificacion cumplida: **40 documentos, diff byte a byte = 0** (24 facturas y
+  boletas reales, 13 guias reales, 1 anulacion real, 2 notas fixture), mas smoke
+  test del flujo firmado y prueba de independencia con marcador en vendor.
 
 ### Fase 3 — Reportes PDF completos
 

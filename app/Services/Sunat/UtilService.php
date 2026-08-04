@@ -5,19 +5,13 @@ namespace App\Services\Sunat;
 use Greenter\Model\Despatch\Despatch;
 use Greenter\Model\DocumentInterface;
 use Greenter\Model\Sale\Invoice;
-use Greenter\Model\Sale\Note;
-use Greenter\Model\Voided\Voided;
 use Greenter\Report\HtmlReport;
 use Greenter\Report\PdfReport;
 use Greenter\Report\Resolver\DefaultTemplateResolver;
-use Greenter\Report\Resolver\InvalidDocumentException;
 use Greenter\Report\XmlUtils;
 use Greenter\See;
 use Greenter\Ws\Services\SunatEndpoints;
-use App\Services\Sunat\Xml\DespatchXmlBuilder;
-use Greenter\Xml\Builder\InvoiceBuilder;
-use Greenter\Xml\Builder\NoteBuilder;
-use Greenter\Xml\Builder\VoidedBuilder;
+use App\Services\Sunat\Xml\SunatXmlBuilder;
 use Greenter\XMLSecLibs\Sunat\SignedXml;
 use Illuminate\Support\Facades\Storage;
 
@@ -78,27 +72,11 @@ class UtilService
     {
         $className = get_class($document);
 
-        switch ($className) {
-            case Invoice::class:
-                $builder = new InvoiceBuilder();
-                break;
-            case Note::class:
-                $builder = new NoteBuilder();
-                break;
-            case Despatch::class:
-                // Builder propio: el template vive en app/Services/Sunat/Templates
-                // (versionado) en vez de vendor/, que el composer install del deploy
-                // deja pristine. Ver DespatchXmlBuilder.
-                $builder = new DespatchXmlBuilder();
-                break;
-            case Voided::class:
-                $builder = new VoidedBuilder();
-                break;
-            default:
-                throw new InvalidDocumentException('Not found template for ' . $className);
-        }
-
-        $xml = $builder->build($document);
+        // Builder propio para todos los tipos: las plantillas viven en
+        // app/Services/Sunat/Templates (versionadas) en vez de vendor/, que el
+        // composer install del deploy deja pristine. De Greenter se siguen usando
+        // los modelos, la firma, el envio y la lectura del CDR. Ver SunatXmlBuilder.
+        $xml = (new SunatXmlBuilder())->build($document);
 
         // DIAG-4068: log temporal para rastrear en que punto se corrompe la direccion (quitar tras diagnosticar).
         if ($className === Despatch::class) {

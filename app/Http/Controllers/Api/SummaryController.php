@@ -7,7 +7,7 @@ use App\Http\Requests\SummaryRequest;
 use App\Models\Company;
 use App\Services\Sunat\SummaryService;
 use Greenter\Report\XmlUtils;
-use Greenter\Xml\Builder\SummaryBuilder;
+use App\Services\Sunat\Xml\SunatXmlBuilder;
 use Greenter\XMLSecLibs\Sunat\SignedXml;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
@@ -58,7 +58,7 @@ class SummaryController extends Controller
         $sunat = new SummaryService($this->company);
         $summary = $sunat->getSummary(request()->all());
 
-        $builder = new SummaryBuilder();
+        $builder = new SunatXmlBuilder();
         $xml = $builder->build($summary);
 
         $signer = new SignedXml();
@@ -78,7 +78,7 @@ class SummaryController extends Controller
         $sunat = new SummaryService($this->company);
         $summary = $sunat->getSummary(request()->all());
 
-        $builder = new SummaryBuilder();
+        $builder = new SunatXmlBuilder();
         $xml = $builder->build($summary);
 
         $signer = new SignedXml();

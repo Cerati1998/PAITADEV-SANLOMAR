@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Services\Sunat\VoidedService;
 use Greenter\Report\XmlUtils;
-use Greenter\Xml\Builder\VoidedBuilder;
+use App\Services\Sunat\Xml\SunatXmlBuilder;
 use Greenter\XMLSecLibs\Sunat\SignedXml;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
@@ -57,7 +57,7 @@ class VoidedController extends Controller
         $sunat = new VoidedService($this->company);
         $voided = $sunat->getVoided(request()->all());
 
-        $builder = new VoidedBuilder();
+        $builder = new SunatXmlBuilder();
         $xml = $builder->build($voided);
 
         $signer = new SignedXml();
@@ -77,7 +77,7 @@ class VoidedController extends Controller
         $sunat = new VoidedService($this->company);
         $voided = $sunat->getVoided(request()->all());
 
-        $builder = new VoidedBuilder();
+        $builder = new SunatXmlBuilder();
         $xml = $builder->build($voided);
 
         $signer = new SignedXml();

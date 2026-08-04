@@ -10,7 +10,6 @@ use App\Services\SunatService;
 use App\Traits\Sunat\DataTrait;
 use Closure;
 use Greenter\Report\XmlUtils;
-use Greenter\Xml\Builder\InvoiceBuilder;
 use Greenter\XMLSecLibs\Sunat\SignedXml;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Log;

@@ -17,7 +17,7 @@ class VoidedTable extends DataTableComponent
     public function configure(): void
     {
         $this->setPrimaryKey('id');
-        $this->setAdditionalSelects(['id']);
+        $this->setAdditionalSelects(['id', 'sunat_ticket', 'sunatResponse']);
         $this->setDefaultSort('id', 'desc');
     }
 

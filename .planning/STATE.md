@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 02
 current_phase_name: reconsulta-de-anulaciones-pendientes
 status: executing
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-08-05T20:03:52.499Z"
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-08-05T20:24:04.249Z"
 last_activity: 2026-08-05
-last_activity_desc: Completed 02-03-PLAN.md
+last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 9
-  completed_plans: 9
+  total_plans: 10
+  completed_plans: 10
   percent: 50
 ---
 
@@ -28,10 +28,10 @@ See: .planning/PROJECT.md (updated 2026-08-04)
 
 ## Current Position
 
-Phase: 02 (reconsulta-de-anulaciones-pendientes) — COMPLETE
-Plan: 3 of 3
+Phase: 02 (reconsulta-de-anulaciones-pendientes) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-08-05 — Completed 02-03-PLAN.md
+Last activity: 2026-08-05 — Phase 02 execution started
 
 Progress: [██████████] 100%
 
@@ -64,6 +64,7 @@ Progress: [██████████] 100%
 | Phase 02 P01 | 8min | 2 tasks | 2 files |
 | Phase 02 P02 | 5min | 2 tasks | 2 files |
 | Phase 02 P03 | 16min | 2 tasks | 3 files |
+| Phase 02 P04 | 20min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -97,6 +98,9 @@ Recent decisions affecting current work:
 - [Phase 02-03]: sendXml() rama Consultar se expresa por exclusion (! Aceptada && ! Rechazada), no por enumeracion (Pendiente || NULL), para que ningun estado presente ni futuro con ticket vivo quede huerfano (CR-01)
 - [Phase 02-03]: dispatchPendingSwal() es el unico punto de composicion del aviso de pendiente; solo afirma progreso cuando el motivo persistido es codigo_98, y en cualquier otro caso muestra No se pudo confirmar el estado con el codigo devuelto
 - [Phase 02-03]: La normalizacion del codigo en resolveTicket() compara (int) code === 98, no la cadena cruda; el code que se persiste en markPending() sigue siendo el crudo de SUNAT (con sus ceros)
+- [Phase 02-04]: La preparacion local del XML sale entera del try que classifyFailure() interpreta como respuesta de SUNAT; su catch delega en dispatchXmlUnavailableSwal(), nunca en classifyFailure()
+- [Phase 02-04]: La guarda de regeneracion del XML comprueba Storage::exists(xml_path), no solo empty(xml_path), replicando el criterio de downloadCDR(); dispatchXmlUnavailableSwal() no vuelca $e->getMessage() al operador
+- [Phase 02-04]: No se extrajo el privado comun downloadOrWarn() que proponia 02-REVIEW.md WR-04: hubiera obligado a reescribir downloadCDR(), declarado intocable; la triplicacion de la guarda queda anotada como deuda junto a IN-06
 
 ### Pending Todos
 
@@ -120,6 +124,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-05T19:06:08.544Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-08-05T20:24:04.239Z
+Stopped at: Completed 02-04-PLAN.md
 Resume file: None

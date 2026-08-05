@@ -21,9 +21,10 @@ en producción para guías de remisión.
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [x] **Phase 1: Ticket persistido y semántica de tres estados** - El envío web guarda el ticket antes de consultar y registra el estado real que devolvió SUNAT (3/6 planes ejecutados; verificación con gaps 2026-08-04; planes de cierre 01-04, 01-05 y 01-06 pendientes de ejecutar) (completed 2026-08-05)
+- [ ] **Phase 1: Ticket persistido y semántica de tres estados** - El envío web guarda el ticket antes de consultar y registra el estado real que devolvió SUNAT (6/6 planes ejecutados; re-verificación 2026-08-05 con 9/9 must-haves y los 4 gaps cerrados; queda `human_needed` — 4 pruebas contra SUNAT beta en `01-UAT.md`)
 - [ ] **Phase 2: Reconsulta de anulaciones pendientes** - El usuario recupera el CDR desde el listado usando el ticket guardado, sin reenviar el XML
 - [ ] **Phase 3: Anulación por API con recuperación por ticket** - El endpoint deja de romperse y expone el mismo comportamiento de ticket que la vía web
+- [ ] **Phase 4: Autorización del flujo de anulación** - Las acciones de anulación comprueban propiedad multi-tenant y permiso en el servidor, no solo en la vista (CR-02 y CR-04 del code review de la Fase 1)
 
 ## Phase Details
 
@@ -95,16 +96,32 @@ Plans:
 
 **Plans**: TBD
 
+### Phase 4: Autorización del flujo de anulación
+
+**Goal**: Anular un comprobante exige ser dueño del comprobante y tener el permiso para hacerlo, comprobado en el servidor y no solo en la vista
+**Mode:** mvp
+**Depends on**: Phase 1
+**Requirements**: TBD
+**Origen**: hallazgos CR-02 y CR-04 de `.planning/phases/01-ticket-persistido-y-sem-ntica-de-tres-estados/01-REVIEW.md` (2026-08-05), dejados abiertos a propósito al cerrar la Fase 1 por ser transversales a todas las tablas Livewire y no solo a `voideds`
+**Success Criteria** (what must be TRUE):
+
+  1. Las acciones de `VoidedTable` (`downloadPDF`, `downloadXML`, `downloadCDR`, `sendXml`, `showResponse`) rechazan un id que no pertenezca a la empresa, sucursal y ambiente de la sesión — hoy solo `builder()` acota el listado, no las acciones (CR-02).
+  2. El permiso `vouchers.anulate` se comprueba en el punto donde la anulación ocurre (`sendVoided()` / `VoidedForm::send()`), no únicamente al abrir el modal, de modo que revocarlo en caliente deja de ser inoperante (CR-04).
+  3. El mismo patrón de guarda se aplica a las demás tablas que comparten `vouchers/partials/cdr.blade.php` — `VoucherTable`, `DespatchTable`, `DespatchTransportistaTable` — o queda documentado por qué no lo necesitan.
+
+**Plans**: TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3
+Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Ticket persistido y semántica de tres estados | 6/6 | Complete   | 2026-08-05 |
+| 1. Ticket persistido y semántica de tres estados | 6/6 | Executed — UAT pendiente (`human_needed`) | - |
 | 2. Reconsulta de anulaciones pendientes | 0/TBD | Not started | - |
 | 3. Anulación por API con recuperación por ticket | 0/TBD | Not started | - |
+| 4. Autorización del flujo de anulación | 0/TBD | Not started | - |
 
 ## Notes
 

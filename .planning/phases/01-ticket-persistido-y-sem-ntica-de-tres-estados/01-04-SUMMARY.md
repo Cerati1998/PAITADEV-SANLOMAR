@@ -125,3 +125,11 @@ Este plan **no** incluye la verificación manual contra el ambiente beta de SUNA
 ---
 *Phase: 01-ticket-persistido-y-sem-ntica-de-tres-estados*
 *Completed: 2026-08-05*
+
+## Self-Check: PASSED
+
+- FOUND: app/Services/Sunat/VoidedTicketFlowService.php
+- FOUND: .planning/phases/01-ticket-persistido-y-sem-ntica-de-tres-estados/01-04-SUMMARY.md
+- FOUND: ef1ec8e (Tarea 1 commit)
+- FOUND: 790f4cd (Tarea 2 commit)
+- FOUND: 1922cc0 (SUMMARY commit)

@@ -31,6 +31,8 @@ return new class extends Migration
             $table->string('cdr_path')->nullable();
 
             $table->string('hash')->nullable();
+            $table->string('sunat_ticket')->nullable();
+            $table->string('sunat_status')->nullable();
 
             $table->json('sunatResponse')->nullable();
 

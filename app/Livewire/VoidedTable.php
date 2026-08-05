@@ -187,7 +187,6 @@ class VoidedTable extends DataTableComponent
         }
 
         $directory = $voided->production ? 'sunat/' : 'sunat/beta/';
-        $name = session('company')->ruc.'-RC-'.$voided->fecGeneracion->format('Ymd').'-'.$voided->correlativo;
 
         $util = new UtilService(session('company'));
         $flow = new VoidedTicketFlowService($util);
@@ -213,8 +212,10 @@ class VoidedTable extends DataTableComponent
                 $xml = $voided->xml;
             }
 
-            $cdrPath = $directory.'cdr/R-'.$name.'.zip';
-            $status = $flow->sendAndResolve($voided, $xml, $cdrPath);
+            // D-04: la ruta del CDR se arma con el RUC de la empresa dueña de
+            // la fila (cdrPathFor() lee $voided->company), no con el de la
+            // empresa de la sesión.
+            $status = $flow->sendAndResolve($voided, $xml, $this->cdrPathFor($voided));
 
             if ($status === VoidedStatus::Pendiente) {
                 $this->dispatch('swal', [
@@ -286,11 +287,19 @@ class VoidedTable extends DataTableComponent
         return $directory.'cdr/R-'.$name.'.zip';
     }
 
-    // D-09/D-13: lista de permitidos, no de bloqueos. Replica hoja por hoja
-    // el árbol de voideds/partials/response.blade.php: devuelve true en los
-    // dos únicos casos en que reenviar el XML es legítimo. Privado porque un
-    // método público de un componente Livewire es un endpoint invocable
-    // directamente desde el cliente.
+    // D-03/D-09/D-13: lista de permitidos, no de bloqueos. Replica hoja por
+    // hoja el árbol de voideds/partials/response.blade.php: devuelve true en
+    // los dos únicos casos en que reenviar el XML es legítimo. Tras la Fase 2
+    // ese árbol tiene una hoja nueva: la rama Pendiente ya no abre el
+    // detalle, dispara sendXml(). Pendiente queda deliberadamente fuera de
+    // esta lista — devolver false aquí es lo que encamina la fila hacia la
+    // rama de reconsulta de sendXml() en vez de hacia el reenvío. La guarda
+    // también neutraliza el botón de la columna CDR (vouchers.partials.cdr,
+    // compartido por VoucherTable, DespatchTable y
+    // DespatchTransportistaTable), que ofrece esta acción a toda fila sin
+    // cdr_path sin mirar el estado. Privado porque un método público de un
+    // componente Livewire es un endpoint invocable directamente desde el
+    // cliente.
     private function canResendXml(Voided $voided): bool
     {
         // Caso 1: rechazada porque el envío inicial nunca llegó a devolver

@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Services\Sunat\VoidedService;
-use Greenter\Report\XmlUtils;
 use App\Services\Sunat\Xml\SunatXmlBuilder;
+use Greenter\Report\XmlUtils;
 use Greenter\XMLSecLibs\Sunat\SignedXml;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
@@ -19,7 +19,7 @@ class VoidedController extends Controller
     {
         $company = auth('sanctum')->user();
 
-        if (!($company instanceof Company)) {
+        if (! ($company instanceof Company)) {
 
             throw new AuthenticationException('El token no está asociado a una empresa.');
         }
@@ -54,7 +54,7 @@ class VoidedController extends Controller
         $voided = $sunat->getVoided(request()->all());
 
         $see = $sunat->getSee();
-        
+
         $result = $see->send($voided);
 
         if ($result->isSuccess()) {
@@ -62,11 +62,11 @@ class VoidedController extends Controller
             $result = $see->getStatus($ticket);
 
             $response = $sunat->getResponse($result);
-        }else{
+        } else {
             $response['success'] = false;
             $response['error'] = [
                 'code' => $result->getError()->getCode(),
-                'message' => $result->getError()->getMessage()
+                'message' => $result->getError()->getMessage(),
             ];
         }
 
@@ -80,14 +80,14 @@ class VoidedController extends Controller
         $sunat = new VoidedService($this->company);
         $voided = $sunat->getVoided(request()->all());
 
-        $builder = new SunatXmlBuilder();
+        $builder = new SunatXmlBuilder;
         $xml = $builder->build($voided);
 
-        $signer = new SignedXml();
+        $signer = new SignedXml;
         $signer->setCertificate($this->company->certificate);
 
         $xmlSigned = $signer->signXml($xml);
-        $hash = (new XmlUtils())->getHashSign($xmlSigned);
+        $hash = (new XmlUtils)->getHashSign($xmlSigned);
 
         return response()->json([
             'xml' => $xmlSigned,
@@ -102,14 +102,14 @@ class VoidedController extends Controller
         $sunat = new VoidedService($this->company);
         $voided = $sunat->getVoided(request()->all());
 
-        $builder = new SunatXmlBuilder();
+        $builder = new SunatXmlBuilder;
         $xml = $builder->build($voided);
 
-        $signer = new SignedXml();
+        $signer = new SignedXml;
         $signer->setCertificate($this->company->certificate);
 
         $xmlSigned = $signer->signXml($xml);
-        $hash = (new XmlUtils())->getHashSign($xmlSigned);
+        $hash = (new XmlUtils)->getHashSign($xmlSigned);
 
         return $sunat->getReportHtml($voided, $hash, $this->company);
     }

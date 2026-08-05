@@ -44,13 +44,13 @@ class VoidedForm extends Form
 
     public function send()
     {
-        $this->validate([
-            'details' => 'required|array|min:1',
-            'details.*.tipoDoc' => 'required|string|size:2',
-            'details.*.serie' => 'required|string|max:4',
-            'details.*.correlativo' => 'required',
-            'details.*.desMotivoBaja' => 'required|min:3|max:250',
-        ]);
+        $this->validate(
+            array_merge(
+                ['details' => 'required|array|min:1'],
+                VoidedService::detailRules()
+            ),
+            VoidedService::detailMessages()
+        );
 
         // El ámbito multi-tenant se re-deriva en el servidor justo antes de
         // persistir; nunca se acepta del cliente. #[Locked] ya lo impide, pero

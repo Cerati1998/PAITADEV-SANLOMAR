@@ -43,7 +43,8 @@
         <cbc:DocumentTypeCode>{{ det.tipoDoc }}</cbc:DocumentTypeCode>
         <sac:DocumentSerialID>{{ det.serie }}</sac:DocumentSerialID>
         <sac:DocumentNumberID>{{ det.correlativo }}</sac:DocumentNumberID>
-        <sac:VoidReasonDescription><![CDATA[{{ det.desMotivoBaja|raw }}]]></sac:VoidReasonDescription>
+        {# Defensa en profundidad: la validacion de entrada (VoidedService::detailRules) ya impide ']]>', pero un CDATA no protege por si mismo y este nodo se firma y se envia a SUNAT. ']]]]><![CDATA[>' cierra y reabre la seccion, de modo que el texto que SUNAT lee es identico y ']]>' deja de poder cerrarla. #}
+        <sac:VoidReasonDescription><![CDATA[{{ det.desMotivoBaja|replace({']]>': ']]]]><![CDATA[>'})|raw }}]]></sac:VoidReasonDescription>
     </sac:VoidedDocumentsLine>
     {% endfor %}
 </VoidedDocuments>

@@ -27,8 +27,29 @@ class VoidedController extends Controller
         $this->company = $company;
     }
 
+    /**
+     * Aplica el mismo contrato de entrada que VoidedForm::send().
+     *
+     * Esta superficie construye el documento directamente desde
+     * request()->all() y lo firma, así que sin esta validación desMotivoBaja
+     * seguiría llegando sin filtrar al CDATA del XML que se envía a SUNAT
+     * aunque el flujo web ya estuviera cerrado.
+     */
+    private function validateDetails(): void
+    {
+        request()->validate(
+            array_merge(
+                ['details' => 'required|array|min:1'],
+                VoidedService::detailRules()
+            ),
+            VoidedService::detailMessages()
+        );
+    }
+
     public function send()
     {
+        $this->validateDetails();
+
         $sunat = new VoidedService($this->company);
         $voided = $sunat->getVoided(request()->all());
 
@@ -54,6 +75,8 @@ class VoidedController extends Controller
 
     public function xml()
     {
+        $this->validateDetails();
+
         $sunat = new VoidedService($this->company);
         $voided = $sunat->getVoided(request()->all());
 
@@ -74,6 +97,8 @@ class VoidedController extends Controller
 
     public function pdf()
     {
+        $this->validateDetails();
+
         $sunat = new VoidedService($this->company);
         $voided = $sunat->getVoided(request()->all());
 

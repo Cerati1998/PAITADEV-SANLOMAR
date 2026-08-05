@@ -21,7 +21,7 @@ en producción para guías de remisión.
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Ticket persistido y semántica de tres estados** - El envío web guarda el ticket antes de consultar y registra el estado real que devolvió SUNAT (3/6 planes ejecutados; verificación con gaps 2026-08-04; planes de cierre 01-04, 01-05 y 01-06 pendientes de ejecutar)
+- [x] **Phase 1: Ticket persistido y semántica de tres estados** - El envío web guarda el ticket antes de consultar y registra el estado real que devolvió SUNAT (3/6 planes ejecutados; verificación con gaps 2026-08-04; planes de cierre 01-04, 01-05 y 01-06 pendientes de ejecutar) (completed 2026-08-05)
 - [ ] **Phase 2: Reconsulta de anulaciones pendientes** - El usuario recupera el CDR desde el listado usando el ticket guardado, sin reenviar el XML
 - [ ] **Phase 3: Anulación por API con recuperación por ticket** - El endpoint deja de romperse y expone el mismo comportamiento de ticket que la vía web
 
@@ -41,7 +41,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Los comprobantes incluidos en la anulación aparecen como dados de baja únicamente después de un CDR aceptado (código `0`); si la baja quedó pendiente, siguen sin marcar.
   5. El estado guardado de una anulación se lee como uno de tres valores explícitos — aceptada, pendiente o rechazada — en lugar del `success: true/false` actual.
 
-**Plans**: 5/6 plans executed
+**Plans**: 6/6 plans complete
 
 Plans:
 **Wave 1**
@@ -63,7 +63,7 @@ Plans:
 
 **Cierre de gaps — Wave 2** *(blocked on Wave 1; serializado a propósito — 01-05 verifica que no toca ninguna vista y 01-06 sí modifica una)*
 
-- [ ] 01-06-PLAN.md — CR-06 de `01-REVIEW.md`: el mensaje de SUNAT deja de renderizarse sin escapar en el modal de detalle (XSS almacenado vía `desMotivoBaja`)
+- [x] 01-06-PLAN.md — CR-06 de `01-REVIEW.md`: el mensaje de SUNAT deja de renderizarse sin escapar en el modal de detalle (XSS almacenado vía `desMotivoBaja`)
 
 ### Phase 2: Reconsulta de anulaciones pendientes
 
@@ -102,7 +102,7 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Ticket persistido y semántica de tres estados | 5/6 | In Progress|  |
+| 1. Ticket persistido y semántica de tres estados | 6/6 | Complete   | 2026-08-05 |
 | 2. Reconsulta de anulaciones pendientes | 0/TBD | Not started | - |
 | 3. Anulación por API con recuperación por ticket | 0/TBD | Not started | - |
 

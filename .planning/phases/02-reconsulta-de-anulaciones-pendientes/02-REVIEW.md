@@ -1,329 +1,411 @@
 ---
 phase: 02-reconsulta-de-anulaciones-pendientes
-reviewed: 2026-08-05T17:47:40Z
+reviewed: 2026-08-05T21:10:00Z
 depth: standard
-files_reviewed: 2
+files_reviewed: 3
 files_reviewed_list:
   - app/Livewire/VoidedTable.php
+  - app/Services/Sunat/VoidedTicketFlowService.php
   - resources/views/voideds/partials/response.blade.php
 findings:
-  critical: 2
-  warning: 9
-  info: 6
-  total: 17
+  critical: 1
+  warning: 8
+  info: 10
+  total: 19
 status: issues_found
 ---
 
 # Fase 2: Informe de revisión de código
 
-**Revisado:** 2026-08-05T17:47:40Z
+**Revisado:** 2026-08-05T21:10:00Z
 **Profundidad:** standard
-**Archivos revisados:** 2
+**Archivos revisados:** 3
 **Estado:** issues_found
 
 ## Resumen
 
-Se revisó el árbol de tres ramas de `VoidedTable::sendXml()`, el nuevo helper
-privado `cdrPathFor()`, el `SelectFilter` de estado y los badges añadidos a
-`voideds/partials/response.blade.php`, cruzando cada rama contra
-`VoidedTicketFlowService`, `VoidedObserver`, la migración
-`2026_08_04_100000_add_sunat_ticket_and_status_to_voideds_table.php`, el modelo
-Greenter `Voided` y el listener `Livewire.on('swal')` de
+Se revisó el estado del código tras el plan de cierre de gaps 02-03: el árbol de
+tres ramas de `VoidedTable::sendXml()`, el nuevo `dispatchPendingSwal()`,
+`cdrPathFor()`, el `SelectFilter` de estado, la normalización
+`(int) $code === 98` en `VoidedTicketFlowService::resolveTicket()` y las hojas
+del árbol de `voideds/partials/response.blade.php`. Cada rama se cruzó contra
+`VoidedTicketFlowService` completo, `VoidedForm::send()` (el otro llamador del
+servicio), `VoidedObserver`, las dos migraciones de `voideds`, el modelo Greenter
+`Voided`, `UtilService::getSee()/readCdr()`, `config/filesystems.php`,
+`FilesystemAdapter::get()/download()`, `SelectFilter::validate()` del paquete
+rappasoft y el listener `Livewire.on('swal')` de
 `resources/views/layouts/dashboard.blade.php`.
 
-La rama de reconsulta hace lo que promete para el caso feliz (Pendiente + ticket
-→ `resolveTicket()` en vez de reenviar), y el filtro compone correctamente sobre
-`builder()` sin ensanchar el ámbito multi-tenant. Pero el árbol de guardas se
-apoya en un supuesto que el código no garantiza —que «ticket presente y estado
-distinto de Pendiente» implica `Rechazada`— y esa grieta deja filas con ticket
-vivo sin ninguna vía de reconsulta, mostrando además al operador un rechazo de
-SUNAT que nunca ocurrió. Eso ataca directamente el core value del proyecto: el
-estado que muestra el sistema deja de coincidir con el que SUNAT tiene, sin
-salida por la interfaz.
+Lo que sí quedó cerrado respecto de la revisión anterior: la rama 1 ahora se
+condiciona por estado y no por presencia de ticket, así que la fila histórica con
+ticket vivo tiene por fin vía de reconsulta (nueva hoja de `response.blade.php`,
+líneas 67-78); el aviso de pendiente dejó de afirmar progreso cuando el motivo es
+`fallo_transporte`; y el código `0098` con ceros a la izquierda ya se reconoce.
 
-Además hay defectos de menor calibre pero comprobables: el swal de detalle nunca
-llega a verse cuando el `catch` de la reconsulta dispara dos eventos, el nombre
-del ZIP del CDR no coincide con el nombre del comprobante que certifica, el
-badge del estado `Rechazada` se renderiza sin color porque `danger` no existe en
-WireUI, y la mitad «empresa dueña de la fila» de D-04 quedó aplicada al path
-pero no a las credenciales SUNAT.
+Lo que no: **el hallazgo WR-09 de la revisión previa sigue intacto y es el fallo
+más grave del conjunto** — un fichero XML ausente en disco hace que la fila se
+grabe como «Rechazada por SUNAT» sin que SUNAT haya dicho nada. Eso es exactamente
+el modo de fallo que esta fase existe para eliminar, y ahora es más visible porque
+el resto del flujo sí es honesto. Junto a él siguen sin corregir el doble `swal`
+que se traga el modal de detalle, la ausencia de guarda en
+`downloadPDF()`/`downloadXML()` (asimétrica con el cuidado que sí recibió
+`downloadCDR()`), el volcado del mensaje crudo de excepción sin ningún
+`Log::error`, y la mitad de D-04 que dejó las credenciales SUNAT ancladas a la
+sesión.
 
-Se confirma que los hallazgos de autorización solapan con CR-02/CR-04 ya
-programados para la Fase 4; se dejan anotados como duplicado explícito, salvo la
-asimetría nueva que esta fase introdujo (WR-03), que no está cubierta por ese
-trabajo planificado.
+Como efecto colateral del cambio de la hoja `Pendiente` (el reloj ahora dispara
+red en vez de abrir el detalle), la rama `Pendiente` de
+`voideds/partials/sunatResponse.blade.php` quedó **inalcanzable desde la interfaz**:
+ya no existe forma de leer el ticket ni el motivo de una fila pendiente sin
+golpear a SUNAT. Y esa misma rama sigue afirmando «SUNAT ... aún la procesa» dos
+líneas antes de decir «No se pudo confirmar el estado» — la contradicción que
+GAP 2 eliminó del toast pero no del modal.
+
+CR-02/CR-04 (propiedad multi-tenant y permisos), WR-01 (prefijo `RC-` del ZIP) y
+WR-07 (color `danger`) se registran como Info por indicación explícita de alcance;
+siguen presentes y verificados en el código actual.
 
 ## Narrative Findings (AI reviewer)
 
 ### Críticos (BLOCKER)
 
-#### CR-01: La rama «Desenlace confirmado» captura filas con ticket vivo y les niega la reconsulta, afirmando un rechazo que nunca ocurrió
+#### CR-01: Un XML ausente en disco graba la fila como «Rechazada por SUNAT» sin que SUNAT haya respondido nada
 
-**Archivo:** `app/Livewire/VoidedTable.php:195-207` (y su reflejo en `resources/views/voideds/partials/response.blade.php:58-76`)
+**Archivo:** `app/Livewire/VoidedTable.php:228-243` (con el desenlace escrito en
+`app/Services/Sunat/VoidedTicketFlowService.php:196-204`)
 
-**Problema:**
-La rama 2 se condiciona sólo por el ticket:
-
-```php
-if (! is_null($voided->sunat_ticket)) {
-    // "Rechazada que conserva ticket"
-```
-
-El comentario (y el plan `02-01-PLAN.md`, línea 205) asumen que, filtrada ya la
-rama 1, «aquí sólo cae `Rechazada` que conserva ticket». Ese supuesto no está
-garantizado por el código: existe al menos un estado alcanzable con
-`sunat_ticket != null` y `sunat_status === null`.
-
-`VoidedTicketFlowService::sendAndResolve()` persiste el ticket con un `save()`
-propio (líneas 73-74) y **después** llama a `resolveTicket()`, que abre otra
-llamada de red SOAP. Si el proceso muere entre ambos puntos —`max_execution_time`
-agotado durante `getStatus()` (un fatal de PHP, no un `Throwable` atrapable),
-OOM, reinicio de php-fpm, o una excepción dentro del propio `save()` de
-`markPending()`, que escaparía al `catch` porque es `classifyFailure()` quien
-falla— la fila queda con ticket guardado y `sunat_status` en `NULL`. Es
-exactamente el modo de fallo que motivó esta fase: SUNAT sí tiene la baja y el
-sistema no sabe cómo terminó.
-
-Consecuencias para esa fila:
-
-1. `sendXml()` la desvía a la rama 2 y muestra *«SUNAT ya devolvió el CDR
-   rechazando esta comunicación de baja»* — una afirmación falsa sobre un
-   tercero fiscal. No existe CDR ni rechazo.
-2. Nunca se puede reconsultar: la rama 1 exige `sunat_status === Pendiente`, así
-   que el ticket queda huérfano para siempre y el CDR jamás se recupera.
-3. En el listado, la fila cae en el `@else` de la vista
-   (`response.blade.php:58`): `is_null($row->sunat_ticket)` es falso, así que se
-   pinta el interrogante con `showResponse`, que renderiza *«Error al Enviar a
-   SUNAT»* (`voideds/partials/sunatResponse.blade.php`, rama histórica) — otra
-   afirmación falsa, y encima incoherente con la de `sendXml()`.
-4. El filtro «SIN ESTADO» de D-07 la lista como pendiente de atención, pero
-   ninguna acción de la interfaz puede resolverla.
-
-Caso secundario de la misma grieta: una fila `Pendiente` **sin** ticket (drift de
-datos o corrección manual) no entra en la rama 1, no entra en la rama 2 y
-`canResendXml()` devuelve `false` → callejón sin salida «No se puede reenviar».
-
-**Fix:** condicionar por estado, no por la presencia del ticket, y reconsultar
-todo ticket vivo cuyo desenlace no esté confirmado por un CDR:
+**Problema:** la guarda de regeneración sólo mira la columna, no el fichero:
 
 ```php
-// Rama 1 — Consultar: cualquier ticket vivo sin desenlace confirmado.
-if (! is_null($voided->sunat_ticket)
-    && $voided->sunat_status !== VoidedStatus::Rechazada
-    && $voided->sunat_status !== VoidedStatus::Aceptada) {
-    // ... resolveTicket()
-}
-
-// Rama 2 — Desenlace confirmado: sólo Rechazada con ticket (D-12).
-if ($voided->sunat_status === VoidedStatus::Rechazada && ! is_null($voided->sunat_ticket)) {
-    // ... swal "Desenlace confirmado"
+if (empty($voided->xml_path)) {
+    // ... regenera XML y PDF
+} else {
+    $xml = $voided->xml;      // Storage::get($this->xml_path)
 }
 ```
 
-Y en la vista, ofrecer `sendXml` (reconsulta) cuando la fila histórica tenga
-ticket:
+Si `xml_path` está poblado pero el fichero no está en el disco —purga, cambio de
+bucket, `Storage::put()` que falló silenciosamente en el envío original, o
+migración de `local` a `do`— pasan dos cosas según el disco por defecto
+(`config/filesystems.php:16`, `FILESYSTEM_DISK`):
 
-```blade
-@if (is_null($row->sunat_ticket) && empty($row->sunatResponse))
-    {{-- reenvío legítimo --}}
-@elseif (! is_null($row->sunat_ticket))
-    {{-- ticket vivo sin estado: ofrecer reconsulta --}}
-    <button wire:click="sendXml({{ $row->id }})" xs> ... </button>
-@else
-    {{-- showResponse --}}
-@endif
+- disco `local` / `public` (`'throw' => false`): `FilesystemAdapter::get()`
+  (líneas 285-292 del framework) no devuelve nada → `null`. Ese `null` llega a
+  `sendAndResolve(Voided $voided, string $xml, ...)`, cuyo parámetro está tipado
+  `string` → **TypeError**.
+- disco `do` (`'throw' => true`, `config/filesystems.php:57`): lanza
+  `UnableToReadFile`.
+
+En ambos casos el `catch (\Throwable $e)` de la línea 259 recoge la excepción y
+llama a `classifyFailure()`. Como esta rama sólo se alcanza cuando
+`canResendXml()` fue `true` —y sus dos casos exigen `sunat_ticket` nulo—
+`classifyFailure()` entra por `is_null($voided->sunat_ticket)` y ejecuta
+`markRejected()`. Resultado persistido:
+
+```
+sunat_status  = rechazada
+sunatResponse = {"success":false,"error":{"code":null,"message":"<texto del TypeError>"}}
 ```
 
----
+El listado pinta el aspa roja y el modal de detalle escribe literalmente
+**«Rechazado por SUNAT»** (`voideds/partials/sunatResponse.blade.php:99-102`).
+SUNAT no ha visto jamás esta comunicación de baja: el fallo fue puramente local.
+La fila queda además en un estado más pobre que antes (`sunat_ticket` sigue nulo,
+así que la vista ofrece reenviar y el ciclo se repite indefinidamente mientras el
+fichero no aparezca), y las facturas involucradas nunca se marcan.
 
-#### CR-02: Las acciones públicas del componente aceptan cualquier `Voided` por id, sin comprobación de propiedad ni de permiso
+Esto viola directamente el core value declarado del proyecto: el estado que
+muestra el sistema afirma un desenlace que SUNAT no comunicó. Es la misma clase de
+defecto que la fase corrigió en la vía del ticket, dejada sin corregir en la vía
+del reenvío. Fue reportado como WR-09 en la revisión anterior y no se tocó en
+02-03.
 
-**Archivo:** `app/Livewire/VoidedTable.php:101-138, 140-284, 286-306`
+Es además incoherente con el cuidado que sí recibió `downloadCDR()` en esta misma
+fase (línea 127), que comprueba `Storage::exists()` antes de tocar el fichero
+justamente porque «la ruta puede estar poblada sin fichero detrás».
 
-**Problema:** `sendXml()`, `showResponse()`, `downloadPDF()`, `downloadXML()` y
-`downloadCDR()` son métodos públicos de un componente Livewire, es decir
-endpoints invocables directamente desde el cliente con cualquier id. El binding
-de modelo resuelve la fila sin pasar por `builder()`, que es el único sitio que
-filtra `branch_id` / `company_id` / `production`. Un usuario autenticado de la
-empresa A puede leer el `sunatResponse` completo de la empresa B, descargar su
-PDF/XML/CDR y disparar envíos o reconsultas contra SUNAT sobre documentos
-ajenos. Tampoco hay comprobación de permiso Spatie dentro del componente: el
-gate `can:` sólo protege la ruta que renderiza la página, no la acción.
-
-**Duplicado señalado:** esto solapa con **CR-02 y CR-04 de la revisión de la
-Fase 1**, ya programados para la **Fase 4** (propiedad multi-tenant y permisos
-en las acciones de anulación). Se registra por completitud del informe de esta
-fase; no debería abrirse un segundo frente de trabajo. Lo que **no** cubre ese
-trabajo planificado está aislado en WR-03.
-
-**Fix (el previsto en Fase 4):** re-resolver la fila dentro del ámbito de sesión
-y autorizar en cada acción, p. ej.
+**Fix:** comprobar la existencia real, y no dejar que un fallo local se escriba
+como desenlace de SUNAT:
 
 ```php
-private function scopedVoided(Voided $voided): Voided
-{
-    abort_unless(
-        $voided->company_id === session('company')->id
-            && $voided->branch_id === session('branch')->id
-            && $voided->production === session('company')->production,
-        404
-    );
+// Regenerar también cuando la columna apunta a un fichero que ya no está.
+if (empty($voided->xml_path) || ! Storage::exists($voided->xml_path)) {
+    $voidedGreenter = (new VoidedService)->getVoided($voided);
 
-    return $voided;
+    $xml = $util->getXmlSigned($voidedGreenter);
+    // ... (resto igual)
+} else {
+    $xml = $voided->xml;
 }
+
+// Defensa adicional, por si el disco devuelve vacío igualmente:
+throw_if(blank($xml), new \RuntimeException(
+    "El XML firmado de la anulación {$voided->id} no está disponible en el almacenamiento."
+));
 ```
 
-más `$this->authorize('voideds.send')` (o el nombre de permiso del seeder) al
-entrar en `sendXml()`.
+Y, complementariamente, que `classifyFailure()` no convierta en rechazo de SUNAT
+una excepción producida **antes** de llamar a `sendXmlFile()`. La forma más
+barata es no entrar al `try` sin XML: validar el `$xml` fuera del bloque
+`try/catch` que envuelve el envío, para que un fallo de almacenamiento se muestre
+como error de la aplicación y no como respuesta de un tercero fiscal.
 
 ---
 
 ### Advertencias (WARNING)
 
-#### WR-01: El ZIP del CDR se archiva con un nombre que no corresponde al comprobante que certifica
+#### WR-01: Dos `swal` en la misma respuesta: el detalle que se acaba de renderizar nunca llega a verse, y se muestra «error» sobre desenlaces confirmados
 
-**Archivo:** `app/Livewire/VoidedTable.php:314-320`
-
-**Problema:** `cdrPathFor()` compone
-`R-{ruc}-RC-{fecGeneracion:Ymd}-{correlativo}.zip`, mientras que el XML firmado
-del mismo documento se guarda (línea 235) con `$voidedGreenter->getName()`, que
-Greenter define como `{ruc}-RA-{fecComunicacion:Ymd}-{correlativo}`
-(`vendor/greenter/core/src/Core/Model/Voided/Voided.php:159-181`). Hay dos
-divergencias: el prefijo (`RC` en vez de `RA`, que es el que SUNAT usa para las
-comunicaciones de baja) y la fecha (`fecGeneracion` en vez de
-`fecComunicacion`, que en la práctica difieren, ya que la generación es la fecha
-de los comprobantes y la comunicación la del envío). Resultado: el CDR —la
-prueba documental de la baja ante SUNAT, y lo que se entrega a contabilidad o a
-una fiscalización— queda archivado con un nombre que no cruza con su XML ni con
-la nomenclatura oficial. El defecto es anterior a esta fase (venía de la línea
-que `cdrPathFor()` sustituye), pero la fase lo consolidó en un helper y lo
-extendió a la nueva vía de reconsulta, así que ahora es el único punto donde
-corregirlo.
-
-**Fix:** derivar el nombre de la misma fuente que el XML:
-
-```php
-private function cdrPathFor(Voided $voided): string
-{
-    $directory = $voided->production ? 'sunat/' : 'sunat/beta/';
-    $name = $voided->company['ruc'].'-RA-'.$voided->fecComunicacion->format('Ymd').'-'.$voided->correlativo;
-
-    return $directory.'cdr/R-'.$name.'.zip';
-}
-```
-
-(o construir el Greenter `Voided` con `VoidedService::getVoided()` y usar
-`getName()`). Ojo: cambiar la ruta rompe la correspondencia con los ZIP ya
-archivados, así que el cambio necesita una migración de datos o una tolerancia
-de lectura para los `cdr_path` históricos.
-
----
-
-#### WR-02: Dos `swal` en la misma respuesta: el detalle que se acaba de renderizar nunca se ve
-
-**Archivo:** `app/Livewire/VoidedTable.php:183-189`
+**Archivo:** `app/Livewire/VoidedTable.php:181-189`
 
 **Problema:** en el `catch` de la rama de reconsulta se llama a
-`showResponse($voided)` —que hace `dispatch('swal', [...'html'...])`— e
+`showResponse($voided)` —que hace `dispatch('swal', [... 'html' ...])`— e
 inmediatamente después se despacha un segundo `swal` de error. El listener es
 `Livewire.on('swal', data => Swal.fire(data[0]))`
-(`resources/views/layouts/dashboard.blade.php:76-78`): ambos eventos llegan en la
-misma respuesta y se procesan seguidos, de modo que el segundo `Swal.fire()`
-sustituye el popup del primero. El operador **nunca** ve el detalle del
-comprobante; sólo el mensaje de error. La intención declarada («además del
-detalle conviene que el usuario vea el mensaje del error») no se cumple.
+(`resources/views/layouts/dashboard.blade.php:77-79`): ambos eventos llegan en la
+misma respuesta y se procesan seguidos, así que el segundo `Swal.fire()` cierra y
+sustituye el popup del primero. La llamada a `showResponse()` es, en la práctica,
+código muerto.
 
-**Fix:** componer un solo swal con ambas cosas, en vez de despachar dos:
+Hay un agravante que la revisión anterior no señaló: `classifyFailure()` puede
+devolver `Aceptada` o `Rechazada` **por su rama de invariante**
+(`VoidedTicketFlowService.php:185-194`), es decir cuando el desenlace ya estaba
+confirmado por un CDR y sólo falló algo posterior. En ese caso el operador ve un
+modal titulado «Error al consultar el comprobante» sobre una comunicación de baja
+que SUNAT aceptó, sin ninguna otra señal en pantalla hasta que el listado se
+repinta.
+
+**Fix:** un solo `swal` que combine ambas cosas, y no titularlo «error» cuando el
+estado es un desenlace confirmado:
 
 ```php
 $html = view('voideds.partials.sunatResponse', ['document' => $voided])->render();
 
 $this->dispatch('swal', [
-    'icon' => 'error',
-    'title' => 'Error al consultar el comprobante',
-    'html' => $html.'<p class="mt-4 text-red-600">'.e($e->getMessage()).'</p>',
+    'icon' => $status === VoidedStatus::Aceptada ? 'info' : 'error',
+    'title' => 'Detalle de la comunicación de baja',
+    'html' => $html.'<p class="mt-4 text-sm text-red-600">No se pudo completar la consulta con SUNAT.</p>',
 ]);
 ```
 
-(La misma corrección aplica al despacho doble equivalente que quede en otras
-tablas si se replica el patrón.)
-
 ---
 
-#### WR-03: D-04 quedó aplicado a medias: la ruta del CDR usa la empresa de la fila, pero las credenciales SUNAT siguen siendo las de la sesión
+#### WR-02: Las filas `Pendiente` se quedaron sin ninguna vía de lectura, y el modal que ya no se alcanza sigue contradiciéndose
 
-**Archivo:** `app/Livewire/VoidedTable.php:151, 223, 314-320`
+**Archivo:** `resources/views/voideds/partials/response.blade.php:13-23`;
+`app/Livewire/VoidedTable.php:323-343`;
+`resources/views/voideds/partials/sunatResponse.blade.php:47-90`
 
-**Problema:** el docblock de `cdrPathFor()` declara que el RUC sale de «la
-empresa dueña del documento, no la empresa de la sesión que dispara la acción»,
-pero el cliente SUNAT que hace el envío y la consulta se sigue construyendo con
-`new UtilService(session('company'))`, es decir con el certificado, el usuario
-SOL, el `client_id/secret` y el flag `production` de la empresa **de la sesión**.
-Si ambas empresas divergen —lo cual sólo es alcanzable hoy explotando CR-02, pero
-también lo será el día que se añada un selector o una acción masiva— el sistema
-consultaría el ticket con las credenciales del contribuyente equivocado y
-archivaría el ZIP resultante bajo el RUC del otro, mezclando documentación fiscal
-entre inquilinos. El riesgo real de esta advertencia no es el escenario
-explotado (eso es CR-02), sino que el comentario induce a creer que la fila ya es
-la fuente de verdad del ámbito, cuando sólo lo es para el nombre del fichero.
+**Problema:** dos defectos encadenados.
 
-**Fix:** derivar también la empresa del cliente SUNAT de la fila, o dejar
-constancia explícita de la precondición:
+1. **La rama `Pendiente` del modal de detalle quedó inalcanzable.** Tras la fase,
+   `showResponse()` sólo se invoca desde: `response.blade.php:6` (Aceptada),
+   `:41` (Rechazada con ticket), `:83` (histórica con respuesta), y desde
+   `VoidedTable.php:169/181/256` (siempre con `$status !== Pendiente`) y
+   `VoidedForm::send()` (idem). El único botón que antes abría el detalle de una
+   fila pendiente —el reloj— ahora dispara `sendXml()`. Consecuencia práctica:
+   **ya no hay forma en la aplicación de leer el número de ticket, el código ni el
+   mensaje guardados de una fila pendiente**; para inspeccionarla hay que lanzar
+   una llamada SOAP contra SUNAT. Sobre un lote filtrado con el nuevo
+   `SelectFilter` «PENDIENTE», eso es una llamada por fila que uno quiera mirar.
+   Y las 60 líneas de `sunatResponse.blade.php:47-90` pasan a ser código muerto
+   alcanzable sólo invocando el endpoint `showResponse` a mano.
 
-```php
-$company = Company::findOrFail($voided->company_id);
-$util = new UtilService($company);
+2. **Esa rama, mientras existe, se contradice.** La línea 56 afirma sin condición
+   «SUNAT recibió la comunicación de baja y aún la procesa», y ocho líneas más
+   abajo `$reasonLabel` puede imprimir «No se pudo confirmar el estado con SUNAT»
+   (línea 63) para el motivo `fallo_transporte`. Es exactamente la afirmación que
+   GAP 2 eliminó del toast (`dispatchPendingSwal()`, líneas 305-320) y que quedó
+   viva en el modal. El criterio aplicado en el toast —sólo `codigo_98` autoriza
+   afirmar progreso— no se replicó aquí.
+
+**Fix:** conservar la lectura y hacer el texto dependiente del motivo, igual que
+en el toast:
+
+```blade
+{{-- response.blade.php, hoja Pendiente --}}
+<div class="flex items-center justify-between gap-2">
+    <button wire:click="sendXml({{ $row->id }})" type="button"
+            title="Consultar el estado del ticket en SUNAT">
+        <x-wire-icon name="clock" class="w-6.5 h-6.5 text-amber-500" solid />
+    </button>
+    <button wire:click="showResponse({{ $row->id }})" type="button" title="Ver detalle guardado">
+        <x-wire-badge sm :color="$row->sunat_status->badgeColor()" :label="$row->sunat_status->label()" />
+    </button>
+</div>
 ```
 
-Si se prefiere no cambiar el origen de las credenciales todavía, añadir una
-guarda dura que impida la divergencia:
-`abort_if($voided->company_id !== session('company')->id, 404);`.
-
----
-
-#### WR-04: `cdrPathFor()` lee `$voided->company['ruc']` sin ninguna comprobación
-
-**Archivo:** `app/Livewire/VoidedTable.php:317`
-
-**Problema:** `company` es una columna JSON poblada por
-`VoidedObserver::creating()`, que a su vez depende de `Company::find()`. Si el
-JSON no trae la clave `ruc` (empresa borrada, fila importada, observador
-saltado por un `insert()` directo o por un seeder), PHP 8 emite un warning
-«Undefined array key» y devuelve `null`: la ruta resultante es
-`sunat/cdr/R--RC-20260805-12.zip`. `Storage::put()` acepta esa ruta sin
-protestar, así que el CDR se archiva silenciosamente con un nombre corrupto y
-`cdr_path` queda apuntando a él. No hay error visible en ningún punto.
-
-**Fix:** validar y fallar ruidosamente antes de tocar el almacenamiento:
-
-```php
-$ruc = data_get($voided->company, 'ruc');
-
-throw_if(blank($ruc), new \RuntimeException(
-    "La anulación {$voided->id} no tiene RUC en su JSON company; no se puede archivar el CDR."
-));
+```blade
+{{-- sunatResponse.blade.php, rama Pendiente: no afirmar progreso sin codigo_98 --}}
+@if (($pending['reason'] ?? null) === 'codigo_98')
+    SUNAT recibió la comunicación de baja y aún la procesa
+@else
+    SUNAT recibió la comunicación de baja; su desenlace no se pudo confirmar todavía
+@endif
 ```
 
 ---
 
-#### WR-05: El mensaje crudo de la excepción se muestra al usuario final
+#### WR-03: Una fila `Pendiente` sin ticket es un callejón sin salida al que el servidor responde con una afirmación falsa
 
-**Archivo:** `app/Livewire/VoidedTable.php:188` (nuevo en esta fase) y `:281` (preexistente)
+**Archivo:** `app/Livewire/VoidedTable.php:146-217`;
+`resources/views/voideds/partials/response.blade.php:13-23`
 
-**Problema:** `'text' => $e->getMessage()` vuelca al swal el texto de cualquier
+**Problema:** la hoja `Pendiente` de la vista ofrece el botón de reconsulta **sin
+comprobar `sunat_ticket`**, mientras que la rama 1 del servidor exige
+`! is_null($voided->sunat_ticket)`. Para la combinación `Pendiente` + ticket nulo
+el flujo cae: rama 1 no (falta ticket) → rama 2 no (no es `Rechazada`) →
+`canResendXml()` devuelve `false` (ninguno de sus dos casos aplica) → el operador
+recibe:
+
+> «Esta comunicación de baja ya tiene una respuesta de SUNAT registrada. Reenviar
+> el XML devolvería el error 2109…»
+
+Las dos frases son falsas para una fila pendiente: no hay respuesta de SUNAT
+—`Pendiente` significa precisamente que no la hay— y no está demostrado que SUNAT
+recibiera nada. Y no queda ninguna acción disponible en la interfaz.
+
+**Alcanzabilidad, con honestidad:** hoy los tres escritores de `Pendiente`
+(`markPending()` desde `resolveTicket()`, desde `sendAndResolve()` y desde
+`classifyFailure()`) conservan siempre el ticket, así que la combinación exige
+deriva de datos (corrección manual en BD, restauración parcial, seeder). Se
+reporta como WARNING y no como Info porque la vista y el servidor discrepan
+estructuralmente sobre la precondición, y porque la salida elegida para el caso
+imprevisto es una afirmación categórica sobre un tercero fiscal en vez de un «no
+se puede determinar» — el criterio contrario al que la fase adoptó en
+`dispatchPendingSwal()`.
+
+**Fix:** hacer que la hoja de la vista replique la precondición del servidor, y
+que el aviso de reenvío no afirme lo que no sabe:
+
+```blade
+@elseif ($row->sunat_status === \App\Enums\VoidedStatus::Pendiente)
+    @if (! is_null($row->sunat_ticket))
+        {{-- reconsulta --}}
+    @else
+        {{-- sólo lectura: estado inconsistente, requiere revisión --}}
+    @endif
+```
+
+---
+
+#### WR-04: `downloadPDF()` y `downloadXML()` no tienen la guarda que sí recibió `downloadCDR()`, y revientan en filas cuyo fichero nunca se generó
+
+**Archivo:** `app/Livewire/VoidedTable.php:101-109`
+
+**Problema:** ambos métodos hacen `Storage::download($voided->pdf_path)` /
+`($voided->xml_path)` sin comprobar nada, mientras que `downloadCDR()` (líneas
+125-138) razona explícitamente que «la ruta puede estar poblada sin fichero
+detrás». Los partials de columna `vouchers/partials/pdf.blade.php` y
+`xml.blade.php` renderizan el botón **incondicionalmente**, sin mirar si la
+columna tiene valor.
+
+El escenario es alcanzable y está reconocido por el propio código bajo revisión:
+la línea 228 regenera el XML precisamente porque existen filas creadas con
+`xml_path`/`pdf_path` en `NULL` («fallo al generar la primera vez» —
+`VoidedForm::send()` persiste el `Voided` en la línea 63 y sólo escribe los paths
+más abajo, así que cualquier excepción entre ambos puntos deja la fila sin
+ficheros). Al pulsar el icono de PDF sobre una de esas filas,
+`FilesystemAdapter::download(null)` falla y el operador se lleva un error 500 de
+Livewire sin ninguna explicación.
+
+**Fix:** replicar la guarda de `downloadCDR()` en ambos métodos (idealmente
+extrayendo un privado común) y, en los partials compartidos, condicionar el botón
+a que la columna tenga valor:
+
+```php
+private function downloadOrWarn(?string $path, string $label)
+{
+    if (empty($path) || ! Storage::exists($path)) {
+        $this->dispatch('swal', [
+            'icon' => 'info',
+            'title' => "Sin {$label}",
+            'text' => "Esta comunicación de baja no tiene {$label} archivado.",
+        ]);
+
+        return;
+    }
+
+    return Storage::download($path);
+}
+```
+
+---
+
+#### WR-05: Ninguna protección contra doble envío, y `markRejected()` no respeta el invariante que `classifyFailure()` declara
+
+**Archivo:** `resources/views/voideds/partials/response.blade.php:19, 31, 61, 74`;
+`app/Services/Sunat/VoidedTicketFlowService.php:245-252`
+
+**Problema:** los cuatro botones que disparan `sendXml` inician una llamada SOAP
+que puede tardar decenas de segundos y ninguno lleva `wire:loading.attr="disabled"`
+ni `wire:target`. La fase acaba de convertir el reloj de las filas pendientes —las
+que el operador va a pulsar repetidamente— en un disparador de red, de modo que
+el patrón «no pasó nada, vuelvo a hacer clic» es el escenario esperable.
+
+Con dos peticiones realmente concurrentes (dos pestañas, dos operadores, o
+recargar y reintentar), ambas leen la fila antes de que la primera persista el
+ticket, y ambas llegan a `sendXmlFile()`. La segunda recibe el error 2109 y
+`sendAndResolve()` la clasifica con `markRejected()` (líneas 52-54), que **no
+tiene** el guardián de «desenlace ya confirmado» que sí aplica `classifyFailure()`
+(líneas 185-194). El comentario de `classifyFailure()` declara el invariante en
+términos absolutos —«un desenlace ya confirmado por un CDR de SUNAT no se
+reescribe nunca, sin importar qué falle después»— pero de los tres escritores de
+estado sólo uno lo aplica: `markRejected()` y `markPending()` sobrescriben sin
+mirar. Un invariante que vive en el llamador y no en el escritor se rompe en
+cuanto se añade una vía de entrada, y la Fase 3 va a añadir una.
+
+**Fix (dos capas).** En la vista:
+
+```blade
+<button wire:click="sendXml({{ $row->id }})" type="button"
+        wire:loading.attr="disabled" wire:target="sendXml({{ $row->id }})">
+```
+
+En el servicio, mover el invariante al escritor:
+
+```php
+private function markRejected(Voided $voided, array $response): VoidedStatus
+{
+    if ($voided->sunat_status === VoidedStatus::Aceptada) {
+        Log::warning('Intento de rechazar una baja ya aceptada por SUNAT; se ignora', [
+            'voided_id' => $voided->id,
+        ]);
+
+        return VoidedStatus::Aceptada;
+    }
+    // ...
+}
+```
+
+y releer la fila bajo bloqueo antes de decidir la rama en `sendXml()`
+(`Voided::whereKey($voided->getKey())->lockForUpdate()->firstOrFail()`).
+
+---
+
+#### WR-06: El mensaje crudo de la excepción se muestra al operador, y ninguna de las dos ramas de error registra nada en el log
+
+**Archivo:** `app/Livewire/VoidedTable.php:186` y `:271`
+
+**Problema:** `'text' => $e->getMessage()` vuelca al `swal` el texto de cualquier
 `Throwable`: `SoapFault` con la URL del endpoint y detalles del WSDL,
 `QueryException` con SQL y nombres de columnas, `UnableToWriteFile` con rutas
-absolutas del servidor o del bucket de DO Spaces, o un `TypeError` de PHP
-(ver WR-09). Es divulgación de información interna a un operador de patio, y
-además ruido incomprensible para él. Nótese que ninguna de estas ramas registra
-nada en el log, así que el mensaje que se pierde en el swal no queda en ningún
-otro sitio.
+absolutas del bucket de DO Spaces, o el `TypeError` de CR-01. Es divulgación de
+detalle interno a un operador de patio y, a la vez, ruido incomprensible para él.
 
-**Fix:** registrar el detalle y mostrar un mensaje acotado:
+Peor: ninguna de las dos ramas llama a `Log::error()`. `markPending()` sí registra
+(línea 231) y `classifyFailure()` también en su rama de invariante (línea 187),
+pero los dos `catch` del componente no dejan rastro: si el operador cierra el
+modal, el mensaje se pierde para siempre y no queda en `storage/logs/laravel.log`.
+Contradice la convención declarada en `.claude/CLAUDE.md` («`Log::error()` para
+fallos; controladores atrapan, registran y devuelven respuesta»).
+
+**Fix:**
 
 ```php
-Log::error('Fallo al consultar la comunicación de baja', [
+Log::error('Fallo al consultar la comunicación de baja en SUNAT', [
     'voided_id' => $voided->id,
+    'sunat_ticket' => $voided->sunat_ticket,
     'exception' => $e,
 ]);
 
@@ -336,134 +418,77 @@ $this->dispatch('swal', [
 
 ---
 
-#### WR-06: Los botones que llaman a SUNAT no tienen ninguna protección contra doble envío
+#### WR-07: D-04 quedó aplicado a medias: la ruta del CDR usa la empresa de la fila, pero el certificado y el endpoint SUNAT siguen siendo los de la sesión
 
-**Archivo:** `resources/views/voideds/partials/response.blade.php:19, 31, 61`; `app/Livewire/VoidedTable.php:140`
+**Archivo:** `app/Livewire/VoidedTable.php:157, 221-222, 345-357`
 
-**Problema:** los tres botones que disparan `sendXml` inician una llamada SOAP
-que puede tardar decenas de segundos, sin indicador de carga ni deshabilitado
-(`wire:loading.attr` / `wire:target` no aparecen en ninguno). La fase acaba de
-convertir el icono del reloj —el de las filas pendientes, justamente las que el
-operador va a pulsar repetidamente— en un disparador de red, así que el patrón
-«no pasó nada, vuelvo a hacer clic» es el escenario esperable.
+**Problema:** el docblock de `cdrPathFor()` declara que el RUC sale de «la empresa
+dueña del documento, no la empresa de la sesión que dispara la acción», pero las
+dos construcciones del cliente SUNAT siguen siendo
+`new UtilService(session('company'))`. `UtilService::getSee()`
+(`app/Services/Sunat/UtilService.php:27-40`) deriva de esa empresa el certificado,
+el usuario/clave SOL **y el endpoint** (`FE_PRODUCCION` vs `FE_BETA`, según
+`$company->production`), mientras que `cdrPathFor()` elige el directorio con
+`$voided->production`. Son dos fuentes de verdad distintas para el mismo eje.
 
-Con dos peticiones realmente concurrentes (dos pestañas, dos operadores, o el
-usuario recargando y reintentando), ambas leen la fila antes de que la primera
-persista el ticket y ambas llegan a `sendXmlFile()`. La segunda recibe el error
-2109 y `VoidedTicketFlowService::sendAndResolve()` la clasifica con
-`markRejected()` (líneas 52-54), que **no** tiene el guardián de «desenlace ya
-confirmado» que sí tiene `classifyFailure()`. Resultado posible: una baja que
-SUNAT aceptó queda escrita en la BD como `Rechazada` — divergencia de estado
-irrecuperable desde la interfaz.
+Hoy `builder()` mantiene ambas alineadas para las filas visibles, así que la
+divergencia sólo se alcanza explotando el hueco de autorización (IN-01) — pero
+el comentario induce a creer que la fila ya es la fuente de verdad del ámbito
+cuando sólo lo es para el nombre del fichero, y el día que se añada una acción
+masiva o un selector, se consultará el ticket con las credenciales del
+contribuyente equivocado archivando el ZIP bajo el RUC del otro.
 
-**Fix (dos capas):** en la vista, bloquear el botón mientras la acción está en
-vuelo:
-
-```blade
-<button wire:click="sendXml({{ $row->id }})"
-        wire:loading.attr="disabled"
-        wire:target="sendXml({{ $row->id }})"
-        type="button">
-```
-
-y en el servidor, releer la fila bajo bloqueo antes de decidir la rama:
+**Fix:** derivar también las credenciales de la fila, o dejar la precondición
+explícita en código y no sólo en un comentario:
 
 ```php
-$voided = Voided::whereKey($voided->getKey())->lockForUpdate()->firstOrFail();
+$util = new UtilService(Company::findOrFail($voided->company_id));
 ```
+
+o bien `abort_if($voided->company_id !== session('company')->id, 404);` al entrar
+en la acción (que es lo que la Fase 4 debería instalar de todos modos).
 
 ---
 
-#### WR-07: El badge de `Rechazada` se renderiza sin color: `danger` no es un color de WireUI
+#### WR-08: `resolveTicket()` es público y reutilizable, pero el invariante de «desenlace confirmado» sólo lo protege el llamador
 
-**Archivo:** `resources/views/voideds/partials/response.blade.php:34, 44` (vía `App\Enums\VoidedStatus::badgeColor()`)
+**Archivo:** `app/Services/Sunat/VoidedTicketFlowService.php:84-166` (y su guarda
+externa en `app/Livewire/VoidedTable.php:146-150`)
 
-**Problema:** `VoidedStatus::Rechazada->badgeColor()` devuelve `'danger'`, pero
-el pack de colores del badge de WireUI 2
-(`vendor/wireui/wireui/src/Components/Badge/WireUi/Color/Solid.php` y
-`src/Enum/Packs/Color.php`) no define `danger`: los válidos son `primary`,
-`secondary`, `positive`, `negative`, `warning`, `info`, `dark`, `base` y los
-nombres de la paleta Tailwind. `ComponentPack::get()` hace
-`data_get($this->all(), $attribute) ?? $attribute`, es decir devuelve la propia
-cadena, y el badge acaba con `class="danger"` — una clase inexistente. El estado
-más importante del listado, el rechazo, se pinta sin color mientras que
-`Aceptada` (`primary`, índigo de marca) y `Pendiente` (`warning`, ámbar) sí se
-distinguen. Se cumple así justo lo contrario del objetivo de D-06. De paso,
-`Aceptada => 'primary'` es semánticamente flojo teniendo `positive` disponible,
-y choca con el icono verde que lleva al lado.
+**Problema:** `resolveTicket()` está documentado como «público a propósito (D-11):
+la Fase 2 lo reutiliza para reconsultar anulaciones pendientes desde el listado»,
+y la Fase 3 lo reutilizará desde otro punto de entrada. Sin embargo no comprueba
+nada sobre el estado de la fila que recibe: lo único que impide invocarlo sobre
+una fila `Aceptada` es la condición de tres términos escrita en `sendXml()`.
 
-**Fix:** en `app/Enums/VoidedStatus.php`:
+Si un llamador futuro omite esa guarda —o la copia mal— la secuencia es
+destructiva: una fila `Aceptada` tiene `sunat_ticket` en `null` (se limpia en la
+línea 142), así que `$see->getStatus(null)` falla, el `catch` de la línea 91 llama
+a `markPending()` y **`markPending()` sobrescribe `sunatResponse` completo**
+(líneas 221-228), destruyendo el `cdrResponse` con el código, la descripción y las
+observaciones del CDR que SUNAT devolvió. La fila pasa a `Pendiente` con un ticket
+nulo, es decir, al callejón sin salida de WR-03, y el registro de la aceptación
+sólo sobrevive en el ZIP del disco.
+
+La asimetría es evidente al comparar con `classifyFailure()`, que sí abre con el
+guardián del invariante. El servicio se describe a sí mismo como «único punto del
+código base que envía una comunicación de baja y consulta su estado»; siendo así,
+la precondición pertenece al servicio.
+
+**Fix:** guarda de entrada en el propio método, barata e idempotente:
 
 ```php
-public function badgeColor(): string
+public function resolveTicket(Voided $voided, string $cdrPath, ?See $see = null): VoidedStatus
 {
-    return match ($this) {
-        self::Aceptada => 'positive',
-        self::Pendiente => 'warning',
-        self::Rechazada => 'negative',
-    };
-}
-```
+    if ($voided->sunat_status === VoidedStatus::Aceptada
+        || ($voided->sunat_status === VoidedStatus::Rechazada && ! is_null($voided->sunat_ticket))) {
+        return $voided->sunat_status; // desenlace ya confirmado por CDR
+    }
 
-(El mismo `danger` inerte aparece en
-`resources/views/vouchers/partials/sunatResponse.blade.php:39`; conviene
-corregirlo en el mismo barrido.)
-
----
-
-#### WR-08: Las filas Pendiente pierden el acceso de sólo lectura al detalle, y el icono cambia de significado sin avisar
-
-**Archivo:** `resources/views/voideds/partials/response.blade.php:13-23`
-
-**Problema:** el icono del reloj pasó de abrir `showResponse` (lectura local:
-motivo del pendiente, código, mensaje y ticket) a disparar `sendXml` (consulta
-real contra SUNAT). El icono, el color y el tooltip son idénticos a los de
-antes, así que el operador no tiene forma de saber que el mismo gesto ahora sale
-a un tercero. Y, más importante, **ya no hay ninguna vía en el listado para leer
-el detalle de una fila pendiente**: para ver el ticket o el motivo hay que
-golpear SUNAT. Sobre un lote de pendientes filtrado con el nuevo `SelectFilter`,
-eso significa una llamada SOAP por cada fila que uno quiera simplemente
-inspeccionar.
-
-**Fix:** conservar ambas acciones — por ejemplo el badge como disparador de
-lectura y el icono como reconsulta— y etiquetar la acción remota:
-
-```blade
-<button wire:click="sendXml({{ $row->id }})" type="button"
-        title="Consultar el estado del ticket en SUNAT" aria-label="Consultar en SUNAT">
-    <x-wire-icon name="clock" class="w-6.5 h-6.5 text-amber-500" solid />
-</button>
-<button wire:click="showResponse({{ $row->id }})" type="button" title="Ver detalle guardado">
-    <x-wire-badge sm :color="$row->sunat_status->badgeColor()" :label="$row->sunat_status->label()" />
-</button>
-```
-
----
-
-#### WR-09: `empty($voided->xml_path)` no comprueba que el XML exista; si falta, se escribe un rechazo que SUNAT nunca emitió
-
-**Archivo:** `app/Livewire/VoidedTable.php:230-245`
-
-**Problema:** la guarda de regeneración sólo mira la columna. Si `xml_path` está
-poblado pero el fichero no está en el disco (purga, migración de bucket, fallo
-previo de `Storage::put`), `$voided->xml` ejecuta
-`Storage::get($this->xml_path)`, que en Laravel 11 devuelve **`null`** en vez de
-lanzar (las excepciones del disco están desactivadas por defecto). Ese `null`
-llega a `$flow->sendAndResolve($voided, $xml, ...)`, cuyo parámetro está tipado
-`string`, y produce un `TypeError`. El `catch (\Throwable)` lo recoge, y
-`classifyFailure()` —con `sunat_ticket` nulo— llama a `markRejected()`: la fila
-queda marcada **Rechazada por SUNAT** por un fallo puramente local, y el usuario
-ve el texto del `TypeError` en el swal (WR-05). Es incoherente con el cuidado
-que sí tiene `downloadCDR()` (línea 127), que comprueba `Storage::exists()`
-antes de tocar el fichero.
-
-**Fix:**
-
-```php
-if (empty($voided->xml_path) || ! Storage::exists($voided->xml_path)) {
-    // ... regenerar XML y PDF
-} else {
-    $xml = $voided->xml;
+    if (blank($voided->sunat_ticket)) {
+        throw new \RuntimeException("La anulación {$voided->id} no tiene ticket que consultar.");
+    }
+    // ...
 }
 ```
 
@@ -471,71 +496,136 @@ if (empty($voided->xml_path) || ! Storage::exists($voided->xml_path)) {
 
 ### Info
 
-#### IN-01: Rama muerta en el filtro: `$value === ''` es inalcanzable
+#### IN-01: Las acciones públicas siguen aceptando cualquier `Voided` por id, sin propiedad ni permiso
+
+**Archivo:** `app/Livewire/VoidedTable.php:101, 106, 125, 140, 323`
+**Problema:** `downloadPDF()`, `downloadXML()`, `downloadCDR()`, `sendXml()` y
+`showResponse()` son endpoints Livewire invocables desde el cliente con cualquier
+id; el binding de modelo no pasa por `builder()`, único sitio que filtra
+`branch_id`/`company_id`/`production`. Un usuario de la empresa A puede leer el
+`sunatResponse` de la empresa B, descargar su XML firmado, su RIDE y su CDR, y
+disparar envíos o reconsultas contra SUNAT sobre documentos ajenos. Verificado que
+sigue presente en el código actual; la fase amplió la superficie con
+`downloadCDR()` (nuevo) y con la reconsulta.
+**Fix:** el previsto para la **Fase 4** (CR-02/CR-04): helper `scopedVoided()` con
+`abort_unless()` sobre los tres ejes + `$this->authorize()` con el permiso Spatie
+correspondiente. Se registra como Info por indicación de alcance; **no abrir un
+segundo frente de trabajo**.
+
+#### IN-02: El ZIP del CDR se archiva con un nombre que no corresponde al comprobante que certifica
+
+**Archivo:** `app/Livewire/VoidedTable.php:351-357`
+**Problema:** `cdrPathFor()` compone `R-{ruc}-RC-{fecGeneracion:Ymd}-{correlativo}.zip`
+mientras el XML del mismo documento se guarda con `$voidedGreenter->getName()`,
+que Greenter define como `{ruc}-RA-{fecComunicacion:Ymd}-{correlativo}`
+(`vendor/greenter/core/src/Core/Model/Voided/Voided.php:159-181`). Divergen el
+prefijo (`RC` en vez de `RA`) y la fecha (`fecGeneracion` en vez de
+`fecComunicacion`). `VoidedForm::send():87` usa `getName()`, así que el mismo
+documento se archiva bajo dos nomenclaturas según qué flujo resuelva el ticket.
+No rompe la descarga (`cdr_path` guarda la ruta usada), pero deja el CDR —la
+prueba documental de la baja— sin cruzar con su XML.
+**Fix:** Fuera de alcance de esta fase (WR-01 ya registrado). Cuando se aborde,
+derivar el nombre de `getName()` y prever tolerancia de lectura para los
+`cdr_path` históricos.
+
+#### IN-03: `VoidedStatus::badgeColor()` devuelve `danger`, que no es un color de WireUI
+
+**Archivo:** `app/Enums/VoidedStatus.php:20-27`, consumido en
+`resources/views/voideds/partials/response.blade.php:34, 44`
+**Problema:** el pack de colores del badge de WireUI 2 no define `danger`
+(`negative` es el equivalente); `ComponentPack::get()` devuelve la propia cadena,
+de modo que el badge acaba con `class="danger"`, inexistente. El estado más
+importante del listado se pinta sin color, justo lo contrario del objetivo de D-06.
+**Fix:** fuera de alcance (WR-07 ya registrado). `positive` / `warning` / `negative`.
+
+#### IN-04: Rama muerta en el filtro: `$value === ''` es inalcanzable
 
 **Archivo:** `app/Livewire/VoidedTable.php:41-43`
-**Problema:** `SelectFilter::validate()` construye las claves válidas con
-`->filter(fn ($value) => strlen($value) > 0)`
-(`vendor/rappasoft/laravel-livewire-tables/src/Views/Filters/SelectFilter.php:26-41`),
-de modo que el valor `''` se descarta y el filtro se elimina antes de invocar la
-closure. La guarda nunca se ejecuta. (La opción `'' => 'Todos'` sí hace falta:
-la vista del paquete sólo renderiza las opciones declaradas.)
-**Fix:** eliminar el `if` y dejar el comentario que explique que el paquete ya
+**Problema:** `SelectFilter::getKeys()` descarta las claves de longitud cero
+(`->filter(fn ($value) => strlen($value) > 0)`,
+`vendor/rappasoft/laravel-livewire-tables/src/Views/Filters/SelectFilter.php:25-32`)
+y `validate()` devuelve `false` para `''`, así que el paquete elimina el filtro
+antes de invocar la closure. La opción `'' => 'Todos'` sí es necesaria (la vista
+sólo renderiza las opciones declaradas); la guarda no.
+**Fix:** eliminar el `if` y dejar un comentario explicando que el paquete ya
 descarta el valor vacío.
 
-#### IN-02: Cadena mágica `sin-estado` / `SIN ESTADO` duplicada entre componente y vista
+#### IN-05: Cadena mágica `sin-estado` / `SIN ESTADO` duplicada entre componente y vista
 
-**Archivo:** `app/Livewire/VoidedTable.php:38` y `resources/views/voideds/partials/response.blade.php:64, 73`
-**Problema:** el valor del filtro y la etiqueta del badge se repiten como
-literales en dos archivos; si alguien renombra uno, el otro queda descolgado sin
-error.
-**Fix:** una constante (`public const SIN_ESTADO = 'sin-estado';`) o un método
-estático en `VoidedStatus` (`VoidedStatus::unknownLabel()`) consumido por ambos.
+**Archivo:** `app/Livewire/VoidedTable.php:38` y
+`resources/views/voideds/partials/response.blade.php:64, 77, 86`
+**Problema:** el valor del filtro y la etiqueta del badge se repiten como literales
+en dos archivos y en tres hojas distintas de la vista; renombrar uno deja los
+otros descolgados sin ningún error.
+**Fix:** una constante en el componente o un método estático en `VoidedStatus`
+(`VoidedStatus::unknownLabel()`) consumido por ambos.
 
-#### IN-03: `$directory` duplicado
+#### IN-06: `sendXml()` sigue por encima de 130 líneas con seis salidas, y `$directory` está duplicado
 
-**Archivo:** `app/Livewire/VoidedTable.php:221` y `:316`
-**Problema:** `$voided->production ? 'sunat/' : 'sunat/beta/'` aparece dos veces
-en el mismo archivo (y otras seis en el resto de `app/`).
-**Fix:** un accesor en el modelo, p. ej. `Voided::storageDirectory()`.
+**Archivo:** `app/Livewire/VoidedTable.php:140-274` y `:219`, `:353`
+**Problema:** la extracción de `dispatchPendingSwal()` eliminó los cuatro payloads
+duplicados de «En proceso» (mejora real respecto de la revisión anterior), pero el
+método sigue muy por encima de la convención del proyecto («métodos de 20 a 50
+líneas; los más grandes delegan en servicios», `.claude/CLAUDE.md`). El ternario
+`$voided->production ? 'sunat/' : 'sunat/beta/'` aparece dos veces en el archivo.
+**Fix:** extraer `reconsultarTicket(Voided $voided)` y `reenviarXml(Voided $voided)`;
+mover el directorio a un accesor del modelo (`Voided::storageDirectory()`).
 
-#### IN-04: `sendXml()` alcanza ~145 líneas con cuatro salidas y payloads de swal duplicados
+#### IN-07: `cdrPathFor()` lee `$voided->company['ruc']` sin ninguna comprobación
 
-**Archivo:** `app/Livewire/VoidedTable.php:140-284`
-**Problema:** el texto «Aún en proceso» está escrito dos veces literalmente
-(líneas 158-162 y 174-178) y «En proceso» otras dos (252-257 y 268-273); el
-método excede la convención del proyecto («métodos de 20 a 50 líneas; los más
-grandes delegan en servicios», `.claude/CLAUDE.md`). Los textos duplicados
-derivarán en cuanto alguien edite uno solo.
-**Fix:** extraer `reconsultarTicket(Voided $voided): void`,
-`reenviarXml(Voided $voided): void` y un privado
-`dispatchPendienteSwal(string $title): void`.
+**Archivo:** `app/Livewire/VoidedTable.php:354`
+**Problema:** si el JSON `company` no trae la clave `ruc`, PHP emite un warning y
+devuelve `null`, produciendo `sunat/cdr/R--RC-20260805-12.zip`; `Storage::put()`
+lo acepta y el CDR queda archivado con un nombre corrupto sin error visible.
+**Alcanzabilidad, verificada:** la columna `company` es `json` **NOT NULL**
+(`2024_12_16_111346_create_voideds_table.php:24`), `VoidedObserver::creating()` la
+puebla siempre, y el RUC está validado como `digits:11` con
+`regex:/^(10|20)\d{9}$/` (`app/Livewire/CompanyCreate.php:54-59`), así que tampoco
+hay vector de path traversal. Se degrada a Info respecto de la revisión anterior:
+requiere una fila insertada saltándose el observador, y hoy no existe tal código.
+**Fix:** `throw_if(blank(data_get($voided->company, 'ruc')), new \RuntimeException(...))`.
 
-#### IN-05: Botones sin `type`, sin etiqueta accesible y con un atributo `xs` inerte
+#### IN-08: El código `99` de SUNAT («proceso con errores») se clasifica como fallo de transporte
 
-**Archivo:** `resources/views/voideds/partials/response.blade.php:6, 19, 31, 41, 61, 70`
-**Problema:** son `<button>` HTML planos (no `x-wire-button`), así que el
-atributo `xs` no hace nada —resto de un componente anterior— y sin
-`type="button"` heredan el `submit` por defecto si algún día quedan dentro de un
-formulario. Al ser botones sólo-icono, tampoco tienen texto accesible.
-**Fix:** añadir `type="button"` y `title`/`aria-label` descriptivos, y eliminar
+**Archivo:** `app/Services/Sunat/VoidedTicketFlowService.php:102-112`
+**Problema:** la normalización a `(int) $code === 98` es correcta y cierra el
+defecto del `'0098'`. Pero cualquier otro código sin CDR cae en
+`fallo_transporte`, incluido el `99` («proceso con errores»), que es un desenlace
+**terminal** de SUNAT y no un problema de comunicación. Si se diera esa
+combinación, la fila quedaría en `Pendiente` para siempre y cada reconsulta
+repetiría el mismo resultado bajo la etiqueta «no se pudo confirmar el estado»,
+que atribuye a la red algo que SUNAT sí respondió.
+**Fix:** un tercer motivo (`proceso_con_errores`) con su etiqueta propia, o al
+menos una entrada de log distinguible para poder detectarlo en producción.
+
+#### IN-09: Botones sin `type`, sin etiqueta accesible y con un atributo `xs` inerte
+
+**Archivo:** `resources/views/voideds/partials/response.blade.php:6, 19, 31, 41, 61, 74, 83`
+**Problema:** son `<button>` HTML planos, así que el atributo `xs` no hace nada
+—resto de un componente anterior— y sin `type="button"` heredarían `submit` dentro
+de un formulario. Al ser botones sólo-icono no tienen texto accesible: la fase
+añadió `title` únicamente a la hoja nueva (línea 74) y dejó las otras seis sin él,
+incluida la del reloj, que es la que cambió de significado (WR-02).
+**Fix:** `type="button"` y `title`/`aria-label` descriptivos en las siete; retirar
 el `xs`.
 
-#### IN-06: El árbol de tres ramas no tiene cobertura automatizada
+#### IN-10: El árbol de decisión no tiene cobertura automatizada
 
-**Archivo:** `app/Livewire/VoidedTable.php:140-284`
-**Problema:** `tests/` sólo contiene los tests por defecto de Jetstream; ni el
-árbol de guardas, ni `canResendXml()`, ni `cdrPathFor()` tienen pruebas, pese a
-gobernar el estado fiscal frente a SUNAT. Se registra como Info y no como
-Warning por el contexto conocido del proyecto (la suite corre contra la BD
-configurada y hoy está rota), pero eso es precisamente lo que habría que
-desbloquear.
-**Fix:** un test Livewire con `Livewire::test(VoidedTable::class)->call('sendXml', $id)`
-por cada hoja del árbol, con `VoidedTicketFlowService` mockeado, sobre sqlite en
-memoria.
+**Archivo:** `app/Livewire/VoidedTable.php:140-274`;
+`app/Services/Sunat/VoidedTicketFlowService.php`
+**Problema:** ni el árbol de tres ramas, ni `canResendXml()`, ni `cdrPathFor()`,
+ni `dispatchPendingSwal()`, ni la clasificación de `resolveTicket()` tienen
+pruebas, pese a gobernar el estado fiscal frente a SUNAT y pese a que la UAT dejó
+dos criterios bloqueados por las limitaciones de beta. Se mantiene como Info por
+el contexto conocido del proyecto (la suite corre contra la BD configurada y hoy
+está roja de base), pero eso es justamente lo que convendría desbloquear antes de
+la Fase 3.
+**Fix:** `Livewire::test(VoidedTable::class)->call('sendXml', $id)` por hoja del
+árbol con `VoidedTicketFlowService` mockeado, y tests unitarios del servicio con
+un `See` doblado, sobre sqlite en memoria.
 
 ---
 
-_Revisado: 2026-08-05T17:47:40Z_
+_Revisado: 2026-08-05T21:10:00Z_
 _Revisor: Claude (gsd-code-reviewer)_
 _Profundidad: standard_

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Storage;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Column;
+use Rappasoft\LaravelLivewireTables\Views\Filters\SelectFilter;
 
 class VoidedTable extends DataTableComponent
 {
@@ -19,6 +20,37 @@ class VoidedTable extends DataTableComponent
         $this->setPrimaryKey('id');
         $this->setAdditionalSelects(['id', 'sunat_ticket', 'sunatResponse']);
         $this->setDefaultSort('id', 'desc');
+    }
+
+    // D-07: vía por la que el operador aísla las anulaciones pendientes que
+    // debe reconsultar con sendXml(). La closure compone sobre el Builder que
+    // ya devuelve builder() (branch_id/company_id/production de la sesión),
+    // así que el filtro solo puede estrechar el listado, nunca ensancharlo.
+    public function filters(): array
+    {
+        return [
+            SelectFilter::make('Estado Sunat')
+                ->options([
+                    '' => 'Todos',
+                    VoidedStatus::Aceptada->value => VoidedStatus::Aceptada->label(),
+                    VoidedStatus::Pendiente->value => VoidedStatus::Pendiente->label(),
+                    VoidedStatus::Rechazada->value => VoidedStatus::Rechazada->label(),
+                    'sin-estado' => 'SIN ESTADO',
+                ])
+                ->filter(function (Builder $builder, string $value) {
+                    if ($value === '') {
+                        return;
+                    }
+
+                    if ($value === 'sin-estado') {
+                        $builder->whereNull('sunat_status');
+
+                        return;
+                    }
+
+                    $builder->where('sunat_status', $value);
+                }),
+        ];
     }
 
     public function columns(): array

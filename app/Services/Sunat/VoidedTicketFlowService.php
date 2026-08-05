@@ -102,9 +102,11 @@ class VoidedTicketFlowService
         if (empty($zip) && ! $cdr) {
             // TICKET-02, D-05: sin excepción pero sin CDR (p. ej. código 98,
             // "en proceso"). El motivo es solo informativo (D-04); la
-            // clasificación pendiente no depende de él.
+            // clasificación pendiente no depende de él. SUNAT devuelve el
+            // código con ceros a la izquierda (0098, no 98): se compara el
+            // valor numérico normalizado, no la cadena tal cual llegó.
             $code = $result->getError()?->getCode();
-            $reason = $code === '98' ? 'codigo_98' : 'fallo_transporte';
+            $reason = (int) $code === 98 ? 'codigo_98' : 'fallo_transporte';
 
             return $this->markPending($voided, $reason, $code, $result->getError()?->getMessage());
         }

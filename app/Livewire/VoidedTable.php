@@ -161,11 +161,7 @@ class VoidedTable extends DataTableComponent
                 $status = $flow->resolveTicket($voided, $this->cdrPathFor($voided));
 
                 if ($status === VoidedStatus::Pendiente) {
-                    $this->dispatch('swal', [
-                        'icon' => 'info',
-                        'title' => 'Aún en proceso',
-                        'text' => 'SUNAT todavía no ha terminado de procesar esta comunicación de baja. El ticket sigue guardado; puede volver a consultar más tarde.',
-                    ]);
+                    $this->dispatchPendingSwal($voided);
 
                     return;
                 }
@@ -177,11 +173,7 @@ class VoidedTable extends DataTableComponent
                 $status = $flow->classifyFailure($voided, $e);
 
                 if ($status === VoidedStatus::Pendiente) {
-                    $this->dispatch('swal', [
-                        'icon' => 'info',
-                        'title' => 'Aún en proceso',
-                        'text' => 'SUNAT todavía no ha terminado de procesar esta comunicación de baja. El ticket sigue guardado; puede volver a consultar más tarde.',
-                    ]);
+                    $this->dispatchPendingSwal($voided);
 
                     return;
                 }
@@ -256,11 +248,7 @@ class VoidedTable extends DataTableComponent
             $status = $flow->sendAndResolve($voided, $xml, $this->cdrPathFor($voided));
 
             if ($status === VoidedStatus::Pendiente) {
-                $this->dispatch('swal', [
-                    'icon' => 'info',
-                    'title' => 'En proceso',
-                    'text' => 'SUNAT recibió la comunicación de baja pero aún la procesa. Su ticket quedó guardado.',
-                ]);
+                $this->dispatchPendingSwal($voided);
 
                 return;
             }
@@ -272,11 +260,7 @@ class VoidedTable extends DataTableComponent
             $status = $flow->classifyFailure($voided, $e);
 
             if ($status === VoidedStatus::Pendiente) {
-                $this->dispatch('swal', [
-                    'icon' => 'info',
-                    'title' => 'En proceso',
-                    'text' => 'SUNAT recibió la comunicación de baja pero aún la procesa. Su ticket quedó guardado.',
-                ]);
+                $this->dispatchPendingSwal($voided);
 
                 return;
             }
@@ -287,6 +271,53 @@ class VoidedTable extends DataTableComponent
                 'text' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Único punto de composición del aviso de fila pendiente (GAP 2). Lee el
+     * motivo que markPending() acaba de persistir sobre la misma instancia y
+     * decide, por ese motivo, si la interfaz puede afirmar que SUNAT sigue
+     * procesando o si sólo puede decir que la consulta del ticket no obtuvo
+     * una respuesta utilizable — nunca ambas cosas a la vez.
+     *
+     * Privado: sustituye las cuatro salidas de pendiente de sendXml() (rama
+     * Consultar y rama de reenvío, cada una con su try y su catch); un método
+     * público sería un endpoint Livewire invocable desde el cliente.
+     */
+    private function dispatchPendingSwal(Voided $voided): void
+    {
+        $reason = data_get($voided->sunatResponse, 'pending.reason');
+        $code = data_get($voided->sunatResponse, 'pending.code');
+
+        if ($reason === 'codigo_98') {
+            // Único motivo que autoriza afirmar progreso: SUNAT respondió con
+            // el código que el modal de detalle ya traduce como "aún está
+            // procesando la comunicación".
+            $this->dispatch('swal', [
+                'icon' => 'info',
+                'title' => 'Aún en proceso',
+                'text' => 'SUNAT todavía no ha terminado de procesar esta comunicación de baja. El ticket sigue guardado; puede volver a consultar más tarde.',
+            ]);
+
+            return;
+        }
+
+        // Cualquier otro motivo — fallo_transporte, o un motivo ausente por
+        // cualquier razón — no puede afirmar progreso alguno: ante la duda,
+        // la interfaz no afirma nada que SUNAT no haya comunicado.
+        $text = 'La consulta del ticket no obtuvo de SUNAT una respuesta utilizable.';
+
+        if (! is_null($code)) {
+            $text .= " Código devuelto: {$code}.";
+        }
+
+        $text .= ' El ticket sigue guardado y puede reintentar la consulta.';
+
+        $this->dispatch('swal', [
+            'icon' => 'warning',
+            'title' => 'No se pudo confirmar el estado',
+            'text' => $text,
+        ]);
     }
 
     public function showResponse(Voided $voided)

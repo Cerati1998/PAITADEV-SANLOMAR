@@ -4,15 +4,15 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 01
 current_phase_name: ticket-persistido-y-sem-ntica-de-tres-estados
-status: verifying
-stopped_at: Fase 01 verificada con gaps (5/9 must-haves)
-last_updated: "2026-08-04T23:59:17.479Z"
-last_activity: 2026-08-04
-last_activity_desc: Fase 01 ejecutada (3/3 planes); verificación encontró 4 gaps
+status: executing
+stopped_at: Fase 01 — planes de cierre de gaps 01-04 y 01-05 listos para ejecutar
+last_updated: "2026-08-05T15:22:15.804Z"
+last_activity: 2026-08-05
+last_activity_desc: Planificado el cierre de los 4 gaps de la fase 01 (planes 01-04 y 01-05)
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 3
+  total_plans: 5
   completed_plans: 3
   percent: 0
 ---
@@ -29,9 +29,9 @@ See: .planning/PROJECT.md (updated 2026-08-04)
 ## Current Position
 
 Phase: 01 (ticket-persistido-y-sem-ntica-de-tres-estados) — EXECUTING
-Plan: 3 of 3
-Status: Phase complete — ready for verification
-Last activity: 2026-08-04 — Phase 01 execution started
+Plan: 3 of 5 (01-01..01-03 ejecutados; 01-04 y 01-05 son cierre de gaps, pendientes)
+Status: Ready to execute
+Last activity: 2026-08-05 — Planificado el cierre de gaps (01-04, 01-05); plan-checker PASSED
 
 Progress: [░░░░░░░░░░] 0%
 

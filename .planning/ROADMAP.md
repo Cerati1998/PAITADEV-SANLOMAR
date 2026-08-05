@@ -21,7 +21,7 @@ en producción para guías de remisión.
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Ticket persistido y semántica de tres estados** - El envío web guarda el ticket antes de consultar y registra el estado real que devolvió SUNAT (3/3 planes ejecutados; verificación con gaps 2026-08-04; planes de cierre 01-04 y 01-05 pendientes de ejecutar)
+- [ ] **Phase 1: Ticket persistido y semántica de tres estados** - El envío web guarda el ticket antes de consultar y registra el estado real que devolvió SUNAT (3/5 planes ejecutados; verificación con gaps 2026-08-04; planes de cierre 01-04 y 01-05 pendientes de ejecutar)
 - [ ] **Phase 2: Reconsulta de anulaciones pendientes** - El usuario recupera el CDR desde el listado usando el ticket guardado, sin reenviar el XML
 - [ ] **Phase 3: Anulación por API con recuperación por ticket** - El endpoint deja de romperse y expone el mismo comportamiento de ticket que la vía web
 

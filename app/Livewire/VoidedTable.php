@@ -8,6 +8,7 @@ use App\Services\Sunat\UtilService;
 use App\Services\Sunat\VoidedService;
 use App\Services\Sunat\VoidedTicketFlowService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Rappasoft\LaravelLivewireTables\DataTableComponent;
 use Rappasoft\LaravelLivewireTables\Views\Column;
@@ -221,11 +222,19 @@ class VoidedTable extends DataTableComponent
         $util = new UtilService(session('company'));
         $flow = new VoidedTicketFlowService($util);
 
-        //Enviar a SUNAT
-        try {
+        // Fase local (CR-01, gap #12 de 02-VERIFICATION.md): preparar el XML
+        // firmado sin tocar ningún estado de SUNAT. Un fallo aquí —columna
+        // vacía, fichero ausente, fichero vacío o una regeneración que
+        // falla— nunca debe interpretarse como una respuesta de SUNAT.
+        $xml = null;
 
-            // Si no tiene XML (fallo al generar la primera vez), lo regeneramos.
-            if (empty($voided->xml_path)) {
+        try {
+            // Si no tiene XML o el fichero ya no está en el disco
+            // configurado, lo regeneramos. La ruta puede estar poblada sin
+            // fichero detrás (purga, cambio de bucket, un Storage::put() que
+            // falló en silencio en el envío original): el mismo criterio que
+            // downloadCDR() ya aplica en esta misma clase.
+            if (empty($voided->xml_path) || ! Storage::exists($voided->xml_path)) {
                 $voidedGreenter = (new VoidedService)->getVoided($voided);
 
                 $xml = $util->getXmlSigned($voidedGreenter);
@@ -241,7 +250,24 @@ class VoidedTable extends DataTableComponent
             } else {
                 $xml = $voided->xml;
             }
+        } catch (\Throwable $e) {
+            $this->dispatchXmlUnavailableSwal($voided, $e);
 
+            return;
+        }
+
+        if (blank($xml)) {
+            // Defensa adicional para el disco no-throwing (config/filesystems.php,
+            // discos local/public): Storage::get() devuelve null o cadena
+            // vacía sin lanzar nada. Con esta guarda, ese valor nunca llega
+            // al parámetro string $xml del envío a SUNAT.
+            $this->dispatchXmlUnavailableSwal($voided, null);
+
+            return;
+        }
+
+        //Enviar a SUNAT
+        try {
             // D-04: la ruta del CDR se arma con el RUC de la empresa dueña de
             // la fila (cdrPathFor() lee $voided->company), no con el de la
             // empresa de la sesión.
@@ -317,6 +343,38 @@ class VoidedTable extends DataTableComponent
             'icon' => 'warning',
             'title' => 'No se pudo confirmar el estado',
             'text' => $text,
+        ]);
+    }
+
+    /**
+     * Aviso de fallo local en la preparación del XML firmado (CR-01, gap #12
+     * de 02-VERIFICATION.md). Se llama cuando la fase local de sendXml() no
+     * pudo obtener un XML utilizable —columna vacía, fichero ausente,
+     * fichero vacío, o una excepción al leerlo o al regenerarlo—, es decir,
+     * antes de que la comunicación de baja llegara a hablar con SUNAT. No
+     * escribe ningún estado en $voided ni delega en el servicio que
+     * clasifica las respuestas de SUNAT: el fallo es de la aplicación, no
+     * un desenlace del tercero fiscal.
+     *
+     * El mensaje de la excepción no viaja al swal (T-02-04-03): trae rutas
+     * absolutas del bucket de DO Spaces, detalles del WSDL o de SQL que el
+     * operador de patio no puede usar. El Throwable completo va al log.
+     *
+     * Privado: un método público de un componente Livewire es un endpoint
+     * invocable desde el cliente.
+     */
+    private function dispatchXmlUnavailableSwal(Voided $voided, ?\Throwable $e): void
+    {
+        Log::error('No se pudo preparar el XML firmado de la comunicación de baja', [
+            'voided_id' => $voided->id,
+            'xml_path' => $voided->xml_path,
+            'exception' => $e,
+        ]);
+
+        $this->dispatch('swal', [
+            'icon' => 'error',
+            'title' => 'No se pudo preparar el XML',
+            'text' => 'El XML firmado de esta comunicación de baja no está disponible en el almacenamiento. No se envió nada a SUNAT y el estado de la fila no cambió; el detalle quedó registrado.',
         ]);
     }
 

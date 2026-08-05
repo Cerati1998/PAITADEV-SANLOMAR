@@ -79,12 +79,12 @@ Plans:
   3. Al obtenerse el CDR por reconsulta, la anulación pasa a aceptada, el CDR queda archivado, el ticket se limpia y los comprobantes quedan dados de baja aplicando la misma regla de la Fase 1.
   4. El listado distingue a simple vista las tres situaciones — aceptada, pendiente y rechazada — de modo que una baja que SUNAT aceptó nunca se pinta en rojo.
 
-**Plans**: 2 plans
+**Plans**: 1/2 plans executed
 
 Plans:
 **Wave 1**
 
-- [ ] 02-01-PLAN.md — `VoidedTable::sendXml()` gana el árbol de tres ramas (consultar / reenviar / avisar) y reconsulta el ticket guardado vía `resolveTicket()`; la ruta del CDR se arma con el RUC del modelo (WEB-02, WEB-03)
+- [x] 02-01-PLAN.md — `VoidedTable::sendXml()` gana el árbol de tres ramas (consultar / reenviar / avisar) y reconsulta el ticket guardado vía `resolveTicket()`; la ruta del CDR se arma con el RUC del modelo (WEB-02, WEB-03)
 
 **Wave 2** *(blocked on Wave 1; serializado a propósito — ambos planes tocan los mismos dos ficheros)*
 
@@ -128,7 +128,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Ticket persistido y semántica de tres estados | 6/6 | Executed — UAT pendiente (`human_needed`) | - |
-| 2. Reconsulta de anulaciones pendientes | 0/2 | Planned | - |
+| 2. Reconsulta de anulaciones pendientes | 1/2 | In Progress|  |
 | 3. Anulación por API con recuperación por ticket | 0/TBD | Not started | - |
 | 4. Autorización del flujo de anulación | 0/TBD | Not started | - |
 

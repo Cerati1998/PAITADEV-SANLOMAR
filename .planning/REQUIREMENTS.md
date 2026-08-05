@@ -19,8 +19,8 @@ baja, en la vía web y en la API. Cada requisito mapea a una fase del roadmap.
 ### Anulación web
 
 - [x] **WEB-01**: Al enviar una anulación que SUNAT aún no termina de procesar, el usuario ve un aviso de "en proceso" y no un error
-- [ ] **WEB-02**: El usuario puede reconsultar el estado de una anulación pendiente desde el listado, sin reenviar el XML
-- [ ] **WEB-03**: El reenvío del XML a SUNAT solo ocurre cuando la anulación no tiene ticket guardado
+- [x] **WEB-02**: El usuario puede reconsultar el estado de una anulación pendiente desde el listado, sin reenviar el XML
+- [x] **WEB-03**: El reenvío del XML a SUNAT solo ocurre cuando la anulación no tiene ticket guardado
 - [ ] **WEB-04**: El usuario distingue en el listado de anulaciones cuáles fueron aceptadas, cuáles siguen pendientes y cuáles rechazó SUNAT
 - [x] **WEB-05**: Los comprobantes incluidos en una anulación se marcan como dados de baja únicamente cuando el CDR la acepta
 
@@ -77,8 +77,8 @@ Reconocidos pero fuera del roadmap actual.
 | TICKET-04 | Phase 1 | Complete |
 | TICKET-05 | Phase 1 | Complete |
 | WEB-01 | Phase 1 | Complete |
-| WEB-02 | Phase 2 | Pending |
-| WEB-03 | Phase 2 | Pending |
+| WEB-02 | Phase 2 | Complete |
+| WEB-03 | Phase 2 | Complete |
 | WEB-04 | Phase 2 | Pending |
 | WEB-05 | Phase 1 | Complete |
 | API-01 | Phase 3 | Pending |

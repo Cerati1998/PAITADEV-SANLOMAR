@@ -2,18 +2,18 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_phase: 01
-current_phase_name: ticket-persistido-y-sem-ntica-de-tres-estados
+current_phase: 02
+current_phase_name: reconsulta-de-anulaciones-pendientes
 status: executing
 stopped_at: Phase 2 context gathered
-last_updated: "2026-08-05T16:46:50.998Z"
+last_updated: "2026-08-05T17:30:02.102Z"
 last_activity: 2026-08-05
-last_activity_desc: Phase 01 execution started
+last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 6
-  completed_plans: 6
+  total_plans: 8
+  completed_plans: 7
   percent: 25
 ---
 
@@ -24,14 +24,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-08-04)
 
 **Core value:** Todo comprobante que sale hacia SUNAT — y toda respuesta que SUNAT devuelve — tiene que quedar registrado fielmente en el sistema.
-**Current focus:** Phase 01 — ticket-persistido-y-sem-ntica-de-tres-estados
+**Current focus:** Phase 02 — reconsulta-de-anulaciones-pendientes
 
 ## Current Position
 
-Phase: 01 (ticket-persistido-y-sem-ntica-de-tres-estados) — EXECUTING
-Plan: 4 of 6
+Phase: 02 (reconsulta-de-anulaciones-pendientes) — EXECUTING
+Plan: 2 of 2
 Status: Ready to execute
-Last activity: 2026-08-05 — Phase 01 execution started
+Last activity: 2026-08-05 — Phase 02 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -61,6 +61,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P04 | 12min | 2 tasks | 1 files |
 | Phase 01-ticket-persistido-y-sem-ntica-de-tres-estados P05 | 8min | 2 tasks | 1 files |
 | Phase 01-ticket-persistido-y-sem-ntica-de-tres-estados P06 | 6min | 1 tasks | 1 files |
+| Phase 02 P01 | 8min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,8 @@ Recent decisions affecting current work:
 - [Phase 01-05]: canResendXml() se escribio como lista de permitidos (dos casos true) y no como lista de bloqueos, para no repetir el error de CR-02 que hubiera bloqueado tambien el caso legitimo rechazada-sin-ticket — El fix propuesto por CR-02 (bloquear si sunatResponse no esta vacio) habria bloqueado el caso legitimo de D-06, cuyo sunatResponse si lo escribe markRejected()
 - [Phase 01-05]: El boton de la columna CDR (vouchers.partials.cdr, compartido por cuatro listados) se neutraliza desde el servidor sin tocar el partial — Editar ese partial afectaria facturas, boletas, notas y las dos guias de remision, fuera del alcance de esta fase
 - [Phase 01-06]: Se escapo en el punto de salida en vez de sanear desMotivoBaja en la entrada, porque el campo viaja al XML firmado enviado a SUNAT — Sanear la entrada rompería el comprobante; el escape en la salida es la mitigacion correcta (cierra CR-06)
+- [Phase 02-01]: El catch de la rama Consultar de sendXml() muestra showResponse() y ademas un swal de error con el mensaje de la excepcion cuando classifyFailure() no devuelve Pendiente, igual criterio que la rama de reenvio
+- [Phase 02-01]: canResendXml() no cambia su logica (D-03); solo se amplio su comentario para documentar que Pendiente queda deliberadamente fuera de la lista de permitidos
 
 ### Pending Todos
 
@@ -108,6 +111,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-05T16:46:50.987Z
+Last session: 2026-08-05T17:29:14.213Z
 Stopped at: Phase 2 context gathered
 Resume file: .planning/phases/02-reconsulta-de-anulaciones-pendientes/02-CONTEXT.md

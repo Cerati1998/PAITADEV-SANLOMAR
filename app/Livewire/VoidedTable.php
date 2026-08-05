@@ -101,11 +101,31 @@ class VoidedTable extends DataTableComponent
     //Métodos
     public function downloadPDF(Voided $voided)
     {
+        if (empty($voided->pdf_path) || ! Storage::exists($voided->pdf_path)) {
+            $this->dispatch('swal', [
+                'icon' => 'info',
+                'title' => 'Sin PDF',
+                'text' => 'Esta comunicación de baja no tiene un PDF archivado que descargar.',
+            ]);
+
+            return;
+        }
+
         return Storage::download($voided->pdf_path);
     }
 
     public function downloadXML(Voided $voided)
     {
+        if (empty($voided->xml_path) || ! Storage::exists($voided->xml_path)) {
+            $this->dispatch('swal', [
+                'icon' => 'info',
+                'title' => 'Sin XML',
+                'text' => 'Esta comunicación de baja no tiene un XML archivado que descargar.',
+            ]);
+
+            return;
+        }
+
         return Storage::download($voided->xml_path);
     }
 

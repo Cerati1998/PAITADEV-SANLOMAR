@@ -64,6 +64,19 @@
                 <x-wire-badge sm color="gray" label="SIN ESTADO" />
             </div>
 
+        @elseif (! is_null($row->sunat_ticket))
+
+            {{-- CR-01: fila histórica con ticket vivo cuyo desenlace SUNAT
+                 todavía no confirmó. El servidor ya la encamina hacia
+                 resolveTicket() en sendXml(); sin esta hoja el ticket
+                 quedaría huérfano, sin ninguna vía de recuperación. --}}
+            <div class="flex items-center justify-between gap-2">
+                <button wire:click="sendXml({{ $row->id }})" xs title="Consultar el estado de este ticket en SUNAT">
+                    <x-wire-icon name="arrow-path" class="w-6.5 h-6.5 text-blue-500" solid />
+                </button>
+                <x-wire-badge sm color="gray" label="SIN ESTADO" />
+            </div>
+
         @else
 
             <div class="flex items-center justify-between gap-2">

@@ -143,11 +143,17 @@ class VoidedTable extends DataTableComponent
         // Livewire son invocables directamente desde el cliente, así que
         // ocultar el botón en la vista no basta: hay que decidir en el
         // servidor si corresponde consultar, avisar o reenviar.
-        if ($voided->sunat_status === VoidedStatus::Pendiente && ! is_null($voided->sunat_ticket)) {
-            // Rama Consultar (D-01/D-02, WEB-02): SUNAT ya tiene esta baja y
-            // dio un ticket; se reconsulta ese ticket en vez de reenviar el
-            // XML, que es lo que hoy devuelve el error 2109 sin recuperar
-            // nunca el CDR.
+        if (
+            ! is_null($voided->sunat_ticket)
+            && $voided->sunat_status !== VoidedStatus::Aceptada
+            && $voided->sunat_status !== VoidedStatus::Rechazada
+        ) {
+            // Rama Consultar (D-01/D-02, WEB-02, CR-01): todo ticket vivo cuyo
+            // desenlace SUNAT todavía no confirmó se reconsulta, incluida la
+            // fila con sunat_status en NULL. La condición excluye los dos
+            // desenlaces ya confirmados en vez de enumerar los estados que sí
+            // se consultan, para que ningún estado presente ni futuro con
+            // ticket vivo quede sin vía de recuperación.
             $util = new UtilService(session('company'));
             $flow = new VoidedTicketFlowService($util);
 
@@ -192,11 +198,11 @@ class VoidedTable extends DataTableComponent
             }
         }
 
-        if (! is_null($voided->sunat_ticket)) {
-            // Rama Avisar — desenlace confirmado (D-12): Rechazada que
-            // conserva ticket. El CDR ya está archivado y el ticket se
-            // conserva únicamente para que nadie reenvíe el XML; reconsultar
-            // no cambiaría el resultado.
+        if ($voided->sunat_status === VoidedStatus::Rechazada && ! is_null($voided->sunat_ticket)) {
+            // Rama Avisar — desenlace confirmado (D-12, CR-01): sólo una
+            // Rechazada que conserva ticket llega aquí. El CDR ya está
+            // archivado y el ticket se conserva únicamente para que nadie
+            // reenvíe el XML; reconsultar no cambiaría el resultado.
             $this->dispatch('swal', [
                 'icon' => 'info',
                 'title' => 'Desenlace confirmado',
@@ -322,12 +328,13 @@ class VoidedTable extends DataTableComponent
     // D-03/D-09/D-13: lista de permitidos, no de bloqueos. Replica hoja por
     // hoja el árbol de voideds/partials/response.blade.php: devuelve true en
     // los dos únicos casos en que reenviar el XML es legítimo. Tras la Fase 2
-    // ese árbol tiene una hoja nueva: la rama Pendiente ya no abre el
-    // detalle, dispara sendXml(). Pendiente queda deliberadamente fuera de
-    // esta lista — devolver false aquí es lo que encamina la fila hacia la
-    // rama de reconsulta de sendXml() en vez de hacia el reenvío. La guarda
-    // también neutraliza el botón de la columna CDR (vouchers.partials.cdr,
-    // compartido por VoucherTable, DespatchTable y
+    // ese árbol tiene dos hojas nuevas que tampoco entran en esta lista: la
+    // rama Pendiente y la fila histórica con ticket vivo (sunat_status NULL)
+    // ya no abren el detalle, disparan sendXml(). Ambas quedan
+    // deliberadamente fuera — devolver false aquí es lo que encamina la fila
+    // hacia la rama de reconsulta de sendXml() en vez de hacia el reenvío. La
+    // guarda también neutraliza el botón de la columna CDR
+    // (vouchers.partials.cdr, compartido por VoucherTable, DespatchTable y
     // DespatchTransportistaTable), que ofrece esta acción a toda fila sin
     // cdr_path sin mirar el estado. Privado porque un método público de un
     // componente Livewire es un endpoint invocable directamente desde el

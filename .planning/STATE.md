@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 01
 current_phase_name: ticket-persistido-y-sem-ntica-de-tres-estados
 status: executing
-stopped_at: Completado 01-04-PLAN.md
-last_updated: "2026-08-05T15:44:36.172Z"
+stopped_at: Completado 01-05-PLAN.md
+last_updated: "2026-08-05T15:50:14.842Z"
 last_activity: 2026-08-05
 last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 6
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -29,7 +29,7 @@ See: .planning/PROJECT.md (updated 2026-08-04)
 ## Current Position
 
 Phase: 01 (ticket-persistido-y-sem-ntica-de-tres-estados) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 Status: Ready to execute
 Last activity: 2026-08-05 — Phase 01 execution started
 
@@ -59,6 +59,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P02 | 8min | 2 tasks | 2 files |
 | Phase 01-ticket-persistido-y-sem-ntica-de-tres-estados P03 | 12min | 2 tasks | 2 files |
 | Phase 01 P04 | 12min | 2 tasks | 1 files |
+| Phase 01-ticket-persistido-y-sem-ntica-de-tres-estados P05 | 8min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -80,6 +81,8 @@ Recent decisions affecting current work:
 - [Phase 01]: classifyFailure() no degrada un desenlace ya confirmado por SUNAT (Aceptada o Rechazada-con-ticket); se incluyo el caso Rechazada-con-ticket aunque el gap solo enumeraba Aceptada, por ser el mismo defecto por el mismo disparador — Evita reescribir un desenlace que SUNAT ya confirmo cuando un fallo ocurre despues del CDR (Gap 1, D-06/D-07)
 - [Phase 01]: La rama de aceptacion de resolveTicket() (escritura de estado + markVoidedInvoices) queda envuelta en DB::transaction(); si falla, refresh() resincroniza el modelo antes de revertir a pendiente — Evita una fila aceptada con comprobantes a medio marcar (D-07, D-11)
 - [Phase 01]: markVoidedInvoices() suma un sexto filtro where(production) leido del Voided recibido, nunca de session() — Evita que una baja de prueba en beta marque como anulada la factura real de produccion que comparte serie/correlativo (Gap 4, WEB-05)
+- [Phase 01-05]: canResendXml() se escribio como lista de permitidos (dos casos true) y no como lista de bloqueos, para no repetir el error de CR-02 que hubiera bloqueado tambien el caso legitimo rechazada-sin-ticket — El fix propuesto por CR-02 (bloquear si sunatResponse no esta vacio) habria bloqueado el caso legitimo de D-06, cuyo sunatResponse si lo escribe markRejected()
+- [Phase 01-05]: El boton de la columna CDR (vouchers.partials.cdr, compartido por cuatro listados) se neutraliza desde el servidor sin tocar el partial — Editar ese partial afectaria facturas, boletas, notas y las dos guias de remision, fuera del alcance de esta fase
 
 ### Pending Todos
 
@@ -103,6 +106,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-05T15:44:36.162Z
-Stopped at: Completado 01-04-PLAN.md
+Last session: 2026-08-05T15:50:14.828Z
+Stopped at: Completado 01-05-PLAN.md
 Resume file: None

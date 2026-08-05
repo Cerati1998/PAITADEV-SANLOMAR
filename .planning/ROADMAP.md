@@ -41,7 +41,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Los comprobantes incluidos en la anulación aparecen como dados de baja únicamente después de un CDR aceptado (código `0`); si la baja quedó pendiente, siguen sin marcar.
   5. El estado guardado de una anulación se lee como uno de tres valores explícitos — aceptada, pendiente o rechazada — en lugar del `success: true/false` actual.
 
-**Plans**: 4/6 plans executed
+**Plans**: 5/6 plans executed
 
 Plans:
 **Wave 1**
@@ -59,7 +59,7 @@ Plans:
 **Cierre de gaps — Wave 1** *(de la verificación 2026-08-04, 5/9 must-haves; ambos planes en paralelo, no comparten archivo)*
 
 - [x] 01-04-PLAN.md — `classifyFailure()` deja de degradar una aceptación a rechazo, la aceptación se escribe de forma atómica y `markVoidedInvoices()` filtra por `production` (gaps 1 y 4)
-- [ ] 01-05-PLAN.md — El listado selecciona `sunat_ticket`/`sunatResponse` y la guarda de servidor de `sendXml()` refleja el árbol de decisión de la vista (gaps 2 y 3)
+- [x] 01-05-PLAN.md — El listado selecciona `sunat_ticket`/`sunatResponse` y la guarda de servidor de `sendXml()` refleja el árbol de decisión de la vista (gaps 2 y 3)
 
 **Cierre de gaps — Wave 2** *(blocked on Wave 1; serializado a propósito — 01-05 verifica que no toca ninguna vista y 01-06 sí modifica una)*
 
@@ -102,7 +102,7 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Ticket persistido y semántica de tres estados | 4/6 | In Progress|  |
+| 1. Ticket persistido y semántica de tres estados | 5/6 | In Progress|  |
 | 2. Reconsulta de anulaciones pendientes | 0/TBD | Not started | - |
 | 3. Anulación por API con recuperación por ticket | 0/TBD | Not started | - |
 

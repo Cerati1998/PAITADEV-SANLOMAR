@@ -8,8 +8,10 @@
 
     @elseif ($row->sunat_status === \App\Enums\VoidedStatus::Pendiente)
 
-        {{-- D-09: nunca ofrece reenvío, aunque el JSON no sea de éxito --}}
-        <button wire:click="showResponse({{ $row->id }})" xs>
+        {{-- D-01/D-02: el botón dispara la reconsulta del ticket ya
+             guardado, no un reenvío — canResendXml() sigue devolviendo false
+             para este estado. --}}
+        <button wire:click="sendXml({{ $row->id }})" xs>
             <x-wire-icon name="clock" class="w-6.5 h-6.5 text-amber-500" solid />
         </button>
 

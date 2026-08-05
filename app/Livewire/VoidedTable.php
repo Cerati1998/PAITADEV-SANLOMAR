@@ -107,25 +107,76 @@ class VoidedTable extends DataTableComponent
 
     public function sendXml(Voided $voided)
     {
-        // D-09: guarda de reenvío, primero de todo. Las acciones de Livewire
-        // son invocables directamente desde el cliente, así que ocultar el
-        // botón en la vista no basta: si SUNAT ya recibió esta comunicación
-        // de baja, reenviar el XML devuelve 2109 y el CDR nunca se recupera.
-        // canResendXml() es la contraparte de servidor del árbol de decisión
-        // de voideds/partials/response.blade.php, y también neutraliza el
-        // botón de la columna CDR (vouchers.partials.cdr, compartido), que
-        // ofrece esta acción a toda fila sin cdr_path sin mirar el estado.
-        if (! $this->canResendXml($voided)) {
-            if (! is_null($voided->sunat_ticket)) {
+        // D-02: guarda de tres ramas, primero de todo. Las acciones de
+        // Livewire son invocables directamente desde el cliente, así que
+        // ocultar el botón en la vista no basta: hay que decidir en el
+        // servidor si corresponde consultar, avisar o reenviar.
+        if ($voided->sunat_status === VoidedStatus::Pendiente && ! is_null($voided->sunat_ticket)) {
+            // Rama Consultar (D-01/D-02, WEB-02): SUNAT ya tiene esta baja y
+            // dio un ticket; se reconsulta ese ticket en vez de reenviar el
+            // XML, que es lo que hoy devuelve el error 2109 sin recuperar
+            // nunca el CDR.
+            $util = new UtilService(session('company'));
+            $flow = new VoidedTicketFlowService($util);
+
+            try {
+                $status = $flow->resolveTicket($voided, $this->cdrPathFor($voided));
+
+                if ($status === VoidedStatus::Pendiente) {
+                    $this->dispatch('swal', [
+                        'icon' => 'info',
+                        'title' => 'Aún en proceso',
+                        'text' => 'SUNAT todavía no ha terminado de procesar esta comunicación de baja. El ticket sigue guardado; puede volver a consultar más tarde.',
+                    ]);
+
+                    return;
+                }
+
+                $this->showResponse($voided);
+
+                return;
+            } catch (\Throwable $e) {
+                $status = $flow->classifyFailure($voided, $e);
+
+                if ($status === VoidedStatus::Pendiente) {
+                    $this->dispatch('swal', [
+                        'icon' => 'info',
+                        'title' => 'Aún en proceso',
+                        'text' => 'SUNAT todavía no ha terminado de procesar esta comunicación de baja. El ticket sigue guardado; puede volver a consultar más tarde.',
+                    ]);
+
+                    return;
+                }
+
+                $this->showResponse($voided);
+
                 $this->dispatch('swal', [
-                    'icon' => 'info',
-                    'title' => 'En proceso',
-                    'text' => 'SUNAT ya recibió esta comunicación de baja y su ticket quedó guardado.',
+                    'icon' => 'error',
+                    'title' => 'Error al consultar el comprobante',
+                    'text' => $e->getMessage(),
                 ]);
 
                 return;
             }
+        }
 
+        if (! is_null($voided->sunat_ticket)) {
+            // Rama Avisar — desenlace confirmado (D-12): Rechazada que
+            // conserva ticket. El CDR ya está archivado y el ticket se
+            // conserva únicamente para que nadie reenvíe el XML; reconsultar
+            // no cambiaría el resultado.
+            $this->dispatch('swal', [
+                'icon' => 'info',
+                'title' => 'Desenlace confirmado',
+                'text' => 'SUNAT ya devolvió el CDR rechazando esta comunicación de baja. Reconsultar no cambiaría el resultado, y reenviar el XML devolvería el error 2109 (la comunicación de baja ya fue informada).',
+            ]);
+
+            return;
+        }
+
+        if (! $this->canResendXml($voided)) {
+            // Rama Avisar — no se puede reenviar: el resto (Aceptada, o
+            // histórica con respuesta guardada).
             $this->dispatch('swal', [
                 'icon' => 'info',
                 'title' => 'No se puede reenviar',
@@ -219,6 +270,20 @@ class VoidedTable extends DataTableComponent
             'title' => $title,
             'html' => $html,
         ]);
+    }
+
+    /**
+     * Ruta del ZIP del CDR de esta comunicación de baja. El RUC con que se
+     * nombra el fichero sale del JSON company que VoidedObserver::creating()
+     * persistió en la fila al crearla (D-04): la empresa dueña del
+     * documento, no la empresa de la sesión que dispara la acción.
+     */
+    private function cdrPathFor(Voided $voided): string
+    {
+        $directory = $voided->production ? 'sunat/' : 'sunat/beta/';
+        $name = $voided->company['ruc'].'-RC-'.$voided->fecGeneracion->format('Ymd').'-'.$voided->correlativo;
+
+        return $directory.'cdr/R-'.$name.'.zip';
     }
 
     // D-09/D-13: lista de permitidos, no de bloqueos. Replica hoja por hoja

@@ -81,13 +81,26 @@ class VoidedTable extends DataTableComponent
         // D-09: guarda de reenvío, primero de todo. Las acciones de Livewire
         // son invocables directamente desde el cliente, así que ocultar el
         // botón en la vista no basta: si SUNAT ya recibió esta comunicación
-        // de baja (hay ticket), reenviar el XML devuelve 2109 y el CDR nunca
-        // se recupera.
-        if (! is_null($voided->sunat_ticket)) {
+        // de baja, reenviar el XML devuelve 2109 y el CDR nunca se recupera.
+        // canResendXml() es la contraparte de servidor del árbol de decisión
+        // de voideds/partials/response.blade.php, y también neutraliza el
+        // botón de la columna CDR (vouchers.partials.cdr, compartido), que
+        // ofrece esta acción a toda fila sin cdr_path sin mirar el estado.
+        if (! $this->canResendXml($voided)) {
+            if (! is_null($voided->sunat_ticket)) {
+                $this->dispatch('swal', [
+                    'icon' => 'info',
+                    'title' => 'En proceso',
+                    'text' => 'SUNAT ya recibió esta comunicación de baja y su ticket quedó guardado.',
+                ]);
+
+                return;
+            }
+
             $this->dispatch('swal', [
                 'icon' => 'info',
-                'title' => 'En proceso',
-                'text' => 'SUNAT ya recibió esta comunicación de baja y su ticket quedó guardado.',
+                'title' => 'No se puede reenviar',
+                'text' => 'Esta comunicación de baja ya tiene una respuesta de SUNAT registrada. Reenviar el XML devolvería el error 2109 (la comunicación de baja ya fue informada), sin recuperar nada.',
             ]);
 
             return;
@@ -177,6 +190,29 @@ class VoidedTable extends DataTableComponent
             'title' => $title,
             'html' => $html,
         ]);
+    }
+
+    // D-09/D-13: lista de permitidos, no de bloqueos. Replica hoja por hoja
+    // el árbol de voideds/partials/response.blade.php: devuelve true en los
+    // dos únicos casos en que reenviar el XML es legítimo. Privado porque un
+    // método público de un componente Livewire es un endpoint invocable
+    // directamente desde el cliente.
+    private function canResendXml(Voided $voided): bool
+    {
+        // Caso 1: rechazada porque el envío inicial nunca llegó a devolver
+        // ticket (D-06). sunatResponse sí está poblado aquí (lo escribió
+        // markRejected()), por eso no forma parte de esta condición.
+        if ($voided->sunat_status === VoidedStatus::Rechazada && is_null($voided->sunat_ticket)) {
+            return true;
+        }
+
+        // Caso 2: fila histórica anterior a la migración (D-13, doble
+        // guardián) sobre la que nunca se envió nada.
+        if (is_null($voided->sunat_status) && is_null($voided->sunat_ticket) && empty($voided->sunatResponse)) {
+            return true;
+        }
+
+        return false;
     }
 
     public function builder(): Builder

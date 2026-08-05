@@ -6,6 +6,7 @@ use App\Enums\VoidedStatus;
 use App\Models\Invoice;
 use App\Models\Voided;
 use Greenter\See;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -132,12 +133,26 @@ class VoidedTicketFlowService
         // D-07, TICKET-04, WEB-05: la aceptación se decide por el código del
         // propio CDR, no por el indicador de éxito del resultado.
         if ((string) $cdr->getCode() === '0') {
-            $voided->sunatResponse = $this->util->readCdr($cdr);
-            $voided->sunat_status = VoidedStatus::Aceptada;
-            $voided->sunat_ticket = null;
-            $voided->save();
+            try {
+                DB::transaction(function () use ($voided, $cdr) {
+                    $voided->sunatResponse = $this->util->readCdr($cdr);
+                    $voided->sunat_status = VoidedStatus::Aceptada;
+                    $voided->sunat_ticket = null;
+                    $voided->save();
 
-            $this->markVoidedInvoices($voided);
+                    $this->markVoidedInvoices($voided);
+                });
+            } catch (\Throwable $e) {
+                // La transacción revierte la fila en BD pero no los atributos
+                // en memoria del modelo: sin resincronizarlos aquí,
+                // classifyFailure() vería el sunat_ticket en null (asignado
+                // dentro del bloque revertido) y no podría distinguir este
+                // caso del rechazo sin ticket (D-06), degradando una
+                // aceptación de SUNAT a rechazo.
+                $voided->refresh();
+
+                return $this->markPending($voided, 'fallo_transporte', null, $e->getMessage());
+            }
 
             return VoidedStatus::Aceptada;
         }
@@ -156,6 +171,26 @@ class VoidedTicketFlowService
      */
     public function classifyFailure(Voided $voided, \Throwable $e): VoidedStatus
     {
+        // Invariante (Gap 1): un desenlace ya confirmado por un CDR de SUNAT
+        // no se reescribe nunca, sin importar qué falle después. Son dos
+        // situaciones, y el orden importa porque la segunda no es
+        // distinguible por el ticket:
+        //   1. Aceptada: la rama de aceptación ya corrió y archivó el CDR.
+        //   2. Rechazada con ticket: rechazo por CDR con código != 0 (única
+        //      situación en que markRejected() se invoca con ticket ya
+        //      persistido). Degradarla a pendiente perdería un desenlace que
+        //      SUNAT ya confirmó.
+        if ($voided->sunat_status === VoidedStatus::Aceptada
+            || ($voided->sunat_status === VoidedStatus::Rechazada && ! is_null($voided->sunat_ticket))) {
+            Log::warning('Fallo posterior a un desenlace SUNAT ya confirmado; no se reescribe el estado', [
+                'voided_id' => $voided->id,
+                'sunat_status' => $voided->sunat_status?->value,
+                'message' => $e->getMessage(),
+            ]);
+
+            return $voided->sunat_status;
+        }
+
         if (is_null($voided->sunat_ticket)) {
             // D-06: el fallo ocurrió antes de que SUNAT devolviera ticket.
             return $this->markRejected($voided, [

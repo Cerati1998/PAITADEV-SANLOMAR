@@ -5,15 +5,15 @@ milestone_name: milestone
 current_phase: 01
 current_phase_name: ticket-persistido-y-sem-ntica-de-tres-estados
 status: executing
-stopped_at: Fase 01 — planes de cierre de gaps 01-04, 01-05 (wave 1) y 01-06 (wave 2) listos para ejecutar
-last_updated: "2026-08-05T15:22:15.804Z"
+stopped_at: Completado 01-04-PLAN.md
+last_updated: "2026-08-05T15:44:36.172Z"
 last_activity: 2026-08-05
-last_activity_desc: Planificado el cierre de los 4 gaps de la fase 01 (01-04, 01-05) más CR-06 XSS (01-06)
+last_activity_desc: Phase 01 execution started
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 6
-  completed_plans: 3
+  completed_plans: 4
   percent: 0
 ---
 
@@ -29,9 +29,9 @@ See: .planning/PROJECT.md (updated 2026-08-04)
 ## Current Position
 
 Phase: 01 (ticket-persistido-y-sem-ntica-de-tres-estados) — EXECUTING
-Plan: 3 of 6 (01-01..01-03 ejecutados; 01-04 y 01-05 en wave 1, 01-06 en wave 2, todos pendientes)
+Plan: 2 of 6
 Status: Ready to execute
-Last activity: 2026-08-05 — Planificado el cierre de gaps (01-04, 01-05) y CR-06 XSS (01-06); plan-checker PASSED
+Last activity: 2026-08-05 — Phase 01 execution started
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -58,6 +58,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01 P01 | 8min | 2 tasks | 4 files |
 | Phase 01 P02 | 8min | 2 tasks | 2 files |
 | Phase 01-ticket-persistido-y-sem-ntica-de-tres-estados P03 | 12min | 2 tasks | 2 files |
+| Phase 01 P04 | 12min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -76,6 +77,9 @@ Recent decisions affecting current work:
 - [Phase 01-02]: Todas las ramas de VoidedForm::send() redirigen a voideds.index; se retiraron los dos redirect a vouchers.index del código original
 - [Phase 01-03]: El listado de anulaciones delega en VoidedTicketFlowService (D-11) y bloquea el reenvio en el servidor cuando sunat_ticket ya tiene valor (D-09)
 - [Phase 01-03]: La vista voideds/partials/response.blade.php diverge deliberadamente del partial compartido de vouchers para cubrir los tres estados sin afectar facturas/guias
+- [Phase 01]: classifyFailure() no degrada un desenlace ya confirmado por SUNAT (Aceptada o Rechazada-con-ticket); se incluyo el caso Rechazada-con-ticket aunque el gap solo enumeraba Aceptada, por ser el mismo defecto por el mismo disparador — Evita reescribir un desenlace que SUNAT ya confirmo cuando un fallo ocurre despues del CDR (Gap 1, D-06/D-07)
+- [Phase 01]: La rama de aceptacion de resolveTicket() (escritura de estado + markVoidedInvoices) queda envuelta en DB::transaction(); si falla, refresh() resincroniza el modelo antes de revertir a pendiente — Evita una fila aceptada con comprobantes a medio marcar (D-07, D-11)
+- [Phase 01]: markVoidedInvoices() suma un sexto filtro where(production) leido del Voided recibido, nunca de session() — Evita que una baja de prueba en beta marque como anulada la factura real de produccion que comparte serie/correlativo (Gap 4, WEB-05)
 
 ### Pending Todos
 
@@ -99,6 +103,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-04T23:59:17.469Z
-Stopped at: Completado 01-03-PLAN.md
+Last session: 2026-08-05T15:44:36.162Z
+Stopped at: Completado 01-04-PLAN.md
 Resume file: None

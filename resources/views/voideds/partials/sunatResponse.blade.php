@@ -137,7 +137,7 @@
             </div>
 
             <div class="whitespace-normal">
-                {!! $document->sunatResponse['error']['message'] ?? null !!}
+                {{ $document->sunatResponse['error']['message'] ?? null }}
             </div>
 
         @endif
@@ -206,7 +206,7 @@
             </div>
 
             <div class="whitespace-normal">
-                {!! $document->sunatResponse['error']['message'] ?? null !!}
+                {{ $document->sunatResponse['error']['message'] ?? null }}
             </div>
 
         @endif

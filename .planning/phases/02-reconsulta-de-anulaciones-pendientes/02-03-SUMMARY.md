@@ -167,3 +167,13 @@ None - no external service configuration required.
 ---
 *Phase: 02-reconsulta-de-anulaciones-pendientes*
 *Completed: 2026-08-05*
+
+## Self-Check: PASSED
+
+- FOUND: `app/Livewire/VoidedTable.php`
+- FOUND: `resources/views/voideds/partials/response.blade.php`
+- FOUND: `app/Services/Sunat/VoidedTicketFlowService.php`
+- FOUND: `.planning/phases/02-reconsulta-de-anulaciones-pendientes/02-03-SUMMARY.md`
+- FOUND commit `449a958` (Tarea 1)
+- FOUND commit `a6bca6e` (Tarea 2)
+- FOUND commit `14adcd4` (docs: summary)

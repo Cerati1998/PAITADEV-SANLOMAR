@@ -252,9 +252,11 @@ class VoidedTicketFlowService
     /**
      * Marca como dados de baja los comprobantes de la anulación. Se invoca
      * únicamente desde la rama en que el código del CDR es '0'. Filtra por
-     * branch_id y company_id leídos del propio Voided recibido, nunca de
-     * session() (RESEARCH Pitfall 7): dentro de una capa de servicio el
-     * modelo recibido es la fuente fiable del ámbito multi-tenant.
+     * branch_id, company_id y production leídos del propio Voided recibido,
+     * nunca de session() (RESEARCH Pitfall 7): dentro de una capa de servicio
+     * el modelo recibido es la fuente fiable del ámbito multi-tenant. El
+     * filtro por production evita que una baja de prueba en beta marque como
+     * anulada la factura real de producción que comparte serie/correlativo.
      */
     private function markVoidedInvoices(Voided $voided): void
     {
@@ -264,6 +266,7 @@ class VoidedTicketFlowService
                 ->where('correlativo', $item['correlativo'])
                 ->where('branch_id', $voided->branch_id)
                 ->where('company_id', $voided->company_id)
+                ->where('production', $voided->production)
                 ->update(['voided' => true]);
         }
     }

@@ -22,7 +22,7 @@ en producción para guías de remisión.
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Ticket persistido y semántica de tres estados** - El envío web guarda el ticket antes de consultar y registra el estado real que devolvió SUNAT (6/6 planes ejecutados; re-verificación 2026-08-05 con 9/9 must-haves y los 4 gaps cerrados; queda `human_needed` — 4 pruebas contra SUNAT beta en `01-UAT.md`)
-- [ ] **Phase 2: Reconsulta de anulaciones pendientes** - El usuario recupera el CDR desde el listado usando el ticket guardado, sin reenviar el XML
+- [x] **Phase 2: Reconsulta de anulaciones pendientes** - El usuario recupera el CDR desde el listado usando el ticket guardado, sin reenviar el XML (completed 2026-08-05)
 - [ ] **Phase 3: Anulación por API con recuperación por ticket** - El endpoint deja de romperse y expone el mismo comportamiento de ticket que la vía web
 - [ ] **Phase 4: Autorización del flujo de anulación** - Las acciones de anulación comprueban propiedad multi-tenant y permiso en el servidor, no solo en la vista (CR-02 y CR-04 del code review de la Fase 1)
 
@@ -79,7 +79,7 @@ Plans:
   3. Al obtenerse el CDR por reconsulta, la anulación pasa a aceptada, el CDR queda archivado, el ticket se limpia y los comprobantes quedan dados de baja aplicando la misma regla de la Fase 1.
   4. El listado distingue a simple vista las tres situaciones — aceptada, pendiente y rechazada — de modo que una baja que SUNAT aceptó nunca se pinta en rojo.
 
-**Plans**: 1/2 plans executed
+**Plans**: 2/2 plans complete
 
 Plans:
 **Wave 1**
@@ -88,7 +88,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1; serializado a propósito — ambos planes tocan los mismos dos ficheros)*
 
-- [ ] 02-02-PLAN.md — Badge de estado en las cuatro ramas de la celda Sunat y `SelectFilter` "Estado Sunat" para aislar las pendientes (WEB-04)
+- [x] 02-02-PLAN.md — Badge de estado en las cuatro ramas de la celda Sunat y `SelectFilter` "Estado Sunat" para aislar las pendientes (WEB-04)
 
 ### Phase 3: Anulación por API con recuperación por ticket
 
@@ -128,7 +128,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Ticket persistido y semántica de tres estados | 6/6 | Executed — UAT pendiente (`human_needed`) | - |
-| 2. Reconsulta de anulaciones pendientes | 1/2 | In Progress|  |
+| 2. Reconsulta de anulaciones pendientes | 2/2 | Complete   | 2026-08-05 |
 | 3. Anulación por API con recuperación por ticket | 0/TBD | Not started | - |
 | 4. Autorización del flujo de anulación | 0/TBD | Not started | - |
 

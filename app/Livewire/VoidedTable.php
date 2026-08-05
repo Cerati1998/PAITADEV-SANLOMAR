@@ -76,6 +76,35 @@ class VoidedTable extends DataTableComponent
         return Storage::download($voided->xml_path);
     }
 
+    /**
+     * Descarga el ZIP del CDR archivado por VoidedTicketFlowService.
+     *
+     * La columna CDR de este listado reutiliza el parcial compartido
+     * vouchers.partials.cdr, que emite wire:click="downloadCDR(...)" en cuanto
+     * la fila tiene cdr_path; sin este método la pulsación reventaba con
+     * MethodNotFoundException. Desde que resolveTicket() archiva el ZIP
+     * siempre que llegue, prácticamente toda anulación resuelta muestra ese
+     * botón, y el CDR es la prueba documental de la baja ante SUNAT.
+     *
+     * La ruta puede estar poblada sin fichero detrás (cdr_path se asigna antes
+     * de escribir el ZIP), así que se comprueba la existencia real en vez de
+     * dejar que Storage lance.
+     */
+    public function downloadCDR(Voided $voided)
+    {
+        if (empty($voided->cdr_path) || ! Storage::exists($voided->cdr_path)) {
+            $this->dispatch('swal', [
+                'icon' => 'info',
+                'title' => 'Sin CDR',
+                'text' => 'Esta comunicación de baja todavía no tiene un CDR archivado que descargar.',
+            ]);
+
+            return;
+        }
+
+        return Storage::download($voided->cdr_path);
+    }
+
     public function sendXml(Voided $voided)
     {
         // D-09: guarda de reenvío, primero de todo. Las acciones de Livewire

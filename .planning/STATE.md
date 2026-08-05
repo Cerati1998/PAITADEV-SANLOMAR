@@ -4,16 +4,16 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 02
 current_phase_name: reconsulta-de-anulaciones-pendientes
-status: verifying
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-08-05T17:38:07.790Z"
+status: executing
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-08-05T19:06:08.554Z"
 last_activity: 2026-08-05
 last_activity_desc: Phase 02 execution started
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 9
+  completed_plans: 9
   percent: 50
 ---
 
@@ -28,12 +28,12 @@ See: .planning/PROJECT.md (updated 2026-08-04)
 
 ## Current Position
 
-Phase: 02 (reconsulta-de-anulaciones-pendientes) — EXECUTING
-Plan: 2 of 2
-Status: Phase complete — ready for verification
-Last activity: 2026-08-05 — Phase 02 execution started
+Phase: 02 (reconsulta-de-anulaciones-pendientes) — COMPLETE
+Plan: 3 of 3
+Status: Phase 02 complete — all plans executed
+Last activity: 2026-08-05 — Completed 02-03-PLAN.md
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -63,6 +63,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-ticket-persistido-y-sem-ntica-de-tres-estados P06 | 6min | 1 tasks | 1 files |
 | Phase 02 P01 | 8min | 2 tasks | 2 files |
 | Phase 02 P02 | 5min | 2 tasks | 2 files |
+| Phase 02 P03 | 16min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,9 @@ Recent decisions affecting current work:
 - [Phase 02-02]: No hizo falta anadir sunat_status a setAdditionalSelects: la columna ya se selecciona implicitamente como base de Column::make('Sunat', 'sunat_status')
 - [Phase 02-02]: El token elegido para el caso NULL del filtro es el literal sin-estado, que no colisiona con ningun ->value del enum VoidedStatus
 - [Phase 02-02]: El badge de Rechazada usa VoidedStatus::badgeColor() = danger, color no registrado en el pack de colores de WireUI; queda anotado como punto de atencion para el UAT de la fase, sin tocar el enum (D-08 lo declara intocable)
+- [Phase 02-03]: sendXml() rama Consultar se expresa por exclusion (! Aceptada && ! Rechazada), no por enumeracion (Pendiente || NULL), para que ningun estado presente ni futuro con ticket vivo quede huerfano (CR-01)
+- [Phase 02-03]: dispatchPendingSwal() es el unico punto de composicion del aviso de pendiente; solo afirma progreso cuando el motivo persistido es codigo_98, y en cualquier otro caso muestra No se pudo confirmar el estado con el codigo devuelto
+- [Phase 02-03]: La normalizacion del codigo en resolveTicket() compara (int) code === 98, no la cadena cruda; el code que se persiste en markPending() sigue siendo el crudo de SUNAT (con sus ceros)
 
 ### Pending Todos
 
@@ -116,6 +120,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-08-05T17:38:07.780Z
-Stopped at: Completed 02-02-PLAN.md
+Last session: 2026-08-05T19:06:08.544Z
+Stopped at: Completed 02-03-PLAN.md
 Resume file: None

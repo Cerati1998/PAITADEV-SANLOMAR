@@ -19,7 +19,7 @@
                             </button>
                         </div>
                         <x-wire-select id="shipping_line_id" :async-data="route('line.search')" option-label="name" option-value="id"
-                            placeholder="Selecciona la Línea" wire:model.live="dischargue.shipping_line_id" />
+                            placeholder="Selecciona la Línea" wire:model="dischargue.shipping_line_id" />
                     </div>
 
                     <!-- Nave -->
@@ -33,8 +33,8 @@
                                 + Nueva Nave
                             </button>
                         </div>
-                        <x-wire-select :options="$vessels" option-label="name" option-value="id"
-                            wire:model="dischargue.vessel_id" placeholder="Selecciona la Nave" />
+                        <x-wire-select id="vessel_id" :async-data="route('vessel.search')" option-label="name" option-value="id"
+                            placeholder="Selecciona la Nave" wire:model="dischargue.vessel_id" />
                     </div>
 
                 </div>
@@ -90,7 +90,7 @@
             </x-wire-modal-card>
         </form>
     </div>
-    <x-spinner :targets="['save','attach']" logo="{{ asset('img/logos/favicon.svg') }}" logoSize="56"
+    <x-spinner :targets="['save', 'attach']" logo="{{ asset('img/logos/favicon.svg') }}" logoSize="56"
         message="Guardando información..." />
     @push('js')
         <script>

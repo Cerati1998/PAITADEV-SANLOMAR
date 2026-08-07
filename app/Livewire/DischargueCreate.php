@@ -37,7 +37,7 @@ class DischargueCreate extends Component
             $this->vessels = Vessel::where('shipping_line_id', $this->dischargue['shipping_line'])->get()->toArray();
         }
     } */
-    #[On('vesselExternAdded')]
+    /* #[On('vesselExternAdded')]
     public function updatedDischargueShippingLineId($value)
     {
         // Resetear el vessel seleccionado
@@ -51,7 +51,7 @@ class DischargueCreate extends Component
         } else {
             $this->vessels = [];
         }
-    }
+    } */
 
     public function updatedDischargueEtaDate($value)
     {

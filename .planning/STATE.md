@@ -114,6 +114,12 @@ Recent decisions affecting current work:
 - Verificación contra SUNAT beta requerida antes de tocar producción: SUNAT es un tercero real y el caso pendiente solo se reproduce contra su servicio.
 - `.planning/codebase/` es del 2026-07-24 y está desactualizado (reporta como abiertos hallazgos ya corregidos). Verificar contra el código antes de usarlo como fuente.
 
+## Quick Tasks Completed
+
+| Date | Slug | Description | Artifacts |
+|------|------|-------------|-----------|
+| 2026-08-20 | `eir-masiva-photos-zip` | Botón naranja "Masiva" en la cabecera de EIR Edit: descarga en un ZIP todas las fotos de la inspección (cabecera + detalles); los 4 botones quedan solo con icono en móvil | `.planning/quick/20260820-eir-masiva-photos-zip/` |
+
 ## Deferred Items
 
 Items acknowledged and carried forward from previous milestone close:

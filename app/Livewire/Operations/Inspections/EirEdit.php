@@ -570,6 +570,26 @@ class EirEdit extends Component
         }
     }
 
+    /**
+     * Descarga en un solo ZIP todas las fotos de la inspección:
+     * las de cabecera y las de cada detalle
+     */
+    public function download_all_photos()
+    {
+        try {
+            $inspection = EirInspection::findOrFail($this->idEir);
+            $zipPath = $this->photoService->generateAllPhotosZip($inspection);
+
+            return response()->download($zipPath)->deleteFileAfterSend(true);
+        } catch (\RuntimeException $e) {
+            $this->dispatch('swal', [
+                'title' => 'Error!',
+                'text' => $e->getMessage(),
+                'icon' => 'error'
+            ]);
+        }
+    }
+
     public function loadPhotoDetail(EirInspectionDetail $eirInspectionDetail)
     {
         $this->photosDetail = $eirInspectionDetail->photos->toArray();

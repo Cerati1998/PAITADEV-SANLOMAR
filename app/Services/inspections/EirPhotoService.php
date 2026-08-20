@@ -43,12 +43,103 @@ class EirPhotoService
     }
 
     /**
-     * Crea un archivo ZIP a partir de un array de rutas de fotos
+     * Genera un archivo ZIP con todas las fotos de la inspección:
+     * las de cabecera y las de cada detalle, organizadas en carpetas
      */
+    public function generateAllPhotosZip(EirInspection $inspection): string
+    {
+        $inspection->loadMissing('details.photos', 'details.location');
+
+        $entries = [];
+
+        $headerPhotos = collect([
+            $inspection->path_photo_1,
+            $inspection->path_photo_2,
+            $inspection->path_photo_3,
+            $inspection->path_photo_4,
+        ])->filter()->values();
+
+        foreach ($headerPhotos as $index => $photoPath) {
+            $entries[] = [
+                'path' => $photoPath,
+                'entry' => 'cabecera/' . $this->numberedFileName($photoPath, $index + 1),
+            ];
+        }
+
+        foreach ($inspection->details as $detailIndex => $detail) {
+            $folder = 'detalles/' . $this->detailFolderName($detail, $detailIndex + 1);
+
+            foreach ($detail->photos as $photoIndex => $photo) {
+                if (empty($photo->path)) continue;
+
+                $entries[] = [
+                    'path' => $photo->path,
+                    'entry' => $folder . '/' . $this->numberedFileName($photo->path, $photoIndex + 1),
+                ];
+            }
+        }
+
+        $zipFileName = "eir_{$inspection->serie}_{$inspection->correlativo}_fotos.zip";
+
+        return $this->createZipFromEntries($entries, $zipFileName);
+    }
+
+    /**
+     * Nombre de la carpeta de un detalle dentro del ZIP
+     */
+    private function detailFolderName(EirInspectionDetail $detail, int $position): string
+    {
+        $code = $detail->location->code ?? 'detalle';
+
+        return str_pad((string) $position, 2, '0', STR_PAD_LEFT) . '_' . $this->sanitizeName($code);
+    }
+
+    /**
+     * Nombre de archivo dentro del ZIP, prefijado para evitar colisiones
+     */
+    private function numberedFileName(string $photoPath, int $position): string
+    {
+        $relativePath = ltrim((string) parse_url($photoPath, PHP_URL_PATH), '/');
+
+        return str_pad((string) $position, 2, '0', STR_PAD_LEFT) . '_' . $this->sanitizeName(basename($relativePath));
+    }
+
+    /**
+     * Limpia un nombre para que sea una entrada válida dentro del ZIP
+     */
+    private function sanitizeName(string $name): string
+    {
+        $clean = preg_replace('/[^A-Za-z0-9._-]+/', '_', $name);
+
+        return trim((string) $clean, '_') ?: 'archivo';
+    }
+
     /**
      * Crea un archivo ZIP a partir de un array de rutas de fotos
      */
     private function createZipFromPaths(array $photoPaths, string $zipFileName): string
+    {
+        $entries = [];
+
+        foreach ($photoPaths as $photoPath) {
+            if (empty($photoPath)) continue;
+
+            $relativePath = ltrim((string) parse_url($photoPath, PHP_URL_PATH), '/');
+
+            $entries[] = [
+                'path' => $photoPath,
+                'entry' => basename($relativePath),
+            ];
+        }
+
+        return $this->createZipFromEntries($entries, $zipFileName);
+    }
+
+    /**
+     * Crea un archivo ZIP a partir de entradas
+     * ['path' => ruta remota de la foto, 'entry' => ruta dentro del ZIP]
+     */
+    private function createZipFromEntries(array $entries, string $zipFileName): string
     {
         $zipPath = storage_path("app/temp/{$zipFileName}");
         $disk = $this->getDisk;
@@ -69,7 +160,9 @@ class EirPhotoService
 
         $addedFiles = 0;
 
-        foreach ($photoPaths as $photoPath) {
+        foreach ($entries as $entry) {
+            $photoPath = $entry['path'] ?? null;
+
             if (empty($photoPath)) continue;
 
             // Si se guardó una URL completa, obtener solo el path relativo
@@ -80,7 +173,7 @@ class EirPhotoService
                 $tempFile = tempnam(sys_get_temp_dir(), 'eir_photo_');
                 file_put_contents($tempFile, Storage::disk($disk)->get($relativePath));
 
-                $zip->addFile($tempFile, basename($relativePath));
+                $zip->addFile($tempFile, $entry['entry'] ?? basename($relativePath));
                 $addedFiles++;
 
                 register_shutdown_function(function () use ($tempFile) {

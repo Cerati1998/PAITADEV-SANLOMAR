@@ -255,18 +255,29 @@
 
             {{-- Botones --}}
             <div class="mt-6 flex justify-center gap-1 lg:gap-2">
-                <x-wire-button blue label="Actualizar" interaction="positive" icon="arrow-up-on-square"
-                    type="submit" wire:target="save" spinner="save" wire:loading.attr="disabled" sm />
-                <x-wire-button positive label="Galeria" interaction="blue" icon="cloud-arrow-up"
-                    x-on:click="$openModal('galleryModal')" sm />
+                <x-wire-button blue interaction="positive" icon="arrow-up-on-square" type="submit"
+                    wire:target="save" spinner="save" wire:loading.attr="disabled" sm>
+                    <span class="hidden sm:inline">Actualizar</span>
+                </x-wire-button>
+                <x-wire-button positive interaction="blue" icon="cloud-arrow-up"
+                    x-on:click="$openModal('galleryModal')" sm>
+                    <span class="hidden sm:inline">Galeria</span>
+                </x-wire-button>
+                <x-wire-button orange icon="archive-box-arrow-down" wire:click="download_all_photos"
+                    wire:target="download_all_photos" wire:loading.attr="disabled" sm>
+                    <span class="hidden sm:inline">Masiva</span>
+                </x-wire-button>
                 <template x-if="status_eir === 'borrador'">
-                    <x-wire-button black label="Cerrar" icon="lock-closed" x-on:click="$openModal('closeEirModal')"
-                        sm />
+                    <x-wire-button black icon="lock-closed" x-on:click="$openModal('closeEirModal')" sm>
+                        <span class="hidden sm:inline">Cerrar</span>
+                    </x-wire-button>
                 </template>
 
                 <template x-if="status_eir !== 'borrador'">
-                    <x-wire-button black label="Reaperturar" icon="lock-open"
-                        onclick="confirmAction('¡La Inspección podrá volver a editarse!','void')" sm />
+                    <x-wire-button black icon="lock-open"
+                        onclick="confirmAction('¡La Inspección podrá volver a editarse!','void')" sm>
+                        <span class="hidden sm:inline">Reaperturar</span>
+                    </x-wire-button>
                 </template>
             </div>
         </form>
@@ -687,7 +698,7 @@
 
     </div>
 
-    <x-spinner :targets="['save', 'close', 'void', 'saveDetail', 'removeDetail', 'deletePhoto', 'saveApprovalChanges']" logo="{{ asset('img/logos/favicon.svg') }}" logoSize="56"
+    <x-spinner :targets="['save', 'close', 'void', 'saveDetail', 'removeDetail', 'deletePhoto', 'saveApprovalChanges', 'download_all_photos']" logo="{{ asset('img/logos/favicon.svg') }}" logoSize="56"
         message="Procesando..." />
 
     @push('js')

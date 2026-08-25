@@ -102,25 +102,27 @@ class WorkOrderForm extends Form
      */
     public function loadUniqueDamages()
     {
-        if (!$this->workOrder) {
+        if (!$this->workOrder || !$this->workOrder->eir_inspection_id) {
             $this->availableDamages = [];
             return;
         }
 
-        /*  // Obtener los inspection_detail_ids únicos de los labores
-        $detailIds = WorkOrderLabor::where('work_order_id', $this->workOrder->id)
-            ->pluck('eir_inspection_detail_id')
-            ->unique(); */
-
-        // Cargar los detalles completos con sus relaciones
+        // FIX RENDIMIENTO: antes esta consulta no filtraba por inspección,
+        // así que traía TODOS los eir_inspection_details "approved" de TODA
+        // la base de datos (todas las inspecciones, todas las sucursales),
+        // con 4 relaciones cargadas, para luego filtrar en memoria con
+        // ->unique('damage_id'). Con miles de inspecciones esto es un
+        // full-table scan que se ejecuta cada vez que se abre/edita una
+        // orden o se guarda/borra un labor (via refreshLabors()).
+        // Ahora se limita a los detalles de LA inspección EIR de esta orden.
         $this->availableDamages = EirInspectionDetail::with([
             'damage',
             'location',
             'component',
             'method'
         ])
+            ->where('eir_inspection_id', $this->workOrder->eir_inspection_id)
             ->where('approved', true)
-            //->whereIn('id', $detailIds)
             ->get()
             ->filter(fn($detail) => $detail->damage) // Solo los que tienen daño
             ->unique('damage_id') // Únicos por damage_id
@@ -601,22 +603,51 @@ class WorkOrderForm extends Form
                 'comments'
             ]));
 
-            // Eliminar labores antiguos y crear nuevos
+            // FIX RENDIMIENTO + INTEGRIDAD DE DATOS:
+            // Antes: ->delete() de TODOS los labores y recreación total en
+            // cada update(). Esto no solo es más escritura de la necesaria,
+            // sino que además destruye (o deja huérfanas, según el FK) las
+            // fotos ya subidas a esos labores, porque el labor original
+            // deja de existir y se crea uno con un id nuevo.
+            // Ahora: se sincroniza por diferencia (solo se borra lo que ya
+            // no está, se actualiza lo que cambió, se crea lo nuevo),
+            // preservando el id -y por tanto las fotos- de los labores que
+            // no cambiaron.
             if (!empty($this->labors)) {
-                $this->workOrder->labors()->delete();
+                $incomingIds = collect($this->labors)
+                    ->map(fn($labor) => is_array($labor) ? ($labor['id'] ?? null) : ($labor->id ?? null))
+                    ->filter()
+                    ->all();
+
+                $this->workOrder->labors()
+                    ->whereNotIn('id', $incomingIds)
+                    ->delete();
 
                 foreach ($this->labors as $labor) {
-                    WorkOrderLabor::create([
+                    $laborData = is_array($labor) ? $labor : $labor->toArray();
+                    $laborId = $laborData['id'] ?? null;
+
+                    $payload = [
                         'work_order_id' => $this->workOrder->id,
-                        'eir_inspection_detail_id' => $labor['eir_inspection_detail_id'],
-                        'description' => $labor['description'],
-                        'qty' => $labor['qty'],
-                        'started_at' => $labor['started_at'] ?? null,
-                        'finished_at' => $labor['finished_at'] ?? null,
-                        'hours' => $labor['hours'] ?? 0,
-                    ]);
+                        'eir_inspection_detail_id' => $laborData['eir_inspection_detail_id'],
+                        'description' => $laborData['description'],
+                        'qty' => $laborData['qty'],
+                        'started_at' => $laborData['started_at'] ?? null,
+                        'finished_at' => $laborData['finished_at'] ?? null,
+                        'hours' => $laborData['hours'] ?? 0,
+                    ];
+
+                    if ($laborId) {
+                        WorkOrderLabor::whereKey($laborId)->update($payload);
+                    } else {
+                        WorkOrderLabor::create($payload);
+                    }
                 }
+            } else {
+                // Si el listado vino vacío, sí corresponde borrar todo.
+                $this->workOrder->labors()->delete();
             }
+
             return $this->workOrder->fresh()->load('labors');
         });
     }

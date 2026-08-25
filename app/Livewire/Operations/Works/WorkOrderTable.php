@@ -243,12 +243,21 @@ class WorkOrderTable extends DataTableComponent
                 }),
             SelectFilter::make('Estado')
                 ->options(
-                    ['' => 'Todos'] + WorkOrder::query()
-                        ->where('branch_id', $branchId)
-                        ->distinct()
-                        ->pluck('work_orders.status', 'status')
-                        ->filter() // Elimina valores null/empty
-                        ->toArray()
+                    // FIX RENDIMIENTO: este SELECT DISTINCT se ejecutaba en
+                    // CADA render del componente (filters() se evalúa en
+                    // cada request de Livewire, incluyendo cosas que no
+                    // tienen nada que ver con los filtros, como escribir en
+                    // el modal de edición). Se cachea por sucursal.
+                    ['' => 'Todos'] + Cache::remember(
+                        "work_order_status_options_branch_{$branchId}",
+                        now()->addMinutes(5),
+                        fn() => WorkOrder::query()
+                            ->where('branch_id', $branchId)
+                            ->distinct()
+                            ->pluck('work_orders.status', 'status')
+                            ->filter() // Elimina valores null/empty
+                            ->toArray()
+                    )
                 )
                 ->filter(function (Builder $builder, $status) {
                     if (!empty($status)) {
@@ -326,7 +335,16 @@ class WorkOrderTable extends DataTableComponent
         });
     }
 
-    #[Computed]
+    /**
+     * FIX RENDIMIENTO: un #[Computed] normal se recalcula en CADA
+     * request de Livewire (cada wire:model.live, cada wire:click, etc.),
+     * no solo la primera vez que se pinta el modal. Como este componente
+     * mezcla la tabla + el modal de edición + fotos + trabajadores en una
+     * sola clase, cualquier interacción menor disparaba esta consulta.
+     * `cache: true` persiste el resultado (vía cache de Laravel) entre
+     * requests durante `seconds`.
+     */
+    #[Computed(cache: true, seconds: 300)]
     public function providers()
     {
         return Provider::query()
@@ -351,20 +369,45 @@ class WorkOrderTable extends DataTableComponent
         ];
     }
 
+    /**
+     * FIX RENDIMIENTO: esta consulta traía TODAS las inspecciones EIR
+     * "completado" de TODAS las sucursales (sin límite), con su
+     * trace.container, y se recalculaba en cada request de Livewire
+     * porque #[Computed] sin cache no persiste entre round trips y el
+     * select que la usa está siempre presente en el modal.
+     * Se agrega: (1) scoping por sucursal -verificar que EirInspection
+     * tenga la columna branch_id; si el scoping real es vía
+     * trace/gate_in_detail, ajustar el where-, (2) límite razonable de
+     * resultados y (3) cache corto para no recalcular en cada interacción.
+     * Si la lista puede crecer mucho, lo ideal a mediano plazo es
+     * convertir el <x-wire-select> en un combobox con búsqueda remota
+     * (que solo consulte cuando el usuario escribe) en vez de cargar
+     * todo por adelantado.
+     */
     #[Computed()]
     public function eirs()
     {
-        return EirInspection::with(['trace.container'])
-            ->where('eir_inspections.status', 'completado')
-            ->orderBy('id', 'desc')
-            ->get()
-            ->map(function ($eir_inspection) {
-                return [
-                    'id' => $eir_inspection->id,
-                    'name' => $eir_inspection->serie . '-' . str_pad($eir_inspection->correlativo, 6, 0, STR_PAD_LEFT),
-                    'description' => $eir_inspection->trace->container->code,
-                ];
-            });
+        $branchId = session('branch')->id;
+
+        return Cache::remember(
+            "work_order_eirs_branch_{$branchId}",
+            now()->addMinutes(2),
+            function () use ($branchId) {
+                return EirInspection::with(['trace.container'])
+                    ->where('eir_inspections.status', 'completado')
+                    ->where('branch_id', $branchId)
+                    ->orderBy('id', 'desc')
+                    ->limit(200)
+                    ->get()
+                    ->map(function ($eir_inspection) {
+                        return [
+                            'id' => $eir_inspection->id,
+                            'name' => $eir_inspection->serie . '-' . str_pad($eir_inspection->correlativo, 6, 0, STR_PAD_LEFT),
+                            'description' => $eir_inspection->trace->container->code,
+                        ];
+                    });
+            }
+        );
     }
 
 

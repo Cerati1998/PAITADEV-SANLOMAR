@@ -39,6 +39,15 @@ class InspectionExport implements FromCollection, WithEvents
                 // Obtener la hoja activa
                 $sheet = $spreadsheet->getActiveSheet();
 
+                // Columna INSPECTOR después de PROVEEDOR (J). Se inserta por código porque
+                // la plantilla está gitignorada y no viaja con el deploy.
+                $sheet->insertNewColumnBefore('K', 1);
+                foreach ([2, 3] as $fila) {
+                    $sheet->duplicateStyle($sheet->getStyle("J{$fila}"), "K{$fila}");
+                }
+                $sheet->getColumnDimension('K')->setWidth($sheet->getColumnDimension('J')->getWidth());
+                $sheet->setCellValue('K2', 'INSPECTOR');
+
                 // Escribir el título en A1
                 $sheet->setCellValue('A1', $this->titulo);
 
@@ -49,7 +58,7 @@ class InspectionExport implements FromCollection, WithEvents
                 foreach ($this->datos as $index => $dato) {
                     // Si no es la primera fila de datos, copiar el formato de la fila plantilla
                     if ($numeroFila > $filaPlantilla) {
-                        for ($col = 'A'; $col <= 'L'; $col++) {
+                        foreach (range('A', 'M') as $col) {
                             // Copiar estilo de la fila plantilla
                             $sheet->duplicateStyle(
                                 $sheet->getStyle("{$col}{$filaPlantilla}"),
@@ -72,8 +81,9 @@ class InspectionExport implements FromCollection, WithEvents
                     $sheet->setCellValue("H{$numeroFila}", $dato['condition']);
                     $sheet->setCellValue("I{$numeroFila}", $dato['height']);
                     $sheet->setCellValue("J{$numeroFila}", $dato['provider']);
-                    $sheet->setCellValue("K{$numeroFila}", $dato['wash']);
-                    $sheet->setCellValue("L{$numeroFila}", $dato['note']);
+                    $sheet->setCellValue("K{$numeroFila}", $dato['inspector']);
+                    $sheet->setCellValue("L{$numeroFila}", $dato['wash']);
+                    $sheet->setCellValue("M{$numeroFila}", $dato['note']);
                     $numeroFila++;
                 }
 

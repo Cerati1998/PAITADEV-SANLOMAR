@@ -241,6 +241,7 @@ class ReportController extends Controller
             'trace.container:id,code,build_year,tare,payload,max_height,own_line_id,container_type_id',
             'trace.container.container_type:id,code',
             'trace.container.line:id,name',
+            'inspector:id,name',
         ])
             // Filtro por fecha
             ->when($request->filled('since'), function ($query) use ($request) {
@@ -327,6 +328,7 @@ class ReportController extends Controller
                 'condition' => ($inspection->fast_repair || $inspection->normal_repair || $inspection->quoted_repair) ? 'DAÑADO' : 'OPERATIVO',
                 'height' => 'Altura Max: ' . $inspection?->trace?->container?->max_height,
                 'provider' => 'SANLOMAR GROUP',
+                'inspector' => $inspection->inspector?->name ?? '-',
                 'wash' => $tipo_lavado,
                 'note' => $nota,
             ];

@@ -47,12 +47,16 @@ Cada emisor llena la columna en el `mount()` de su componente:
 
 Commit: `74a5c30`
 
-## Pendiente (fuera de alcance, reportado)
+## No se cierra: misma falla en la API, descartada
 
-`Api\NoteController::send()` y `Api\InvoiceController::send()` construyen el
-`Invoice::create($data)` solo con lo que trae el request más `company_id` y
-`production`. `InvoiceRequest` no valida ni exige `branch_id`, y esos endpoints
-corren sin sesión (Sanctum/JWT), así que un cliente externo que no mande la
-columna choca con el mismo error 1364. Requiere decidir de dónde sale la
-sucursal en esa superficie (campo del request, sucursal por defecto de la
-empresa, o columna nullable) — no se tocó aquí.
+`Api\NoteController::send()`, `Api\InvoiceController::send()`,
+`Api\DespatchController::send()` y `Api\DespatchTransportistaController::send()`
+crean su comprobante solo con lo que trae el request más `company_id` y
+`production`, sin `branch_id`, y ninguno de sus FormRequest lo exige. Mismo
+error 1364 si un cliente externo no lo manda.
+
+**No se corrigió por decisión del usuario: esa superficie API está inutilizada
+actualmente.** Si algún día se reactiva, hay que resolver de dónde sale la
+sucursal ahí (no hay `session('branch')`: el token de Sanctum autentica a una
+`Company`) — la opción evaluada era deducirla de la serie vía
+`branch_company_document`, con `branch_id` explícito del request por encima.

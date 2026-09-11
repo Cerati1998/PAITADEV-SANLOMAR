@@ -80,6 +80,7 @@ class GenerateNote extends Component
 
         $this->note->fechaEmision = now()->format('Y-m-d');
         $this->note->company_id = session('company')->id;
+        $this->note->branch_id = session('branch')->id;
         $this->note->production = session('company')->production;
 
         $this->getSeries();

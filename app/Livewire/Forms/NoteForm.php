@@ -63,6 +63,7 @@ class NoteForm extends Form
 
     public $legends = [];
 
+    public $branch_id;
     public $company_id;
     public $production;
 

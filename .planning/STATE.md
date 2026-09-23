@@ -120,6 +120,7 @@ Recent decisions affecting current work:
 |------|------|-------------|-----------|
 | 2026-08-20 | `eir-masiva-photos-zip` | Botón naranja "Masiva" en la cabecera de EIR Edit: descarga en un ZIP todas las fotos de la inspección (cabecera + detalles); los 4 botones quedan solo con icono en móvil | `.planning/quick/20260820-eir-masiva-photos-zip/` |
 | 2026-09-11 | `note-branch-id` | Fix: la nota de crédito/débito no asignaba `branch_id` (columna NOT NULL) y el insert en `invoices` fallaba con error 1364 antes de enviar a SUNAT | `.planning/quick/20260911-note-branch-id/` |
+| 2026-09-23 | `eir-duplicado-cabecera` | Fix: EIR permitía crear dos inspecciones con cabecera idéntica para el mismo contenedor (guard evitado desde el camino real de producción, `save()` no idempotente, correlativo sin bloqueo) | `.planning/quick/260923-f7y-eir-duplicado-cabecera/` |
 
 ## Deferred Items
 

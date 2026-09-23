@@ -172,3 +172,29 @@ Commits verificados en `git log --oneline`:
 - FOUND: e1ab6ef
 - FOUND: 71a96fa
 - FOUND: 4522ab1
+
+## Revisión del orquestador (post-ejecución)
+
+Al revisar el `save()` resultante apareció un defecto introducido por la propia Tarea 3: si
+la transacción revienta **después** de `$this->eir->store()` (el `update` de `containers`
+del paso 4), el rollback deshace el insert pero `$this->idEir` queda asignado en memoria.
+Un `save()` posterior tomaría entonces la guarda de idempotencia del inicio del método y
+despacharía `eirCreated` con `route('inspections.eir.edit', $idEir)` para un id que ya no
+existe → 404 en lugar de reintentar el guardado.
+
+Corregido en `5e7fd35`: `$this->idEir = null` al entrar al `catch (QueryException)`
+(antes del `continue` del reintento, para que un intento fallido no contamine el siguiente)
+y en la rama `if ($duplicate)`. Invariante resultante: `$this->idEir` solo tiene valor
+cuando la transacción confirmó.
+
+Ese commit se dejó deliberadamente en 7 líneas: `pint --dirty` sobre `EirCreate.php`
+volvía a reformatear zonas no relacionadas (líneas en blanco entre las declaraciones de
+propiedades, `NULL`→`null`, `fn(`→`fn (`, `if (!$lineId) return;` a bloque, y la
+eliminación del import sin usar `Livewire\Attributes\Computed`), así que se reconstruyó el
+archivo desde `132b4c4` y se reaplicó solo el cambio intencionado.
+
+Verificación de cierre repetida por el orquestador: `php -l` limpio en los 6 PHP,
+`php artisan view:clear` sin error, `route:list --name=inspections.eir` con 4 rutas,
+árbol de trabajo limpio, y el `tinker` de solo lectura devolviendo
+`guard_traza_318 = "EIR-SLEI-000149"`, `excluyendo_150 = 384`, `traza_inexistente = null`,
+`scope_branch_1 = true`, `scope_branch_99999 = false` y `pares_repetidos = []`.

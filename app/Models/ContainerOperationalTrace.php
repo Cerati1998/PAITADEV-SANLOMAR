@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\inspections\EirInspection;
 use App\Models\inspections\LeakTest;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
@@ -54,6 +55,23 @@ class ContainerOperationalTrace extends Model
     {
         return $this->hasOne(LeakTest::class,'trace_id');
     }
+
+    /**
+     * Filtra por trazas cuyo evento de origen (Dischargue/Devolution) pertenece al
+     * branch indicado. Replica el criterio de ContainerTraceTable::builder(). El
+     * parámetro explícito permite verificar el scope desde tinker, donde no hay sesión.
+     */
+    public function scopeForBranch(Builder $query, $branchId = null): Builder
+    {
+        $branchId = $branchId ?? session('branch')->id;
+
+        return $query->whereHas('gateInDetail', function ($query) use ($branchId) {
+            $query->whereHasMorph('originable', [Dischargue::class, Devolution::class], function ($morphQuery) use ($branchId) {
+                $morphQuery->where('branch_id', $branchId);
+            });
+        });
+    }
+
     // Accessor para formatear la fecha
     protected function dateRepBox(): Attribute
     {

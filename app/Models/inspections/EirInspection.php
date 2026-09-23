@@ -70,6 +70,27 @@ class EirInspection extends Model
         return $this->belongsTo(ContainerOperationalTrace::class, 'trace_id');
     }
 
+    /**
+     * Devuelve el EIR existente para una traza, si lo hay. $exceptId excluye ese id
+     * (uso: excluir el propio EIR cuando se edita). Bloquea ante cualquier EIR de la
+     * traza, sin filtrar por status: una traza = un EIR.
+     */
+    public static function existingForTrace($traceId, $exceptId = null): ?self
+    {
+        return static::query()
+            ->where('trace_id', $traceId)
+            ->when($exceptId, fn ($query) => $query->whereKeyNot($exceptId))
+            ->first();
+    }
+
+    /**
+     * Etiqueta "EIR-{serie}-{correlativo}" con el correlativo relleno a 6 dígitos.
+     */
+    public function documentLabel(): string
+    {
+        return 'EIR-' . $this->serie . '-' . str_pad((string) $this->correlativo, 6, '0', STR_PAD_LEFT);
+    }
+
     public function inspector()
     {
         return $this->belongsTo(User::class, 'inspector_id');

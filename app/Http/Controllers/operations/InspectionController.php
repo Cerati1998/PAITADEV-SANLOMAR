@@ -4,6 +4,7 @@ namespace App\Http\Controllers\operations;
 
 use App\Http\Controllers\Controller;
 use App\Models\Component;
+use App\Models\ContainerOperationalTrace;
 use App\Models\ContainerType;
 use App\Models\Damage;
 use App\Models\Document;
@@ -37,6 +38,48 @@ class InspectionController extends Controller
     }
     public function create_eir($trace = null)
     {
+        if ($trace !== null) {
+            $traceId = filter_var($trace, FILTER_VALIDATE_INT);
+
+            if ($traceId === false) {
+                session()->flash('swal', [
+                    'icon' => 'error',
+                    'title' => 'Error!',
+                    'text' => 'La traza indicada no es válida.',
+                ]);
+
+                return redirect()->route('containers.traces');
+            }
+
+            $containerTrace = ContainerOperationalTrace::whereKey($traceId)->forBranch()->first();
+
+            if (!$containerTrace) {
+                session()->flash('swal', [
+                    'icon' => 'error',
+                    'title' => 'Error!',
+                    'text' => 'No se encontró el contenedor en tu sucursal.',
+                ]);
+
+                return redirect()->route('containers.traces');
+            }
+
+            $existing = EirInspection::existingForTrace($traceId);
+
+            if ($existing) {
+                session()->flash('swal', [
+                    'icon' => 'info',
+                    'title' => 'EIR ya generado',
+                    'text' => "Este contenedor ya tiene la inspección {$existing->documentLabel()}. No se puede generar otro EIR para él.",
+                ]);
+
+                if (auth()->user()->can('inspections.eir.edit')) {
+                    return redirect()->route('inspections.eir.edit', $existing->id);
+                }
+
+                return redirect()->route('containers.traces');
+            }
+        }
+
         $catalogs = [
             'locations' => Location::all(),
             'damages' => Damage::all(),

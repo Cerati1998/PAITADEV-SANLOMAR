@@ -20,6 +20,8 @@ class ContainerOperationalTraceController extends Controller
             ->select('container_operational_traces.id as id', 'containers.code')
             ->join('containers', 'container_operational_traces.container_id', '=', 'containers.id')
             ->whereIn('container_operational_traces.status', [1, 2, 3])
+            ->forBranch()
+            ->whereDoesntHave('EirInspection')
             ->when(
                 $request->search,
                 fn(Builder $query) =>

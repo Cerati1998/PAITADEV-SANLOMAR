@@ -90,12 +90,39 @@ class EirCreate extends Component
         }
     }
 
+    private function rejectTrace(string $text): void
+    {
+        $this->dispatch('swal', [
+            'icon' => 'error',
+            'title' => 'Contenedor no disponible',
+            'text' => $text,
+        ]);
+
+        $this->eir->trace_id = null;
+
+        $this->reset(['trace', 'containerInfo', 'containerData', 'trace_origin']);
+    }
+
     public function getContainerTrace()
     {
         if (!$this->trace) return;
 
         $trace = ContainerOperationalTrace::with('container.container_type', 'container.reefer_technology', 'container.machine')
-            ->find($this->trace);
+            ->forBranch()
+            ->whereKey($this->trace)
+            ->first();
+
+        if (!$trace) {
+            $this->rejectTrace('No se encontró el contenedor en tu sucursal.');
+            return;
+        }
+
+        $existingEir = EirInspection::existingForTrace($this->trace, $this->idEir);
+
+        if ($existingEir) {
+            $this->rejectTrace("Este contenedor ya tiene la inspección {$existingEir->documentLabel()}.");
+            return;
+        }
 
         if ($trace?->container) {
             $container = $trace->container;
@@ -148,32 +175,9 @@ class EirCreate extends Component
 
     public function updated($property, $value)
     {
-
         if ($property === 'trace') {
-
-            // Validar que el trace no esté siendo usado en otra inspección borrador
-            $existingEir = EirInspection::where('trace_id', $value)
-                //->where('status', 'borrador') // o el valor que uses para borrador
-                ->where('id', '!=', $this->idEir) // Excluir el EIR actual si existe
-                ->first();
-            if ($existingEir) {
-                $correlativo_existing = str_pad($existingEir->correlativo, 6, '0', STR_PAD_LEFT);
-                $this->dispatch('swal', [
-                    'icon' => 'error',
-                    'title' => 'Contenedor no disponible',
-                    'text' => "Este contenedor ya está siendo usado en la inspección EIR-{$existingEir->serie}-{$correlativo_existing} que está en estado borrador."
-                ]);
-                $this->trace = null;
-                $this->eir->trace_id = null;
-
-                $this->reset(['trace', 'containerInfo', 'containerData', 'trace_origin']);
-
-                return;
-            }
-
             $this->trace = $value;
             $this->getContainerTrace();
-            $this->eir->trace_id = $value;
         }
     }
 

@@ -6,14 +6,21 @@
             </x-slot>
 
             {{-- EIR --}}
-            <x-wire-dropdown.item
-                onclick="confirmRedirect('{{ route('inspections.eir.create', $trace->id) }}', '¿Deseas generar el EIR?')"
-                class="group">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-receipt mr-2 group-hover:text-blue-500"></i>
-                    <span class="group-hover:text-blue-500">Generar EIR</span>
+            @if (!$trace->EirInspection)
+                <x-wire-dropdown.item
+                    onclick="confirmRedirect('{{ route('inspections.eir.create', $trace->id) }}', '¿Deseas generar el EIR?')"
+                    class="group">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-receipt mr-2 group-hover:text-blue-500"></i>
+                        <span class="group-hover:text-blue-500">Generar EIR</span>
+                    </div>
+                </x-wire-dropdown.item>
+            @else
+                <div class="flex items-center gap-2 px-4 py-2 text-gray-400">
+                    <i class="fas fa-receipt mr-2"></i>
+                    <span>EIR ya generado ({{ $trace->EirInspection->documentLabel() }})</span>
                 </div>
-            </x-wire-dropdown.item>
+            @endif
 
             {{-- PTI --}}
             <x-wire-dropdown.item

@@ -5,6 +5,7 @@ namespace App\Livewire\Forms;
 use App\Models\inspections\EirInspection;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Database\QueryException;
 use Illuminate\Validation\Rule;
 use Livewire\Form;
 
@@ -87,6 +88,8 @@ class EirForm extends Form
         try {
             $eir = EirInspection::create($this->except('details', 'tipoDoc'));
             return $eir->id;
+        } catch (QueryException $e) {
+            throw $e;
         } catch (\Exception $e) {
             throw new \Exception('Error al guardar EIR: ' . $e->getMessage());
         }

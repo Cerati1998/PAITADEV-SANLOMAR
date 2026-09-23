@@ -234,7 +234,7 @@
             {{-- Botones (Guardar - Cerrar) --}}
             <div class="mt-6 flex justify-center gap-4">
                 <x-wire-button green label="Guardar" interaction="positive" icon="arrow-up-on-square"
-                    type="submit" />
+                    type="submit" x-bind:disabled="submitting" />
             </div>
         </form>
     </div>
@@ -251,6 +251,7 @@
                     lavado_quimico: @entangle('eir.quimic_wash'),
                     lavado_especial: @entangle('eir.special_wash'),
                     containerData: @entangle('containerData'),
+                    submitting: false,
                     get maxGross() {
                         const tare = parseInt(this.containerData.tare) || 0;
                         const payload = parseInt(this.containerData.payload) || 0;
@@ -286,6 +287,8 @@
                         });
                     },
                     save() {
+                        if (this.submitting) return;
+
                         Swal.fire({
                             title: "¿Estas seguro de Iniciar?",
                             text: "¡No podrás revertir esto!",
@@ -296,7 +299,12 @@
                             confirmButtonText: '¡Sí, Continua!'
                         }).then((result) => {
                             if (result.isConfirmed) {
-                                @this.call('save');
+                                this.submitting = true;
+                                @this.call('save').finally(() => {
+                                    if (!@this.get('idEir')) {
+                                        this.submitting = false;
+                                    }
+                                });
                             }
                         })
                     }

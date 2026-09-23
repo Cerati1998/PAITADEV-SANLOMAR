@@ -319,6 +319,11 @@ class EirCreate extends Component
 
                 break;
             } catch (QueryException $e) {
+                // La transacción hizo rollback: el id asignado en el paso 3 ya no existe en BD.
+                // Dejarlo puesto haría que un save() posterior tomara la guarda de
+                // idempotencia y redirigiera a un EIR inexistente.
+                $this->idEir = null;
+
                 if ($attempts < $maxAttempts && $this->isDuplicateCorrelativo($e)) {
                     continue;
                 }
@@ -342,6 +347,8 @@ class EirCreate extends Component
         }
 
         if ($duplicate) {
+            $this->idEir = null;
+
             $this->dispatch('swal', [
                 'icon' => 'error',
                 'title' => 'Contenedor no disponible',

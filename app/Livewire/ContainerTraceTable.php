@@ -178,7 +178,7 @@ class ContainerTraceTable extends DataTableComponent
                 'container:id,code,iso_code'
             ])
             ->where('container_operational_traces.status', '>', 0)
-            ->whereDate('container_operational_traces.created_at', '>=', now()->subMonths(3))
+            ->whereDate('container_operational_traces.created_at', '>=', now()->subMonths(6))
             ->whereHas('gateInDetail', function ($query) {
                 $query->whereHasMorph('originable', ['App\Models\Dischargue', 'App\Models\Devolution'], function ($morphQuery) {
                     $morphQuery->where('branch_id', session('branch')->id);
